@@ -1,0 +1,24 @@
+Version 0.0 - Initial release
+=============================
+* ✘ Web site basic:
+  * ✗ Configuration file.
+  * ✗ Core pages: main and login.
+  * ✗ Default template: XHTML 1.1 and CSS 2. W3C standars.
+  * ✗ Project page and source code links.
+  * ✗ Initial I18n support.
+* ✘ Database.
+  * ✗ MySQL Support.
+* ✘ Main page: Bookmark list basic structure.
+  * ✗ Bookmark title, link, link language, link type, linker, added date and
+      time, modified date and time, summary and related tags.
+  * ✗ List ordered by last modified date and time. Newer first.
+* ✘ Login page: Bookmark list basic form.
+  * ✗ Access login and password page.
+  * ✗ Bookmark form: language, title, link, link language, link type, summary
+      and related tags.
+  * ✗ I18n support: Bookmark language and bookmark link language.
+* ✘ Update system:
+  * ✗ New version notification.
+  * ✗ Notification levels.
+* ✘ General configuration:
+  * ✗ Update system: Activate or deactivate notification by level.
