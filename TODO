@@ -1,18 +1,18 @@
 Version 0.0 - Initial release
 =============================
 * ✘ Web site basic:
-  * ✗ Configuration file.
+  * ✓ Configuration file.
   * ✗ Core pages: main and login.
-  * ✗ Default template: XHTML 1.1 and CSS 2. W3C standars.
+  * ✗ Default template: XHTML 1.1 and CSS 2. W3C standards.
   * ✗ Project page and source code links.
   * ✗ Initial I18n support.
 * ✘ Database.
   * ✗ MySQL Support.
-* ✘ Main page: Bookmark list basic structure.
+* ✘ Main page:
   * ✗ Bookmark title, link, link language, link type, linker, added date and
       time, modified date and time, summary and related tags.
   * ✗ List ordered by last modified date and time. Newer first.
-* ✘ Login page: Bookmark list basic form.
+* ✘ Administration area:
   * ✗ Access login and password page.
   * ✗ Bookmark form: language, title, link, link language, link type, summary
       and related tags.
@@ -22,3 +22,33 @@ Version 0.0 - Initial release
   * ✗ Notification levels.
 * ✘ General configuration:
   * ✗ Update system: Activate or deactivate notification by level.
+
+Version 0.1
+===========
+* ✘ Main page
+  * ✗ Tag cloud
+  * ✗ Individual page per tag.
+  * ✗ Limited bookmarks per page. Multi-page support.
+  * ✗ Ordered by: Date and time, tag and title (normal and inversed).
+* ✘ Administration area:
+  * ✗ User levels.
+  * ✗ User administration.
+
+Version 0.2
+===========
+* ✘ Main page
+  * ✗ Individual page per bookmark, date,  linker.
+* ✘ Comments support
+  * ✗ Add comment to a bookmark.
+  * ✗ Captcha system.
+* ✘ Administration area:
+  * ✗ Bookmark linker modified by administrator.
+  * ✗ Profile configuration page.
+
+Version > 1.0
+=============
+* ✘ Firefox plug-in to page bookmarking.
+* ✘ Twitter integration.
+* ✘ Database:
+  * ✗ SQLite support.
+  * ✗ PostgreSQL support.

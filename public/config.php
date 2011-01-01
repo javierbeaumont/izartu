@@ -19,10 +19,68 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
+################################################################################
+############################# BASIC CONFIGURATION ##############################
+################################################################################
+
+# PRI_DIR -- 'private/' directory location (and name).
+#             Relative to this config.php archive.
+
+define('PRI_DIR', '../private/');
+
+# DB_HOST Host where database is located. 'localhost' by default.
+# DB_USER User of the database.
+# DB_PASS Password of the database.
+# DB_NAME Name of the database.
+
+define('DB_HOST', 'localhost');
+define('DB_USER', 'izartuuser');
+define('DB_PASS', 'izartupass');
+define('DB_NAME', 'izartu');
+
+################################################################################
+############################ ADVANCED CONFIGURATION ############################
+################################################################################
+
+# DB_TYPE -- Database type. At this moment 'MySQL' is the unique option allowed.
+#            'MySQL' by default.
+# DB_PORT -- Port of the database. 3306 (MySQL default port).
+#            At this moment 3306 is the unique port number allowed.
+
+define('DB_TYPE', 'MySQL');
+define('DB_PORT', 3306);
+
+# PREFIX -- Database tables prefix. For example: define('PREFIX', 'iz_');
+#           FALSE (none) by default.
+
+define('PREFIX', FALSE);
+
+################################################################################
+############################ DEVELOPER CONFIGURATION ###########################
+################################################################################
+
+# DEBUG -- Activate (TRUE) or deactivate (FALSE) the debug mode.
+#          In real environment ALWAYS DEACTIVATED (FALSE).
+
 define('DEBUG', TRUE);
 
 /**
  * @file config.php
  * @brief Site configuration file.
+ *
+ * @enum PRI_DIR 'private/' directory location (and name). Relative to this
+ *   config.php archive.
+ * @enum DB_HOST Host where database is located. 'localhost' by default.
+ * @enum DB_USER User of the database.
+ * @enum DB_PASS Password of the database.
+ * @enum DB_NAME Name of the database.
+ * @enum DB_TYPE Database type. At this moment 'MySQL' is the unique option
+ *   allowed. 'MySQL' by default.
+ * @enum DB_PORT Port of the database. 3306 (MySQL default port). At this moment
+ *   3306 is the unique port number allowed.
+ * @enum PREFIX Database tables prefix. For example: @code define('PREFIX',
+ *   'iz_'); @endcode. FALSE (none) by default.
+ * @enum DEBUG Activate (TRUE) or deactivate (FALSE) the debug mode. In real
+ *   environment ALWAYS DEACTIVATED.
  */
 ?>
