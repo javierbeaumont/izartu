@@ -35,5 +35,8 @@ if (DEBUG) {
 
 /* Database */
 require DIR_PRI.'class/db/database.php';
+require DIR_PRI.'class/db/table.php';
+
+new Table();
 
 ?>
