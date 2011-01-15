@@ -23,15 +23,15 @@
 ############################# BASIC CONFIGURATION ##############################
 ################################################################################
 
-# PRI_DIR -- 'private/' directory location (and name).
+# PRI_DIR -- 'private' directory location (and name).
 #             Relative to this config.php archive.
 
-define('PRI_DIR', '../private/');
+define('PRI_DIR', '../private');
 
-# DB_HOST Host where database is located. 'localhost' by default.
-# DB_USER User of the database.
-# DB_PASS Password of the database.
-# DB_NAME Name of the database.
+# DB_HOST -- Host where database is located. 'localhost' by default.
+# DB_USER -- User of the database.
+# DB_PASS -- Password of the database.
+# DB_NAME -- Name of the database.
 
 define('DB_HOST', 'localhost');
 define('DB_USER', 'izartuuser');
@@ -83,4 +83,5 @@ define('DEBUG', TRUE);
  * @enum DEBUG Activate (TRUE) or deactivate (FALSE) the debug mode. In real
  *   environment ALWAYS DEACTIVATED.
  */
+
 ?>
