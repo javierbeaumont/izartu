@@ -23,12 +23,17 @@
  * @file preload.php
  * @brief The data and files to load before the page content.
  *
- * @param DEBUG Display all PHP errors
+ * Loads database and internationalization files.
  */
 
-if (DEBUG) {.
+if (DEBUG) {
   ini_set('display_errors', 'stdout');
   error_reporting (E_ALL | E_STRICT);
+  require PRI_DIR.'/class/benchmark.php';
+  new Benchmark;
 }
+
+/* Database */
+require DIR_PRI.'class/db/database.php';
 
 ?>
