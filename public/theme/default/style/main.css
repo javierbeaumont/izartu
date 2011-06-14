@@ -1,0 +1,175 @@
+@charset "UTF-8";
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font: normal 9pt sans-serif;
+  background-color: #e0e0e0;
+}
+
+#header {
+  margin: 0;
+  border-bottom: .3em solid #bbb;
+  background: #e0e0e0 url('../image/header.png') repeat-x center bottom;
+  color: white;
+  text-shadow: 0 0 .1em black;
+}
+
+#header p {
+  float: right;
+  margin: 0;
+  padding: 1em;
+}
+
+#header h1 {
+  margin: 0;
+  padding: 1em;
+  font-size: 1.2em;
+}
+
+#header a {
+  color: white;
+  text-decoration: none;
+}
+
+#content {
+  margin: 0;
+  border-top: .2em solid #999;
+  border-bottom: .2em solid #999;
+  background-color: white;
+}
+
+#content div.option {
+  float: right;
+  margin-right: 0;
+  width: 30%;
+}
+
+
+#content div.option > div {
+  margin: 3.3em 2em 2em auto;
+  border: .1em dashed #ddd;
+}
+
+#content div.option > div > div {
+  margin: -1.3em 0 0 1em;
+  border: .1em dashed #ddd;
+  padding: .5em;
+  background-color: white;
+  width: 40%;
+}
+
+#content div.option > div > p {
+  margin: 0;
+  padding: 2em;
+}
+
+#list {
+  margin-right: 30%;
+}
+
+#list div.data {
+  margin: 2em;
+  border: .1em dashed #ddd;
+}
+
+#list div.data * {
+  margin: 0;
+  margin: 0;
+}
+
+#list div.data div.head {
+  padding: .2em .5em;
+  background-color: #eee;
+
+}
+
+#list div.data h2 {
+  font-size: 1.2em;
+}
+
+#list div.data p.link-page {
+  font-size: .8em;
+}
+
+#list div.data a {
+  color: black;
+  text-decoration: none;
+}
+
+#list div.data p.link-page a {
+  cursor: text;
+}
+
+#list div.data p.link-info {
+  margin: .1em 0;
+  font-size: .9em;
+}
+
+#list div.data div.info {
+  border-top: .1em dashed #ddd;
+  padding: .5em;
+  text-align: justify;
+}
+
+#list div.data div.info p.tag{
+  padding-top: .5em;
+  font-size: .8em;
+}
+
+#footer {
+  clear: both;
+  margin: 0;
+  border-top: .3em solid #bbb;
+  background: #e0e0e0 url('../image/antiheader.png') repeat-x center top;
+  color: white;
+  text-shadow: 0 0 .1em black;
+}
+
+#footer p {
+  margin: 0;
+  padding: 2em 1em;
+  color: #ccc;
+  font-size: .8em;
+}
+
+#footer p.power {
+  float: left;
+}
+
+#footer p.source {
+  float: right;
+}
+
+#footer p.standard {
+  text-align: center;
+}
+
+#footer a {
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+
+p.error {
+  font-weight: bold;
+  color: red;
+}
+
+#debug {
+  position: relative;
+  margin: -13.6em 0 0 auto;
+  border: .3em double red;
+  padding: .5em;
+  background-color: #fee;
+  width: 13em;
+}
+
+#debug dd {
+  margin: 0;
+  text-align: right;
+}
