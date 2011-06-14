@@ -88,7 +88,6 @@ class Database {
     defined('DB_NAME')?: define('DB_NAME', FALSE);
     defined('DB_TYPE')?: define('DB_TYPE', FALSE);
     defined('DB_PORT')?: define('DB_PORT', FALSE);
-
     defined('PREFIX')?: define('PREFIX', FALSE);
 
     try { return new PDO(self::pdoDSN(), DB_USER, DB_PASS); }
