@@ -2,10 +2,15 @@ Izartu
 ======
 Web bookmark manager based on tags.
 
+* [Homepage](http://javierbeaumont.github.com/izartu/)
+* Source code on [GitHub](http://github.com/javierbeaumont/izartu) or on [Gitorious](http://gitorious.org/izartu/izartu).
+
 License
 -------
+Izartu use GNU AGPLv3 license.
 Please, read the LICENSE file for more information.
 
-Project web page
-----------------
-[Izartu in GitHub](http://javierbeaumont.github.com/Izartu/).
+Requisites
+----------
+* MySQL >= 4.1
+* PHP   >= 5.2
