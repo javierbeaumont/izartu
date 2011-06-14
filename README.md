@@ -8,4 +8,4 @@ Please, read the LICENSE file for more information.
 
 Project web page
 ----------------
-[Izartu](http://javierbeaumont.github.com/Izartu/).
+[Izartu in GitHub](http://javierbeaumont.github.com/Izartu/).
