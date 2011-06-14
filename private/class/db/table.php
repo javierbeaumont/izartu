@@ -36,15 +36,18 @@ class Table {
  * @fn __construct
  * @brief To initialize a new database PDO instance.
  */
+
   public function __construct () {
     self::$db = Database::open();
   }
+
 /**
  * @fn process
  * @brief To save data in a database table
  * @param $query SQL query
  * @return Rows in a database table (or an error)
  */
+
   private static function process($query) {
     if (empty($query)) {
       trigger_error(__('Data not found'), E_USER_ERROR);
@@ -61,6 +64,7 @@ class Table {
  * @param $sql SQL query
  * @param $param Query parameters
  */
+
   public static function save($sql, $param) {
     if ($param['id']) {
       $query = self::$db->prepare($sql);
@@ -68,8 +72,8 @@ class Table {
     } else {
       $query = $this->db->prepare($id);
     }
-    for ($i = 0, $x = count($param); $i < $x; $i ++) {
-      $query->bindParam($param[$i][0], $param[$i][1], $param[$i][2], $param[$i][3]);
+    foreach ($param as $value) {
+      $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }
     $query->execute();
     return self::process($query);
@@ -82,11 +86,12 @@ class Table {
  * @param $param Query parameters
  * @return Rows in a database table
  */
+
   public static function read($sql, $param = FALSE) {
     $query = self::$db->prepare($sql);
     if (is_array($param)) {
-      for ($i = 0, $x = count($param); $i < $x; $i ++) {
-        $query->bindParam($param[$i][0], $param[$i][1], $param[$i][2], $param[$i][3]);
+      foreach ($param as $value) {
+        $query->bindParam($value[0], $value[1], $value[2], $value[3]);
       }
     }
     $query->execute();
@@ -99,14 +104,16 @@ class Table {
  * @param $sql SQL query
  * @param $param Query parameters
  */
+
   public static function delete($sql, $param) {
     $query = self::$db->prepare($sql);
-    for ($i = 0, $x = count($param); $i < $x; $i ++) {
-      $query->bindParam($param[$i][0], $param[$i][1], $param[$i][2], $param[$i][3]);
+    foreach ($param as $value) {
+      $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }
     $query->execute();
     return self::process($query);
   }
+
 }
 
 ?>
