@@ -22,8 +22,47 @@
 /**
  * @file index.php
  * @brief Site default page.
+ *
+ * This page show the bookmarks related data. Two types will be allowed:
+ * - Single: bookmark page.                  Izartu / Bookmark / TITLE
+ * - List (default): bookmarks list. Two groups:
+ *   - Defined:
+ *     - By tag:                             Izartu / Tag / NAME
+ *     - By linker:                          Izartu / Linker / NICK
+ *     - By modified date:                   Izartu / Date / YEAR/MONTH/DAY
+ *     - ...
+ *   - Undefined:
+ *     - Ordered by title:                   Izartu / Title
+ *     - Ordered by linker:                  Izartu / Linker
+ *     - Ordered by modified date (default): Izartu / Date
+ *     - ...
  */
 
-require_once ('config.php');
+require_once __DIR__.'/config.php';
+
+define('DIR_PRI', realpath(PRI_DIR).'/');
+
+require_once DIR_PRI.'preload.php';
+
+require_once DIR_PRI.'class/db/data.php';
+require_once DIR_PRI.'class/db/tag.php';
+require_once DIR_PRI.'class/show/data.php';
+require_once DIR_PRI.'class/show/tag.php';
+
+require_once DIR_PRI.'postload.php' ;
+
+$template = new Template;
+$template->show();
+
+/**
+ * @mainpage
+ *   Izartu is a web bookmark manager based on tags.
+ *
+ * @par Purpose
+ *   The primary purpose of its development is learn some programming issues.
+ * @par Requisites
+ *   Izartu is developer with PHP and MySQL. Doxygen is used for source code
+ *   documentation.
+ */
 
 ?>
