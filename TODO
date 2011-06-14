@@ -3,14 +3,15 @@ Version 0.0 - Initial release
 * ✘ Web site basic:
   * ✓ Configuration file.
   * ✗ Core pages: main and login.
-  * ✗ Default template: XHTML 1.1 and CSS 2. W3C standards.
-  * ✗ Project page and source code links.
+  * ✗ Default template: XHTML 1.1 and CSS 2.1. W3C standards.
+  * ✓ Project page and source code links.
   * ✗ Initial I18n support.
 * ✘ Database.
-  * ✗ MySQL Support.
+  * ✓ MySQL Support.
 * ✘ Main page:
-  * ✗ Bookmark title, link, link language, link type, linker, added date and
+  * ✓ Bookmark title, link, link language, link type, linker, added date and
       time, modified date and time, summary and related tags.
+  * ✓ Tag cloud
   * ✗ List ordered by last modified date and time. Newer first.
 * ✘ Administration area:
   * ✗ Access login and password page.
@@ -26,10 +27,9 @@ Version 0.0 - Initial release
 Version 0.1
 ===========
 * ✘ Main page
-  * ✗ Tag cloud
   * ✗ Individual page per tag.
   * ✗ Limited bookmarks per page. Multi-page support.
-  * ✗ Ordered by: Date and time, tag and title (normal and inversed).
+  * ✗ Ordered by: Date and time, tag and title (normal and inverse).
 * ✘ Administration area:
   * ✗ User levels.
   * ✗ User administration.
@@ -37,7 +37,7 @@ Version 0.1
 Version 0.2
 ===========
 * ✘ Main page
-  * ✗ Individual page per bookmark, date,  linker.
+  * ✗ Individual page per bookmark, date, linker.
 * ✘ Comments support
   * ✗ Add comment to a bookmark.
   * ✗ Captcha system.
@@ -48,7 +48,7 @@ Version 0.2
 Version > 1.0
 =============
 * ✘ Firefox plug-in to page bookmarking.
-* ✘ Twitter integration.
+* ✘ Twitter/Identi.ca integration.
 * ✘ Database:
   * ✗ SQLite support.
   * ✗ PostgreSQL support.
