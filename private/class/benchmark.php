@@ -68,22 +68,14 @@ class Benchmark {
     self::$memoryMax = number_format(round(self::$memoryMax/1024, 2), 2);
 
     return '
-      <div id="debug">
-        <p class="section">Execution time:</p>
-        <p class="subsection">
-          <span class="title">Time:</span>
-          <span class="value">'.self::$timeTotal.' ms.</span>
-        </p>
-        <p class="section">Memory usage:</p>
-        <p class="subsection">
-          <span class="title">Max:</span>
-          <span class="value">'.self::$memoryMax.' KB.</span>
-          <span class="title">Used:</span>
-          <span class="value">'.self::$memoryEnd.' KB.</span>
-          <span class="title">Script:</span>
-          <span class="value">'.self::$memoryTotal.' KB.</span>
-        </p>
-      </div>';
+      <dl id="debug">
+        <dt class="time">Execution time:</dt>
+        <dd>Time: '.self::$timeTotal.' ms.</dd>
+        <dt class="memory">Memory usage:</dt>
+        <dd>Max: '.self::$memoryMax.' KB.</dd>
+        <dd>Used: '.self::$memoryEnd.' KB.</dd>
+        <dd>Script: '.self::$memoryTotal.' KB.</dd>
+      </dl>';
   }
 }
 ?>
