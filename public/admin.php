@@ -22,8 +22,31 @@
 /**
  * @file admin.php
  * @brief Site administration default page.
+ *
+ * This page show the admin page.
 **/
 
-require_once ('config.php');
+require_once __DIR__.'/config.php';
 
+define('DIR_PRI', realpath(PRI_DIR).'/');
+
+require_once DIR_PRI.'preload.php';
+require_once DIR_PRI.'postload.php';
+
+$template = new Template;
+$template->show();
+
+// 1 - User and password (TODO)
+/*
+if ($login) {
+  switch ($page) {
+    case 'bookmark':      // Bookmark administration (TODO)
+    case 'profile':       // Profile modification (TODO)
+    case 'general':       // General configuration (TODO)
+    case 'users':         // User administration (TODO)
+      break;
+
+  }
+}
+*/
 ?>

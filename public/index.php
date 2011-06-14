@@ -49,7 +49,7 @@ require_once DIR_PRI.'class/db/tag.php';
 require_once DIR_PRI.'class/show/data.php';
 require_once DIR_PRI.'class/show/tag.php';
 
-require_once DIR_PRI.'postload.php' ;
+require_once DIR_PRI.'postload.php';
 
 $template = new Template;
 $template->show();
