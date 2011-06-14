@@ -24,7 +24,7 @@
 ################################################################################
 
 # PRI_DIR -- 'private' directory location (and name).
-#             Relative to this config.php archive.
+#             Relative to this configuration archive (config.php).
 
 define('PRI_DIR', '../private');
 
@@ -69,7 +69,7 @@ define('DEBUG', TRUE);
  * @brief Site configuration file.
  *
  * @enum PRI_DIR 'private/' directory location (and name). Relative to this
- *   config.php archive.
+ *   configuration archive (config.php).
  * @enum DB_HOST Host where database is located. 'localhost' by default.
  * @enum DB_USER User of the database.
  * @enum DB_PASS Password of the database.
