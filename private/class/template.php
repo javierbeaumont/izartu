@@ -61,9 +61,9 @@ class Template {
   }
 
   protected function getFile ($file) {
-    if (!file_exists(DIR_PRI.'template/'.$this->id.'/'.$file.'.php'))
+    if (!file_exists(PRI_DIR.'template/'.$this->id.'/'.$file.'.php'))
       $this->id = 'default';
-    require_once DIR_PRI.'template/'.$this->id.'/'.$file.'.php';
+    require_once PRI_DIR.'template/'.$this->id.'/'.$file.'.php';
   }
 
   public function show () {

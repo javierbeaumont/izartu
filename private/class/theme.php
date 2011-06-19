@@ -35,9 +35,9 @@ class Theme {
 
   protected function getFile ($data, $file) {
     $theme = trim($this->getTheme());
-    if (!file_exists(DIR_PRI.'template/'.$theme.'/'.$file))
+    if (!file_exists(PRI_DIR.'template/'.$theme.'/'.$file))
       $theme = 'default';
-    require_once (DIR_PRI.'template/'.$theme.'/'.$file);
+    require_once (PRI_DIR.'template/'.$theme.'/'.$file);
   }
 
   public function getFavicon() {

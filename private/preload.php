@@ -29,25 +29,25 @@
 if (DEBUG) {
   ini_set('display_errors', 'stdout');
   error_reporting (E_ALL | E_STRICT);
-  require_once DIR_PRI.'class/benchmark.php';
+  require_once PRI_DIR.'class/benchmark.php';
   new Benchmark;
 }
 
 /* Database */
-require_once DIR_PRI.'class/db/database.php';
-require_once DIR_PRI.'class/db/table.php';
+require_once PRI_DIR.'class/db/database.php';
+require_once PRI_DIR.'class/db/table.php';
 
 new Table();
 
 /* Internationalization */
-require_once DIR_PRI.'class/i18n.php';
-require_once DIR_PRI.'class/php-gettext/gettext.inc';
+require_once PRI_DIR.'class/i18n.php';
+require_once PRI_DIR.'class/php-gettext/gettext.inc';
 
 $i18n = new I18n;
 define ('LANG', $i18n->getLang());
 
 _setlocale(LC_MESSAGES, LANG);
-_bindtextdomain('messages', DIR_PRI.'locale');
+_bindtextdomain('messages', PRI_DIR.'locale');
 _bind_textdomain_codeset('messages', 'UTF-8');
 _textdomain('messages');
 

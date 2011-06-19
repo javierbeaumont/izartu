@@ -23,10 +23,11 @@
 ############################# BASIC CONFIGURATION ##############################
 ################################################################################
 
-# PRI_DIR -- 'private' directory location (and name).
-#             Relative to this configuration archive (config.php).
+# PRI_DIR -- 'private/' directory location (and name, ending with '/').
+#             Absolute or relative path to this configuration file (config.php).
+#             The absolute path is best for performance.
 
-define('PRI_DIR', '../private');
+define('PRI_DIR', '../private/');
 
 # DB_HOST -- Host where database is located. 'localhost' by default.
 # DB_USER -- User of the database.
@@ -50,7 +51,7 @@ define('DB_NAME', 'izartu');
 define('DB_TYPE', 'MySQL');
 define('DB_PORT', 3306);
 
-# PREFIX -- Database tables prefix. For example: define('PREFIX', 'iz_');
+# PREFIX -- Database tables prefix. For example: define('PREFIX', 'i_');
 #           FALSE (none) by default.
 
 define('PREFIX', FALSE);
@@ -68,8 +69,9 @@ define('DEBUG', TRUE);
  * @file config.php
  * @brief Site configuration file.
  *
- * @enum PRI_DIR 'private/' directory location (and name). Relative to this
- *   configuration archive (config.php).
+ * @enum PRI_DIR 'private/' directory location (and name, ending with '/').
+ *   Absolute or relative path to this configuration file (config.php). The
+ *   absolute path is best for performance.
  * @enum DB_HOST Host where database is located. 'localhost' by default.
  * @enum DB_USER User of the database.
  * @enum DB_PASS Password of the database.
@@ -79,7 +81,7 @@ define('DEBUG', TRUE);
  * @enum DB_PORT Port of the database. 3306 (MySQL default port). At this moment
  *   3306 is the unique port number allowed.
  * @enum PREFIX Database tables prefix. For example: @code define('PREFIX',
- *   'iz_'); @endcode. FALSE (none) by default.
+ *   'i_'); @endcode. FALSE (none) by default.
  * @enum DEBUG Activate (TRUE) or deactivate (FALSE) the debug mode. In real
  *   environment ALWAYS DEACTIVATED.
  */
