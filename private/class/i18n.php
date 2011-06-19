@@ -29,9 +29,9 @@ class I18n {
 
   public function __construct() {
     // Translation list
-    $content = scandir(DIR_PRI.'locale/');
+    $content = scandir(PRI_DIR.'locale/');
     foreach ($content as $value) {
-      if ($value != '.' AND $value != '..' AND is_dir(DIR_PRI.'locale/'.$value))
+      if ($value != '.' AND $value != '..' AND is_dir(PRI_DIR.'locale/'.$value))
         $locale[] = $value;
     }
     // Browser language list

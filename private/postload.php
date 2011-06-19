@@ -26,7 +26,7 @@
  * Loads theme and template files.
  **/
 
-require_once DIR_PRI.'class/theme.php';
-require_once DIR_PRI.'class/template.php';
+require_once PRI_DIR.'class/theme.php';
+require_once PRI_DIR.'class/template.php';
 
 ?>

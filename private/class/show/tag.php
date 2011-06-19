@@ -32,7 +32,7 @@ $data = FALSE;
     for ($i = 0, $x = count($table); $i < $x; $i ++) {
       $data .= $table[$i]['name'].' ('.$table[$i]['value'].') ';
     }
-    include(DIR_PRI.'template/default/option.php');
+    include(PRI_DIR.'template/default/option.php');
   }
 }
 

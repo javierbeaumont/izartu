@@ -35,7 +35,7 @@ final class DataShow extends Data {
       for ($j = 0, $y = count($tag2); $j < $y; $j ++) {
         $tag .= $tag2[$j]['name'].' ';
       }
-      include(DIR_PRI.'template/default/content/list.php');
+      include(PRI_DIR.'template/default/content/list.php');
     }
   }
 }
