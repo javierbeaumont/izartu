@@ -44,8 +44,7 @@ class Benchmark {
  * @brief To initialize some class variables.
  */
 
-
-  function __construct() {
+  final public function __construct() {
     self::$timeStart = microtime(TRUE);
     self::$memoryStart = memory_get_peak_usage();
   }
@@ -56,8 +55,7 @@ class Benchmark {
  * @return XHTML formated text to add to the template.
  */
 
-
-  static function get() {
+  final public static function get() {
     self::$timeEnd = microtime(TRUE);
     self::$memoryEnd = memory_get_peak_usage();
     self::$memoryMax = memory_get_peak_usage(TRUE);
@@ -77,5 +75,7 @@ class Benchmark {
         <dd>Script: '.self::$memoryTotal.' KB.</dd>
       </dl>';
   }
+
 }
+
 ?>
