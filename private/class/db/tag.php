@@ -32,17 +32,43 @@
 class Tag {
 
 /**
-* @fn cloud
+* @fn read
+* @brief Read tag.
+*/
+
+  public static function read($id) {
+    $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
+    return Table::read('SELECT `id`, `name` FROM `'.PREFIX.'tag`
+                        WHERE `id` IN
+                        (SELECT `tag`
+                         FROM `'.PREFIX.'data_tag`
+                         WHERE `data` = :data)',
+                        $param);
+  }
+
+/**
+* @fn getCloud
 * @brief Get tags for tagcloud.
 */
-  protected function cloud() {
-    $param[0] = array(':lang', LANG, PDO::PARAM_STR, 5);
+
+  protected function getCloud($cond = FALSE, $param = FALSE) {
     return Table::read('SELECT `tag`.`id`, `tag`.`name`, COUNT(`data_tag`.`tag`) AS `value`
                         FROM `tag`
-                        LEFT JOIN `data_tag` ON (`data_tag`.`tag` = `tag`.`id`)
-                        WHERE `tag`.`lang` = :lang
+                        LEFT JOIN `data_tag` ON (`data_tag`.`tag` = `tag`.`id`)'.
+                        $cond.'
                         GROUP BY `tag`.`name`',
                         $param);
+  }
+
+/**
+* @fn getCloudByLang
+* @brief Get tags for tagcloud by lang.
+*/
+
+  protected function getCloudByLang() {
+    $cond = 'WHERE `tag`.`lang` = :lang';
+    $param[0] = array(':lang', LANG_ID, PDO::PARAM_INT, 5);
+    return self::getCloud ($cond, $param[0]);
   }
 
 }
