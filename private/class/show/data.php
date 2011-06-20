@@ -28,14 +28,13 @@ final class DataShow extends Data {
 
   public function listOrderByDate() {
     $table = parent::orderByDate();
-    for ($i = 0, $x = count($table); $i < $x; $i ++) {
-      $data = $table[$i];
-      $tag2 = parent::readTag($table[$i]['id']);
+    foreach ($table as $data) {
+      $list = Tag::read($data['id']);
       $tag = FALSE;
-      for ($j = 0, $y = count($tag2); $j < $y; $j ++) {
-        $tag .= $tag2[$j]['name'].' ';
+      foreach ($list as $value) {
+        $tag .= $value['name'].' ';
       }
-      include(PRI_DIR.'template/default/content/list.php');
+      include PRI_DIR.'template/default/content/list.php';
     }
   }
 }

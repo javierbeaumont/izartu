@@ -27,13 +27,14 @@
 final class TagShow extends Tag {
 
   public function tagCloud() {
-    $table = parent::cloud();
-$data = FALSE;
-    for ($i = 0, $x = count($table); $i < $x; $i ++) {
-      $data .= $table[$i]['name'].' ('.$table[$i]['value'].') ';
+    $table = parent::getCloud();
+    $tag = FALSE;
+    foreach ($table as $value) {
+      $tag .= $value['name'].' ('.$value['value'].') ';
     }
-    include(PRI_DIR.'template/default/option.php');
+    include_once PRI_DIR.'template/default/option.php';
   }
+
 }
 
 ?>
