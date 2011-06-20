@@ -21,11 +21,11 @@
 
 ?>
 
-<?php if ($data): ?>
+<?php if ($tag): ?>
         <div class="option">
           <div class="tag">
             <div class="title"><?php echo __('Tags'); ?></div>
-            <p class="tag"><?php echo $data; ?></p>
+            <p class="tag"><?php echo $tag; ?></p>
           </div>
         </div>
 <?php endif; ?>
