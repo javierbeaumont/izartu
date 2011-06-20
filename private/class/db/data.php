@@ -44,10 +44,11 @@ class Data {
   private $mod;
 
 /**
-* @fn saveData
+* @fn save
 * @brief Save data.
 */
-  private function saveData() {
+
+  private function save() {
     if ($this->id) {
       $query = $db->prepare('UPDATE `'.PREFIX.'data`
                               SET   `lang`  = :lang,
@@ -76,32 +77,32 @@ class Data {
   }
 
 /**
-* @fn readData
+* @fn read
 * @brief Read data.
 */
-  private function readData($cond, $param) {
+
+  private function read($cond, $param) {
     return Table::read('SELECT `id`,   `title`, `hlink`, `hlang`, `htype`,
                                   `text`, `user`,  `add`,    `mod`
                            FROM `'.PREFIX.'data`'.$cond, $param);
   }
 
 /**
-* @fn readTag
-* @brief Read tag.
+* @fn delete
+* @brief Delete data.
 */
-  protected function readTag($id) {
-    $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
-    return Table::read('SELECT `id`, `name` FROM `'.PREFIX.'tag`
-                           WHERE `id` IN
-                          (SELECT `tag` FROM `'.PREFIX.'data_tag`
-                           WHERE `data` = :data)',
-                          $param);
+
+  private function delete() {
+    $query = $db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
+    $query->bindParam(  ':id',       $this->id,       PDO::PARAM_INT, 255);
+    $query->execute();
   }
 
 /**
 * @fn orderByDate
 * @brief Read data and order by date.
 */
+
   protected function orderByDate($search = FALSE, $order = FALSE) {
     $cond = $param = FALSE;
     if (!empty($search) AND array_key_exists('lang', $search) AND $search['lang']){
@@ -111,18 +112,9 @@ class Data {
     $order? $order = 'ASC': $order = 'DESC';
     $cond .= ' ORDER BY `mod` '.$order;
 
-    return self::readData($cond, $param);
+    return self::read($cond, $param);
   }
 
-/**
-* @fn deleteData
-* @brief Delete data.
-*/
-  private function deleteData() {
-    $query = $db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
-    $query->bindParam(  ':id',       $this->id,       PDO::PARAM_INT, 255);
-    $query->execute();
-  }
 }
 
 ?>
