@@ -59,9 +59,14 @@ class I18n {
     $this->lang = 'en'; // TODO: Default language defined in database
   }
 
-  public static function getLang() {
+  public static function getCode() {// TODO
     return 'en';
   }
+
+  public static function getId() { // TODO
+    return 1;
+  }
+
 }
 
 ?>
