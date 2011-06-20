@@ -44,9 +44,10 @@ require_once PRI_DIR.'class/i18n.php';
 require_once PRI_DIR.'class/php-gettext/gettext.inc';
 
 $i18n = new I18n;
-define ('LANG', $i18n->getLang());
+define ('LANG_CODE', $i18n->getCode());
+define ('LANG_ID',   $i18n->getId());
 
-_setlocale(LC_MESSAGES, LANG);
+_setlocale(LC_MESSAGES, LANG_CODE);
 _bindtextdomain('messages', PRI_DIR.'locale');
 _bind_textdomain_codeset('messages', 'UTF-8');
 _textdomain('messages');
