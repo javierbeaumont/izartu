@@ -1,5 +1,5 @@
-Version 0.0 - Initial release
-=============================
+Version 0.0 - "Agena"
+=====================
 * ✘ Web site basic:
   * ✓ Configuration file.
   * ✗ Core pages: main and login.
@@ -24,8 +24,8 @@ Version 0.0 - Initial release
 * ✘ General configuration:
   * ✗ Update system: Activate or deactivate notification by level.
 
-Version 0.1
-===========
+Version 0.1 - "Capella A"
+=========================
 * ✘ Main page
   * ✗ Individual page per tag.
   * ✗ Limited bookmarks per page. Multi-page support.
@@ -34,8 +34,8 @@ Version 0.1
   * ✗ User levels.
   * ✗ User administration.
 
-Version 0.2
-===========
+Version 0.2 - "Altair"
+======================
 * ✘ Main page
   * ✗ Individual page per bookmark, date, linker.
 * ✘ Comments support
