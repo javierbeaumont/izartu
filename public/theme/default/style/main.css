@@ -71,28 +71,27 @@ body {
   margin-right: 30%;
 }
 
-#list div.data {
+#list .data {
   margin: 2em;
   border: .1em dashed #ddd;
 }
 
-#list div.data * {
+#list .data * {
   margin: 0;
-  margin: 0;
+  padding: 0;
 }
 
-#list div.data div.head {
+#list .data div.head {
   padding: .2em .5em;
   background-color: #eee;
-
 }
 
-#list div.data h2 {
-  font-size: 1.2em;
+#list div.data h2, form #title {
+  font: bold 1.2em sans-serif;
 }
 
-#list div.data p.link-page {
-  font-size: .8em;
+#list div.data p.link-page, form #link {
+  font: .8em sans-serif;
 }
 
 #list div.data a {
@@ -109,15 +108,51 @@ body {
   font-size: .9em;
 }
 
-#list div.data div.info {
+#list .data div.info {
   border-top: .1em dashed #ddd;
   padding: .5em;
   text-align: justify;
 }
 
-#list div.data div.info p.tag{
+#list div.data div.info p.tag {
   padding-top: .5em;
   font-size: .8em;
+}
+
+form {
+  position: relative;
+}
+
+form, fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend, label {
+  display: none;
+}
+
+input, textarea {
+  margin: 0;
+  border-style: none;
+  background-color: inherit;
+  padding: 0;
+  width: 100%;
+}
+
+form #buttons {
+  position: absolute;
+  top: 0;
+  float: right;
+  right: -15px;
+}
+
+form button {
+  display: block;
+}
+
+form button img {
+  vertical-align: middle;
 }
 
 #footer {
