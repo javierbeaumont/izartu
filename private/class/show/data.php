@@ -26,17 +26,22 @@
 
 final class DataShow extends Data {
 
-  public function listOrderByDate() {
+  public function listOrderByDate($edit = TRUE) {
     $table = parent::orderByDate();
     foreach ($table as $data) {
       $list = Tag::read($data['id']);
       $tag = FALSE;
       foreach ($list as $value) {
-        $tag .= $value['name'].' ';
+        $tag .= $value['name'].', ';
       }
+      echo '
+        <div id="list">';
       include PRI_DIR.'template/default/content/list.php';
+      echo '
+        </div>';
     }
   }
+
 }
 
 ?>

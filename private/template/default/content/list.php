@@ -20,38 +20,38 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 ?>
-<?php if ($edit): ?>
-          <form method="post" action="<?php echo $page ; ?>">
-            <fieldset class="data">
-              <legend><?php echo __('Bookmark') ; ?></legend>
-              <div class="head">
-                <div>
-                  <label for="title"><?php echo __('Title') ; ?></label>
-                  <input type="text" id="title" name="title" title="<?php echo __('Bookmark\'s title (maximun 255 caracters).') ; ?>" value="<?php echo $data['title'] ; ?>" maxlength="255" />
-                </div>
-                <div>
-                  <label for="link"><?php echo __('Link') ; ?></label>
-                  <input type="text" id="link" name="link" value="<?php echo $data['hlink'] ; ?>" maxlength="255" />
-                </div>
+
+        <form method="post" action="<?php echo $page ; ?>">
+          <fieldset class="data">
+            <legend><?php echo __('Bookmark') ; ?></legend>
+            <div class="head">
+              <div>
+                <label for="title"><?php echo __('Title') ; ?></label>
+                <input type="text" id="title" name="title" title="<?php echo __('Bookmark\'s title (maximun 255 caracters).') ; ?>" value="<?php echo $data['title'] ; ?>" maxlength="255" />
               </div>
-              <div class="info">
-                <p title="<?php echo __('Bookmark\'s short description (maximun 511 caracters)') ; ?>">
-                  <label for="description"><?php echo __('Text') ; ?></label>
-                  <textarea id="description" name="description" ><?php echo $data['text'] ; ?></textarea>
-                </p>
-                <p title="<?php echo __('Bookmark\'s tags, separated by colons (maximun 255 caracters).') ; ?>">
-                  <label for="tags"><?php echo __('Tags') ; ?></label>
-                  <input type="text" id="tags" name="tags" value="<?php echo $tag ; ?>" maxlength="255" />
-                </p>
+              <div>
+                <label for="link"><?php echo __('Link') ; ?></label>
+                <input type="text" id="link" name="link" value="<?php echo $data['hlink'] ; ?>" maxlength="255" />
               </div>
-              <div id="buttons">
-                <button type="submit" name="save"><img src="theme/default/image/save.png" alt="<?php echo __('Save') ; ?>" /></button>
-                <button type="reset"><img src="theme/default/image/reset.png" alt="<?php echo __('Reset') ; ?>" /></button>
-                <button type="submit" name="delete"><img src="theme/default/image/trash.png" alt="<?php echo __('Trash') ; ?>" /></button>
-              </div>
-            </fieldset>
-          </form>
-<?php else: ?>
+            </div>
+            <div class="info">
+              <p title="<?php echo __('Bookmark\'s short description (maximun 511 caracters)') ; ?>">
+                <label for="description"><?php echo __('Text') ; ?></label>
+                <textarea id="description" name="description" rows="5" cols="50"><?php echo $data['text'] ; ?></textarea>
+              </p>
+              <p title="<?php echo __('Bookmark\'s tags, separated by colons (maximun 255 caracters).') ; ?>">
+                <label for="tags"><?php echo __('Tags') ; ?></label>
+                <input type="text" id="tags" name="tags" value="<?php echo $tag ; ?>" maxlength="255" />
+              </p>
+            </div>
+            <div class="buttons">
+              <input type="image" class="save" name="save" src="theme/default/image/save.png" alt="<?php echo __('Save') ; ?>" />
+              <input type="image" class="trash" name="trash" src="theme/default/image/trash.png" alt="<?php echo __('Trash') ; ?>" />
+            </div>
+          </fieldset>
+        </form>
+
+        <div class="form">
           <div class="data">
             <div class="head">
               <h2><a href="<?php echo $data['hlink'] ; ?>"><?php echo $data['title'] ; ?></a></h2>
@@ -69,4 +69,4 @@
   <?php endif; ?>
             </div>
           </div>
-<?php endif; ?>
+        </div>
