@@ -21,7 +21,16 @@
 
 ?>
 
-<?php if ($tag): ?>
+<?php if($notice): ?>
+        <div class="option">
+          <div class="notice">
+            <div class="title"><?php echo __('Notice'); ?></div>
+            <p class="notice"><?php echo $notice; ?></p>
+          </div>
+        </div>
+<?php endif; ?>
+
+<?php if($tag): ?>
         <div class="option">
           <div class="tag">
             <div class="title"><?php echo __('Tags'); ?></div>
