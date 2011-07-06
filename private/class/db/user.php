@@ -32,15 +32,27 @@
 class User {
 
 /**
-* @fn ask
-* @brief ask for an user.
+* @fn search
+* @brief search for an user.
 */
 
-  static function ask($email, $password) {
+  static function search($email, $password) {
     $query = $db->prepare('SELECT `id` FROM `user` WHERE `email` = :email AND `hash` = :hash');
     $query->bindParam(':email', $email, PDO::PARAM_STR, 12);
     $hash = hash('sha512', $password);
     $query->bindParam(':hash', $hash, PDO::PARAM_STR, 128);
+    $query->execute();
+    return $query->rowCount();
+  }
+
+/**
+* @fn ask
+* @brief ask for a email.
+*/
+
+  static function ask($email) {
+    $query = $db->prepare('SELECT `id` FROM `user` WHERE `email` = :email');
+    $query->bindParam(':email', $email, PDO::PARAM_STR, 12);
     $query->execute();
     return $query->rowCount();
   }
