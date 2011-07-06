@@ -43,8 +43,12 @@ class Template {
   }
 
   public function getOption() {
-    $show = new Update;
-    $notice = $show->notice();
+    if (class_exists('Update')) {
+      $show = new Update;
+      $notice = $show->notice();
+    } else {
+      $notice = FALSE;
+    }
 
     $show = new TagShow;
     $tag = $show->tagCloud();
