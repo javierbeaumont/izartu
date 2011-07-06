@@ -28,25 +28,23 @@
 
 require_once __DIR__.'/config.php';
 
-define('DIR_PRI', realpath(PRI_DIR).'/');
+require_once PRI_DIR.'preload.php';
 
-require_once DIR_PRI.'preload.php';
-require_once DIR_PRI.'postload.php';
-
-$template = new Template;
-$template->show();
+require_once PRI_DIR.'class/db/data.php';
+require_once PRI_DIR.'class/db/tag.php';
+require_once PRI_DIR.'class/show/data.php';
+require_once PRI_DIR.'class/show/tag.php';
 
 // 1 - User and password (TODO)
-/*
-if ($login) {
-  switch ($page) {
-    case 'bookmark':      // Bookmark administration (TODO)
-    case 'profile':       // Profile modification (TODO)
-    case 'general':       // General configuration (TODO)
-    case 'users':         // User administration (TODO)
-      break;
+require_once PRI_DIR.'class/update.php';
 
-  }
-}
-*/
+require_once PRI_DIR.'postload.php';
+
+
+
+$page = 'bookmark'; // (TODO)
+
+$template = new Template;
+$template->show($page);
+
 ?>
