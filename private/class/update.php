@@ -25,7 +25,7 @@ class Update {
   private $notice = FALSE;
 
   function notice() {
-    $file = file('http://javierbeaumont.github.com/izartu/version.txt');
+    $file = file('http://javierbeaumont.github.com/izartu/version.list');
     foreach ($file as $value) {
       list($version, $level) = explode('/', $value);
       if ($this->version < $version) {
