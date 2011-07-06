@@ -33,6 +33,9 @@ if (DEBUG) {
   new Benchmark;
 }
 
+/* Session */
+session_start();
+
 /* Database */
 require_once PRI_DIR.'class/db/database.php';
 require_once PRI_DIR.'class/db/table.php';
