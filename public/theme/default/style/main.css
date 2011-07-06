@@ -6,7 +6,7 @@ html, body {
 }
 
 body {
-  font: normal 9pt sans-serif;
+  font: normal 9pt "Arial", sans-serif;
   background-color: #e0e0e0;
 }
 
@@ -72,7 +72,7 @@ body {
 }
 
 #list .data {
-  margin: 2em;
+  margin: 0 0 0 7em;
   border: .1em dashed #ddd;
 }
 
@@ -119,7 +119,7 @@ body {
   font-size: .8em;
 }
 
-form {
+form, .form {
   position: relative;
 }
 
@@ -132,27 +132,21 @@ legend, label {
   display: none;
 }
 
-input, textarea {
+form .head input, form .head textarea, form .info input, form .info textarea  {
   margin: 0;
-  border-style: none;
+  border: .1em solid white;
   background-color: inherit;
   padding: 0;
   width: 100%;
 }
 
-form #buttons {
-  position: absolute;
-  top: 0;
-  float: right;
-  right: -15px;
+form .head input:hover, form .head textarea:hover, form .info input:hover, form .info textarea:hover  {
+  border: .1em solid #ddd;
 }
 
-form button {
-  display: block;
-}
-
-form button img {
-  vertical-align: middle;
+form .head input:focus, form .head textarea:focus, form .info input:focus, form .info textarea:focus  {
+    border: .1em solid #ddd;
+  background-color: #fefefe;
 }
 
 #footer {
