@@ -43,8 +43,14 @@ class Template {
   }
 
   public function getOption() {
+    $show = new Update;
+    $notice = $show->notice();
+
     $show = new TagShow;
-    return $show->tagCloud();
+    $tag = $show->tagCloud();
+
+    include_once PRI_DIR.'template/default/option.php';
+
   }
 
   public function getAdvice() {
@@ -69,5 +75,6 @@ class Template {
   public function show () {
     self::getFile('layout');
   }
+
 }
 ?>

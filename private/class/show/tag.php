@@ -30,9 +30,9 @@ final class TagShow extends Tag {
     $table = parent::getCloud();
     $tag = FALSE;
     foreach ($table as $value) {
-      $tag .= $value['name'].' ('.$value['value'].') ';
+      $tag .= $value['name'].' ('.$value['value'].'), ';
     }
-    include_once PRI_DIR.'template/default/option.php';
+    return $tag;
   }
 
 }
