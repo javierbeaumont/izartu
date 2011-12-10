@@ -2,7 +2,7 @@ Izartu
 ======
 Web bookmark manager based on tags.
 
-* [Homepage](http://javierbeaumont.github.com/izartu/)
+* [Homepage](http://izartu.org)
 * Source code on [GitHub](http://github.com/javierbeaumont/izartu) or on [Gitorious](http://gitorious.org/izartu/izartu).
 
 License
