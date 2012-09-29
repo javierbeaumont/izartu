@@ -28,9 +28,7 @@
  * @brief Data related methods.
 **/
 
-class Data {
-
-  private $table;
+trait Data {
   private $id;
   private $lang;
   private $type;
@@ -44,20 +42,11 @@ class Data {
   private $mod;
 
 /**
- * @fn __construct
- * @brief To initialize a new table.
- */
-
-  public function __construct () {
-    $this->table = new Table;
-  }
-
-/**
-* @fn save
+* @fn saveData
 * @brief Save data.
 */
 
-  private function save() {
+  private function saveData() {
     if ($this->id) {
       $query = $db->prepare('UPDATE `'.PREFIX.'data`
                               SET   `lang`  = :lang,
@@ -86,34 +75,33 @@ class Data {
   }
 
 /**
-* @fn read
+* @fn readData
 * @brief Read data.
 */
 
-  private function read($cond, $param) {
-    $this->table = new Table;
-    return $this->table->read('SELECT `id`,   `title`, `hlink`, `hlang`, `htype`,
+  private function readData($cond, $param) {
+    return parent::read('SELECT `id`,   `title`, `hlink`, `hlang`, `htype`,
                                   `text`, `user`,  `add`,    `mod`
                            FROM `'.PREFIX.'data`'.$cond, $param);
   }
 
 /**
-* @fn delete
+* @fn deleteData
 * @brief Delete data.
 */
 
-  private function delete() {
+  private function deleteData() {
     $query = $db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
     $query->bindParam(  ':id',       $this->id,       PDO::PARAM_INT, 255);
     $query->execute();
   }
 
 /**
-* @fn orderByDate
+* @fn orderDataByDate
 * @brief Read data and order by date.
 */
 
-  protected function orderByDate($search = FALSE, $order = FALSE) {
+  protected function orderDataByDate($search = FALSE, $order = FALSE) {
     $cond = $param = FALSE;
     if (!empty($search) AND array_key_exists('lang', $search) AND $search['lang']){
       $param[0] = array(':lang', $search['lang'], PDO::PARAM_INT, 255);
@@ -122,7 +110,7 @@ class Data {
     $order? $order = 'ASC': $order = 'DESC';
     $cond .= ' ORDER BY `mod` '.$order;
 
-    return $this->read($cond, $param);
+    return $this->readData($cond, $param);
   }
 
 }

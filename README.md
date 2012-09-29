@@ -13,4 +13,4 @@ Please, read the LICENSE file for more information.
 Requisites
 ----------
 * MySQL >= 4.1
-* PHP   >= 5.2
+* PHP   >= 5.4

@@ -23,22 +23,18 @@
  * @brief Methods to display Data data.
  */
 
-final class DataShow extends Data {
-    private $tag;
+final class DataShow extends Table {
+    use Data, Tag;
 
 /**
- * @fn __construct
- * @brief To initialize a new table.
+ * @fn listOrderByDate
+ * @brief To get list order by date.
  */
 
-  public function __construct () {
-    $this->tag = new Tag;
-  }
-
   public function listOrderByDate($edit = TRUE) {
-    $table = parent::orderByDate();
+    $table = $this->orderDataByDate();
     foreach ($table as $data) {
-      $list = $this->tag->getTag($data['id']);
+      $list = $this->getTags($data['id']);
       $tag = FALSE;
       foreach ($list as $value) {
         $tag .= $value['name'].', ';

@@ -28,14 +28,14 @@
  * @brief Tag related methods.
 **/
 
-class Tag extends Table {
+trait Tag {
 
 /**
-* @fn read
-* @brief Read tag.
+* @fn getTags
+* @brief Get tag for one bookmark.
 */
 
-  public function getTag($id) {
+  public function getTags($id) {
     $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
     return parent::read('SELECT `id`, `name` FROM `'.PREFIX.'tag`
                         WHERE `id` IN
@@ -57,17 +57,6 @@ class Tag extends Table {
                         $cond.'
                         GROUP BY `tag`.`name`',
                         $param);
-  }
-
-/**
-* @fn getCloudByLang
-* @brief Get tags for tagcloud by lang.
-*/
-
-  protected function getCloudByLang() {
-    $cond = 'WHERE `tag`.`lang` = :lang';
-    $param[0] = array(':lang', LANG_ID, PDO::PARAM_INT, 5);
-    return $this->getCloud ($cond, $param[0]);
   }
 
 }
