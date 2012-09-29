@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -85,5 +84,3 @@ define('DEBUG', TRUE);
  * @enum DEBUG Activate (TRUE) or deactivate (FALSE) the debug mode. In real
  *   environment ALWAYS DEACTIVATED.
  */
-
-?>

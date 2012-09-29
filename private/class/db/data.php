@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -116,5 +115,3 @@ class Data {
   }
 
 }
-
-?>

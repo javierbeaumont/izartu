@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -31,14 +30,14 @@ class Update {
       if ($this->version < $version) {
         switch($level) {
           case 0: // Minor bugs
-            $this->notice .= '<br />'.sprintf(__('%s version available. Minor bugs update.'), $version);
+            $this->notice .= '<br />'.sprintf('%s version available. Minor bugs update.', $version);
             break;
           case 1: // New features
-            $this->notice .= '<br />'.sprintf(__('%s version availabe. New features version.'), $version);
+            $this->notice .= '<br />'.sprintf('%s version availabe. New features version.', $version);
             break;
           case 2: // Critical bugs
           default:
-            $this->notice .= '<br />'.sprintf(__('%s version availabe. Critical version.'), $version);
+            $this->notice .= '<br />'.sprintf('%s version availabe. Critical version.', $version);
             break;
         }
       }
@@ -47,5 +46,3 @@ class Update {
   }
 
 }
-
-?>

@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -36,12 +35,10 @@ final class DataShow extends Data {
       }
       echo '
         <div id="list">';
-      include PRI_DIR.'template/default/content/list.php';
+      include PRI_DIR.'template/content/list.php';
       echo '
         </div>';
     }
   }
 
 }
-
-?>
