@@ -24,11 +24,21 @@
  */
 
 final class DataShow extends Data {
+    private $tag;
+
+/**
+ * @fn __construct
+ * @brief To initialize a new table.
+ */
+
+  public function __construct () {
+    $this->tag = new Tag;
+  }
 
   public function listOrderByDate($edit = TRUE) {
     $table = parent::orderByDate();
     foreach ($table as $data) {
-      $list = Tag::read($data['id']);
+      $list = $this->tag->getTag($data['id']);
       $tag = FALSE;
       foreach ($list as $value) {
         $tag .= $value['name'].', ';

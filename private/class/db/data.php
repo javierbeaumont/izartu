@@ -30,6 +30,7 @@
 
 class Data {
 
+  private $table;
   private $id;
   private $lang;
   private $type;
@@ -41,6 +42,15 @@ class Data {
   private $user;
   private $add;
   private $mod;
+
+/**
+ * @fn __construct
+ * @brief To initialize a new table.
+ */
+
+  public function __construct () {
+    $this->table = new Table;
+  }
 
 /**
 * @fn save
@@ -81,7 +91,8 @@ class Data {
 */
 
   private function read($cond, $param) {
-    return Table::read('SELECT `id`,   `title`, `hlink`, `hlang`, `htype`,
+    $this->table = new Table;
+    return $this->table->read('SELECT `id`,   `title`, `hlink`, `hlang`, `htype`,
                                   `text`, `user`,  `add`,    `mod`
                            FROM `'.PREFIX.'data`'.$cond, $param);
   }
@@ -111,7 +122,7 @@ class Data {
     $order? $order = 'ASC': $order = 'DESC';
     $cond .= ' ORDER BY `mod` '.$order;
 
-    return self::read($cond, $param);
+    return $this->read($cond, $param);
   }
 
 }

@@ -28,16 +28,16 @@
  * @brief Tag related methods.
 **/
 
-class Tag {
+class Tag extends Table {
 
 /**
 * @fn read
 * @brief Read tag.
 */
 
-  public static function read($id) {
+  public function getTag($id) {
     $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
-    return Table::read('SELECT `id`, `name` FROM `'.PREFIX.'tag`
+    return parent::read('SELECT `id`, `name` FROM `'.PREFIX.'tag`
                         WHERE `id` IN
                         (SELECT `tag`
                          FROM `'.PREFIX.'data_tag`
@@ -51,7 +51,7 @@ class Tag {
 */
 
   protected function getCloud($cond = FALSE, $param = FALSE) {
-    return Table::read('SELECT `tag`.`id`, `tag`.`name`, COUNT(`data_tag`.`tag`) AS `value`
+    return parent::read('SELECT `tag`.`id`, `tag`.`name`, COUNT(`data_tag`.`tag`) AS `value`
                         FROM `tag`
                         LEFT JOIN `data_tag` ON (`data_tag`.`tag` = `tag`.`id`)'.
                         $cond.'
@@ -67,7 +67,7 @@ class Tag {
   protected function getCloudByLang() {
     $cond = 'WHERE `tag`.`lang` = :lang';
     $param[0] = array(':lang', LANG_ID, PDO::PARAM_INT, 5);
-    return self::getCloud ($cond, $param[0]);
+    return $this->getCloud ($cond, $param[0]);
   }
 
 }

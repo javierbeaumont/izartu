@@ -28,17 +28,7 @@
  * @brief  General actions class.
  */
 
-class Table {
-  private static $db;
-
-/**
- * @fn __construct
- * @brief To initialize a new database PDO instance.
- */
-
-  public function __construct () {
-    self::$db = Database::open();
-  }
+class Table extends Database {
 
 /**
  * @fn process
@@ -47,7 +37,7 @@ class Table {
  * @return Rows in a database table (or an error)
  */
 
-  private static function process($query) {
+  private function process($query) {
     if (empty($query)) {
       trigger_error('Data not found', E_USER_ERROR);
     } else {
@@ -64,9 +54,9 @@ class Table {
  * @param $param Query parameters
  */
 
-  public static function save($sql, $param) {
+  public function save($sql, $param) {
     if ($param['id']) {
-      $query = self::$db->prepare($sql);
+      $query = $this->db->prepare($sql);
       $query->bindParam($param['id'][0], $param['id'][1], $param['id'][2], $param['id'][3]);
     } else {
       $query = $this->db->prepare($id);
@@ -75,7 +65,7 @@ class Table {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }
     $query->execute();
-    return self::process($query);
+    return $this->process($query);
   }
 
 /**
@@ -86,15 +76,15 @@ class Table {
  * @return Rows in a database table
  */
 
-  public static function read($sql, $param = FALSE) {
-    $query = self::$db->prepare($sql);
+  public function read($sql, $param = FALSE) {
+    $query = $this->db->prepare($sql);
     if (is_array($param)) {
       foreach ($param as $value) {
         $query->bindParam($value[0], $value[1], $value[2], $value[3]);
       }
     }
     $query->execute();
-    return self::process($query);
+    return $this->process($query);
   }
 
 /**
@@ -104,13 +94,13 @@ class Table {
  * @param $param Query parameters
  */
 
-  public static function delete($sql, $param) {
-    $query = self::$db->prepare($sql);
+  public function delete($sql, $param) {
+    $query = $this->db->prepare($sql);
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }
     $query->execute();
-    return self::process($query);
+    return $this->process($query);
   }
 
 }

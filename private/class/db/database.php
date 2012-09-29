@@ -31,6 +31,21 @@
  */
 
 class Database {
+  protected $db;
+
+/**
+ * @fn __construct
+ * @brief To open a database connection.
+ * @return Connection between PHP and a database server or and E_USER_ERROR.
+ */
+
+  public function __construct() {
+    try {
+      $this->db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
+    } catch (PDOException $e) {
+      trigger_error($e->getMessage(), E_USER_ERROR);
+    }
+  }
 
 /**
  * @fn pdoMySQL
@@ -38,7 +53,7 @@ class Database {
  * @return DSN for connecting to MySQL database.
  */
 
-  private static function pdoMySQL() {
+  private function pdoMySQL() {
     $dsn = 'mysql:';
     // Unix Socket
     if (strncmp(DB_HOST, '/', 1)) {
@@ -54,43 +69,6 @@ class Database {
     if (DB_NAME)
       $dsn .= ';dbname='.DB_NAME;
     return $dsn;
-  }
-
-/**
- * @fn pdoDSN
- * @brief Switch to select database type.
- * @return At this moment in all cases: pdoMySQL()
- * @todo PostgreSQL and SQLite support
- */
-
-  private static function pdoDSN() {
-    switch (strtolower(trim(DB_TYPE))) {
-      case 'sqlite':
-      case 'postgresql':
-      case 'mysql':
-      default:
-        return self::pdoMySQL();
-        break;
-    }
-  }
-
-/**
- * @fn open
- * @brief To open a database connection.
- * @return Connection between PHP and a database server or and E_USER_ERROR.
- */
-
-  public static function open() {
-    defined('DB_HOST')?: define('DB_HOST', FALSE);
-    defined('DB_USER')?: define('DB_USER', FALSE);
-    defined('DB_PASS')?: define('DB_PASS', FALSE);
-    defined('DB_NAME')?: define('DB_NAME', FALSE);
-    defined('DB_TYPE')?: define('DB_TYPE', FALSE);
-    defined('DB_PORT')?: define('DB_PORT', FALSE);
-    defined('PREFIX')?: define('PREFIX', FALSE);
-
-    try { return new PDO(self::pdoDSN(), DB_USER, DB_PASS); }
-    catch (PDOException $e) { trigger_error($e->getMessage(), E_USER_ERROR); }
   }
 
 }
