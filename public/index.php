@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -40,14 +39,26 @@
 
 require_once __DIR__.'/config.php';
 
-require_once PRI_DIR.'preload.php';
+if (DEBUG) {
+  ini_set('display_errors', 'stdout');
+  error_reporting (E_ALL | E_STRICT);
+  require_once PRI_DIR.'class/benchmark.php';
+  new Benchmark;
+}
+
+/* Database */
+require_once PRI_DIR.'class/db/database.php';
+require_once PRI_DIR.'class/db/table.php';
+
+new Table();
 
 require_once PRI_DIR.'class/db/data.php';
 require_once PRI_DIR.'class/db/tag.php';
 require_once PRI_DIR.'class/show/data.php';
 require_once PRI_DIR.'class/show/tag.php';
 
-require_once PRI_DIR.'postload.php';
+require_once PRI_DIR.'class/theme.php';
+require_once PRI_DIR.'class/template.php';
 
 $template = new Template;
 $template->show();
@@ -62,5 +73,3 @@ $template->show();
  *   Izartu is developer with PHP and MySQL. Doxygen is used for source code
  *   documentation.
  */
-
-?>
