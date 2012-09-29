@@ -5,7 +5,6 @@ Version 0.0 - "Agena"
   * ✗ Core pages: main and login.
   * ✗ Default template: XHTML 1.1 and CSS 2.1. W3C standards.
   * ✓ Project page and source code links.
-  * ✗ Initial I18n support.
 * ✘ Database.
   * ✓ MySQL Support.
 * ✘ Main page:
@@ -33,6 +32,7 @@ Version 0.1 - "Capella A"
 * ✘ Administration area:
   * ✗ User levels.
   * ✗ User administration.
+* ✘ Initial I18n support
 
 Version 0.2 - "Altair"
 ======================
