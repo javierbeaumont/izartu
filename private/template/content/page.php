@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -18,14 +17,12 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
-
 ?>
-
-        <form>
-          <fieldset>
-            <legend><?php echo __('Login'); ?></legend>
-            <div><label for="iam">Email</label> <input type="text" id="iam" name="iam"/></div>
-            <div><label for="dro">Password</label> <input type="password" id="dro" name="dro"/></div>
-            <div><input type="submit" id="login" name="login" value="<?php echo __('Login'); ?>"/></div>
-          </fieldset>
-        </form>
+        <div id="bookmark">'
+          <div class="bookmark">
+            <h2><a href="<?php echo $bookmark['link'] ; ?>"><?php echo $bookmark['title'] ; ?></a></h2>
+            <small><a href="<?php echo $bookmark['link'] ; ?>"><?php echo $bookmark['link'] ; ?></a></small> Vote: 3/10
+            <p><?php echo $bookmark['description'] ; ?></p>
+            <p>Created by <?php echo $bookmark['author'] ; ?> <?php echo $bookmark['modified'] ; ?></p>
+          </div>
+        </div>

@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -18,35 +17,33 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
-
 ?>
-
         <form method="post" action="<?php echo $page ; ?>">
           <fieldset class="data">
-            <legend><?php echo __('Bookmark') ; ?></legend>
+            <legend>Bookmark</legend>
             <div class="head">
               <div>
-                <label for="title"><?php echo __('Title') ; ?></label>
-                <input type="text" id="title" name="title" title="<?php echo __('Bookmark\'s title (maximun 255 caracters).') ; ?>" value="<?php echo $data['title'] ; ?>" maxlength="255" />
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" title="Bookmark's title (maximun 255 caracters)." value="<?php echo $data['title'] ; ?>" maxlength="255" />
               </div>
               <div>
-                <label for="link"><?php echo __('Link') ; ?></label>
+                <label for="link">Link</label>
                 <input type="text" id="link" name="link" value="<?php echo $data['hlink'] ; ?>" maxlength="255" />
               </div>
             </div>
             <div class="info">
-              <p title="<?php echo __('Bookmark\'s short description (maximun 511 caracters)') ; ?>">
-                <label for="description"><?php echo __('Text') ; ?></label>
+              <p title="Bookmark's short description (maximun 511 caracters">
+                <label for="description">Text</label>
                 <textarea id="description" name="description" rows="5" cols="50"><?php echo $data['text'] ; ?></textarea>
               </p>
-              <p title="<?php echo __('Bookmark\'s tags, separated by colons (maximun 255 caracters).') ; ?>">
-                <label for="tags"><?php echo __('Tags') ; ?></label>
+              <p title="Bookmark's tags, separated by colons (maximun 255 caracters).">
+                <label for="tags">Tags</label>
                 <input type="text" id="tags" name="tags" value="<?php echo $tag ; ?>" maxlength="255" />
               </p>
             </div>
             <div class="buttons">
-              <input type="image" class="save" name="save" src="theme/default/image/save.png" alt="<?php echo __('Save') ; ?>" />
-              <input type="image" class="trash" name="trash" src="theme/default/image/trash.png" alt="<?php echo __('Trash') ; ?>" />
+              <input type="image" class="save" name="save" src="image/save.png" alt="Save" />
+              <input type="image" class="trash" name="trash" src="image/trash.png" alt="Trash" />
             </div>
           </fieldset>
         </form>
