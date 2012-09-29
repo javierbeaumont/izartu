@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -20,13 +19,11 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 ?>
-
-<?php if () ?>
-        <p class="error"><?php echo $data; ?></p>
-<?php if () ?>
-        <p class="error"><?php echo $data; ?></p>
-<?php if () ?>
-        <p class="error"><?php echo $data; ?></p>
-<?php if () ?>
-        <p class="error"><?php echo $data; ?></p>
-<?php endif; ?>
+        <form>
+          <fieldset>
+            <legend>Login</legend>
+            <div><label for="iam">Email</label> <input type="text" id="iam" name="iam"/></div>
+            <div><label for="dro">Password</label> <input type="password" id="dro" name="dro"/></div>
+            <div><input type="submit" id="login" name="login" value="Login"/></div>
+          </fieldset>
+        </form>

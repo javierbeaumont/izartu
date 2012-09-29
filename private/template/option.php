@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -18,13 +17,20 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
-
 ?>
-        <div id="bookmark">'
-          <div class="bookmark">
-            <h2><a href="<?php echo $bookmark['link'] ; ?>"><?php echo $bookmark['title'] ; ?></a></h2>
-            <small><a href="<?php echo $bookmark['link'] ; ?>"><?php echo $bookmark['link'] ; ?></a></small> Vote: 3/10
-            <p><?php echo $bookmark['description'] ; ?></p>
-            <p>Created by <?php echo $bookmark['author'] ; ?> <?php echo $bookmark['modified'] ; ?></p>
+<?php if($notice): ?>
+        <div class="option">
+          <div class="notice">
+            <div class="title">Notice</div>
+            <p class="notice"><?php echo $notice; ?></p>
           </div>
         </div>
+<?php endif; ?>
+<?php if($tag): ?>
+        <div class="option">
+          <div class="tag">
+            <div class="title">Tags</div>
+            <p class="tag"><?php echo $tag; ?></p>
+          </div>
+        </div>
+<?php endif; ?>
