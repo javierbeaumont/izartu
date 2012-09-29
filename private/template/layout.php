@@ -17,8 +17,6 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
-
-$show = new DataShow;
 ?>
 <?php echo '<?xml version="1.0" encoding="UTF-8"?>'."\n"; ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -47,9 +45,12 @@ $show = new DataShow;
     $tag = $show->tagCloud();
 
     include_once PRI_DIR.'template/option.php';
- ?>
+?>
       <div class="body">
-        <?php echo $show->listOrderByDate(); ?>
+<?php
+  $show = new DataShow;
+  echo $show->listOrderByDate();
+?>
       </div>
     </div>
     <div id="footer">

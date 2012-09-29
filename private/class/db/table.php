@@ -1,8 +1,7 @@
 <?php
-
 #  Izartu
 #
-#  Copyright © 2011 Javier Beaumont <contact@javierbeaumont.org>
+#  Copyright © 2011-2012 Javier Beaumont <contact@javierbeaumont.org>
 #
 #  This file is part of Izartu.
 #
@@ -50,7 +49,7 @@ class Table {
 
   private static function process($query) {
     if (empty($query)) {
-      trigger_error(__('Data not found'), E_USER_ERROR);
+      trigger_error('Data not found', E_USER_ERROR);
     } else {
       $data = $query->fetchAll(PDO::FETCH_ASSOC);
       $query->closeCursor();
@@ -115,5 +114,3 @@ class Table {
   }
 
 }
-
-?>
