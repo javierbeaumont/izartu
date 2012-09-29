@@ -57,7 +57,6 @@ require_once PRI_DIR.'class/db/tag.php';
 require_once PRI_DIR.'class/show/data.php';
 require_once PRI_DIR.'class/show/tag.php';
 
-require_once PRI_DIR.'class/theme.php';
 require_once PRI_DIR.'class/template.php';
 
 $template = new Template;
