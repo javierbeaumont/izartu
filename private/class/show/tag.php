@@ -23,10 +23,11 @@
  * @brief Methods to display Tag data.
  */
 
-final class TagShow extends Tag {
+final class TagShow extends Table {
+  use Tag;
 
   public function tagCloud() {
-    $table = parent::getCloud();
+    $table = $this->getCloud();
     $tag = FALSE;
     foreach ($table as $value) {
       $tag .= $value['name'].' ('.$value['value'].'), ';
