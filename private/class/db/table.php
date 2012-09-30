@@ -56,10 +56,10 @@ class Table extends Database {
 
   public function save($sql, $param) {
     if ($param['id']) {
-      $query = $this->db->prepare($sql);
+      $query = parent::$db->prepare($sql);
       $query->bindParam($param['id'][0], $param['id'][1], $param['id'][2], $param['id'][3]);
     } else {
-      $query = $this->db->prepare($id);
+      $query = parent::$db->prepare($id);
     }
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);
@@ -77,7 +77,7 @@ class Table extends Database {
  */
 
   public function read($sql, $param = FALSE) {
-    $query = $this->db->prepare($sql);
+    $query = parent::$db->prepare($sql);
     if (is_array($param)) {
       foreach ($param as $value) {
         $query->bindParam($value[0], $value[1], $value[2], $value[3]);
@@ -95,7 +95,7 @@ class Table extends Database {
  */
 
   public function delete($sql, $param) {
-    $query = $this->db->prepare($sql);
+    $query = parent::$db->prepare($sql);
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }

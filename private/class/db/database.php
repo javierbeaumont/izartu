@@ -31,7 +31,7 @@
  */
 
 class Database {
-  protected $db;
+  static protected $db;
 
 /**
  * @fn __construct
@@ -40,10 +40,12 @@ class Database {
  */
 
   public function __construct() {
-    try {
-      $this->db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
-    } catch (PDOException $e) {
-      trigger_error($e->getMessage(), E_USER_ERROR);
+    if(!self::$db) {
+      try {
+        self::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
+      } catch (PDOException $e) {
+        trigger_error($e->getMessage(), E_USER_ERROR);
+      }
     }
   }
 

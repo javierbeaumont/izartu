@@ -49,9 +49,6 @@ if (DEBUG) {
 /* Database */
 require_once PRI_DIR.'class/db/database.php';
 require_once PRI_DIR.'class/db/table.php';
-
-new Table();
-
 require_once PRI_DIR.'class/db/data.php';
 require_once PRI_DIR.'class/db/tag.php';
 require_once PRI_DIR.'class/show/data.php';
