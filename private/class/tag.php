@@ -19,7 +19,7 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @file db/tag.php
+ * @file tag.php
  * @brief The tag class.
  *
  * Tag methods..

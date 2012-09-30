@@ -19,7 +19,7 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @file db/data.php
+ * @file data.php
  * @brief The data class.
  *
  * Data methods.

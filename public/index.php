@@ -47,12 +47,12 @@ if (DEBUG) {
 }
 
 /* Database */
-require_once PRI_DIR.'class/db/database.php';
-require_once PRI_DIR.'class/db/table.php';
-require_once PRI_DIR.'class/db/data.php';
-require_once PRI_DIR.'class/db/tag.php';
-require_once PRI_DIR.'class/show/data.php';
-require_once PRI_DIR.'class/show/tag.php';
+require_once PRI_DIR.'class/database.php';
+require_once PRI_DIR.'class/crud.php';
+require_once PRI_DIR.'class/data.php';
+require_once PRI_DIR.'class/tag.php';
+require_once PRI_DIR.'class/showdata.php';
+require_once PRI_DIR.'class/showtag.php';
 
 require_once PRI_DIR.'template/layout.php';
 
