@@ -41,14 +41,14 @@
       $notice = FALSE;
     }
 
-    $show = new TagShow;
+    $show = new ShowTag;
     $tag = $show->tagCloud();
 
     include_once PRI_DIR.'template/option.php';
 ?>
       <div class="body">
 <?php
-  $show = new DataShow;
+  $show = new ShowData;
   echo $show->listOrderByDate();
 ?>
       </div>

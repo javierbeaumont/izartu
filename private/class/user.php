@@ -19,7 +19,7 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @file db/user.php
+ * @file user.php
  * @brief The user class.
  *
  * User methods.
@@ -28,7 +28,7 @@
  * @brief User related methods.
 **/
 
-class User {
+trait User {
 
 /**
 * @fn search

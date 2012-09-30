@@ -19,20 +19,32 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @file show/tag.php
- * @brief Methods to display Tag data.
+ * @file showdata.php
+ * @brief Methods to display Data data.
  */
 
-final class TagShow extends Table {
-  use Tag;
+final class ShowData extends Crud {
+    use Data, Tag;
 
-  public function tagCloud() {
-    $table = $this->getCloud();
-    $tag = FALSE;
-    foreach ($table as $value) {
-      $tag .= $value['name'].' ('.$value['value'].'), ';
+/**
+ * @fn listOrderByDate
+ * @brief To get list order by date.
+ */
+
+  public function listOrderByDate($edit = TRUE) {
+    $table = $this->orderDataByDate();
+    foreach ($table as $data) {
+      $list = $this->getTags($data['id']);
+      $tag = FALSE;
+      foreach ($list as $value) {
+        $tag .= $value['name'].', ';
+      }
+      echo '
+        <div id="list">';
+      include PRI_DIR.'template/content/list.php';
+      echo '
+        </div>';
     }
-    return $tag;
   }
 
 }

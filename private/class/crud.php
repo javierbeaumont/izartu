@@ -19,16 +19,16 @@
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @file table.php
+ * @file crud.php
  * @brief Database table general class.
  *
  * General actions used in a database table.
  *
- * @class Table
- * @brief  General actions class.
+ * @class Crud
+ * @brief  Create, Read, Update and Delete actions class.
  */
 
-class Table extends Database {
+class Crud extends Database {
 
 /**
  * @fn process
