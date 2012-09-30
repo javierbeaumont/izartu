@@ -41,7 +41,7 @@ final class ShowData extends Crud {
       }
       echo '
         <div id="list">';
-      include PRI_DIR.'template/content/list.php';
+      include PRI_DIR.'template/contentlist.php';
       echo '
         </div>';
     }
