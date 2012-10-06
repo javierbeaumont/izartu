@@ -34,13 +34,6 @@
     </div>
     <div id="content">
 <?php
-    if (class_exists('Update')) {
-      $show = new Update;
-      $notice = $show->notice();
-    } else {
-      $notice = FALSE;
-    }
-
     $show = new ShowTag;
     $tag = $show->tagCloud();
 
