@@ -39,7 +39,7 @@ class Database {
  * @return Connection between PHP and a database server or and E_USER_ERROR.
  */
 
-  public function __construct() {
+  final public function __construct() {
     if(!static::$db) {
       try {
         static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
@@ -55,7 +55,7 @@ class Database {
  * @return DSN for connecting to MySQL database.
  */
 
-  private function pdoMySQL() {
+  final private function pdoMySQL() {
     $dsn = 'mysql:';
     // Unix Socket
     if (strncmp(DB_HOST, '/', 1)) {

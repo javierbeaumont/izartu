@@ -35,14 +35,16 @@ trait Tag {
 * @brief Get tag for one bookmark.
 */
 
-  public function getTags($id) {
+  final private function getTags($id) {
     $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
-    return parent::read('SELECT `id`, `name` FROM `'.PREFIX.'tag`
-                        WHERE `id` IN
-                        (SELECT `tag`
-                         FROM `'.PREFIX.'data_tag`
-                         WHERE `data` = :data)',
-                        $param);
+    return $this->read('
+      SELECT `id`, `name`
+      FROM `'.PREFIX.'tag`
+      WHERE `id` IN (
+        SELECT `tag`
+        FROM `'.PREFIX.'data_tag`
+        WHERE `data` = :data
+      )', $param);
   }
 
 /**
@@ -50,13 +52,17 @@ trait Tag {
 * @brief Get tags for tagcloud.
 */
 
-  protected function getCloud($cond = FALSE, $param = FALSE) {
-    return parent::read('SELECT `tag`.`id`, `tag`.`name`, COUNT(`data_tag`.`tag`) AS `value`
-                        FROM `tag`
-                        LEFT JOIN `data_tag` ON (`data_tag`.`tag` = `tag`.`id`)'.
-                        $cond.'
-                        GROUP BY `tag`.`name`',
-                        $param);
+  final private function getCloud($cond = FALSE, $param = FALSE) {
+    return $this->read('
+      SELECT `tag`.`id`, `tag`.`name`,
+        COUNT(`data_tag`.`tag`) AS `value`
+      FROM `tag`
+      LEFT JOIN `data_tag` ON (
+        `data_tag`.`tag` = `tag`.`id`
+      )'.
+      $cond.'
+      GROUP BY `tag`.`name`',
+      $param);
   }
 
 }

@@ -28,7 +28,7 @@
  * @brief Data related methods.
 **/
 
-trait Data {
+class Data extends Crud {
   private $id;
   private $lang;
   private $type;
@@ -46,21 +46,27 @@ trait Data {
 * @brief Save data.
 */
 
-  private function saveData() {
+  final private function saveData() {
     if ($this->id) {
-      $query = $db->prepare('UPDATE `'.PREFIX.'data`
-                              SET   `lang`  = :lang,
-                                    `title` = :title,
-                                    `hlink` = :hlink,
-                                    `hlang` = :hlang,
-                                    `htype` = :htype,
-                                    `text`  = :text,
-                             WHERE  `id`    = :id');
+      $query = static::$db->prepare('
+        UPDATE `'.PREFIX.'data`
+        SET
+          `lang` =  :lang,
+          `title` = :title,
+          `hlink` = :hlink,
+          `hlang` = :hlang,
+          `htype` = :htype,
+          `text` =  :text,
+        WHERE `id` = :id');
       $query->bindParam(':id', $this->id, PDO::PARAM_INT, 255);
     } else {
-      $query = $db->prepare('INSERT INTO `'.PREFIX.'data`
-                                    (`lang`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`)
-                             VALUES (:lang,  :title,  :hlink,  :hlang,  :htype,  :text,  :user,  :add)');
+      $query = static::$db->prepare('
+        INSERT INTO `'.PREFIX.'data` (
+          `lang`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`
+        )
+        VALUES (
+          :lang,  :title,  :hlink,  :hlang,  :htype,  :text,  :user,  :add
+        )');
       $query->bindParam(':user', $this->user,         PDO::PARAM_STR, 255);
       $query->bindParam(':add',  date('Y-m-d H:i:s'), PDO::PARAM_STR,  19);
     }
@@ -79,10 +85,12 @@ trait Data {
 * @brief Read data.
 */
 
-  private function readData($cond, $param) {
-    return parent::read('SELECT `id`,   `title`, `hlink`, `hlang`, `htype`,
-                                  `text`, `user`,  `add`,    `mod`
-                           FROM `'.PREFIX.'data`'.$cond, $param);
+  final private function readData($cond, $param) {
+    return $this->read('
+      SELECT
+        `id`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`, `mod`
+      FROM `'.PREFIX.'data`' . $cond,
+      $param);
   }
 
 /**
@@ -90,9 +98,9 @@ trait Data {
 * @brief Delete data.
 */
 
-  private function deleteData() {
-    $query = $db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
-    $query->bindParam(  ':id',       $this->id,       PDO::PARAM_INT, 255);
+  final private function deleteData() {
+    $query = static::$db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
+    $query->bindParam(':id', $this->id, PDO::PARAM_INT, 255);
     $query->execute();
   }
 
@@ -101,13 +109,13 @@ trait Data {
 * @brief Read data and order by date.
 */
 
-  protected function orderDataByDate($search = FALSE, $order = FALSE) {
+  final protected function orderDataByDate($search = FALSE, $order = FALSE) {
     $cond = $param = FALSE;
     if (!empty($search) AND array_key_exists('lang', $search) AND $search['lang']){
       $param[0] = array(':lang', $search['lang'], PDO::PARAM_INT, 255);
       $cond .= ' WHERE AND `lang` = :lang';
     }
-    $order? $order = 'ASC': $order = 'DESC';
+    $order ? $order = 'ASC' : $order = 'DESC';
     $cond .= ' ORDER BY `mod` '.$order;
 
     return $this->readData($cond, $param);
