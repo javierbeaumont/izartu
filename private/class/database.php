@@ -40,9 +40,9 @@ class Database {
  */
 
   public function __construct() {
-    if(!self::$db) {
+    if(!static::$db) {
       try {
-        self::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
+        static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
       } catch (PDOException $e) {
         trigger_error($e->getMessage(), E_USER_ERROR);
       }

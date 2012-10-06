@@ -56,10 +56,10 @@ class Crud extends Database {
 
   public function save($sql, $param) {
     if ($param['id']) {
-      $query = parent::$db->prepare($sql);
+      $query = static::$db->prepare($sql);
       $query->bindParam($param['id'][0], $param['id'][1], $param['id'][2], $param['id'][3]);
     } else {
-      $query = parent::$db->prepare($id);
+      $query = static::$db->prepare($id);
     }
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);
@@ -77,7 +77,7 @@ class Crud extends Database {
  */
 
   public function read($sql, $param = FALSE) {
-    $query = parent::$db->prepare($sql);
+    $query = static::$db->prepare($sql);
     if (is_array($param)) {
       foreach ($param as $value) {
         $query->bindParam($value[0], $value[1], $value[2], $value[3]);
@@ -95,7 +95,7 @@ class Crud extends Database {
  */
 
   public function delete($sql, $param) {
-    $query = parent::$db->prepare($sql);
+    $query = static::$db->prepare($sql);
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }
