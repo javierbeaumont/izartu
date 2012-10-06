@@ -3,30 +3,24 @@ Version 0.0 - "Agena"
 * ✘ Web site basic:
   * ✓ Configuration file.
   * ✗ Core pages: main and login.
-  * ✗ Default template: XHTML 1.1 and CSS 2.1. W3C standards.
+  * ✓ Default template: XHTML 1.1 and CSS 2.1. W3C standards.
   * ✓ Project page and source code links.
 * ✘ Database.
   * ✓ MySQL Support.
 * ✘ Main page:
-  * ✓ Bookmark title, link, link language, link type, linker, added date and
-      time, modified date and time, summary and related tags.
+  * ✓ Bookmark title, link, link type, linker, added date and time, modified
+      date and time, summary and related tags.
   * ✓ Tag cloud
+  * ✗ Individual page per tag.
   * ✗ List ordered by last modified date and time. Newer first.
 * ✘ Administration area:
   * ✗ Access login and password page.
   * ✗ Bookmark form: language, title, link, link language, link type, summary
       and related tags.
-  * ✗ I18n support: Bookmark language and bookmark link language.
-* ✘ Update system:
-  * ✗ New version notification.
-  * ✗ Notification levels.
-* ✘ General configuration:
-  * ✗ Update system: Activate or deactivate notification by level.
 
 Version 0.1 - "Capella A"
 =========================
 * ✘ Main page
-  * ✗ Individual page per tag.
   * ✗ Limited bookmarks per page. Multi-page support.
   * ✗ Ordered by: Date and time, tag and title (normal and inverse).
 * ✘ Administration area:
@@ -44,6 +38,18 @@ Version 0.2 - "Altair"
 * ✘ Administration area:
   * ✗ Bookmark linker modified by administrator.
   * ✗ Profile configuration page.
+
+Version > 0.2
+=============
+* ✘ Main page
+  * ✗ Bookmark link language.
+* ✘ Administration area:
+  * ✗ I18n support: Bookmark language and bookmark link language.
+* ✘ Update system:
+  * ✗ New version notification.
+  * ✗ Notification levels.
+* ✘ General configuration:
+  * ✗ Update system: Activate or deactivate notification by level.
 
 Version > 1.0
 =============
