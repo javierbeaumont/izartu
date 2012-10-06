@@ -51,6 +51,6 @@
       <p class="source">Get the source code <a href="http://github.com/javierbeaumont/izartu">on GitHub</a> or <a href="http://gitorious.org/izartu/izartu">on Gitorious</a></p>
       <p class="standard"><a href="http://validator.w3.org/check?uri=referer">XHTML 1.1</a> · <a href="http://jigsaw.w3.org/css-validator/check/referer">CSS 2.1</a></p>
     </div>
-    <?php echo Benchmark::get(); ?>
+    <?php echo $benchmark->get(); ?>
   </body>
 </html>
