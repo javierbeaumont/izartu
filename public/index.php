@@ -39,17 +39,16 @@
 
 require_once __DIR__.'/config.php';
 
-if (DEBUG) {
-  ini_set('display_errors', 'stdout');
-  error_reporting (E_ALL | E_STRICT);
-  require_once PRI_DIR . 'class/Benchmark.php';
-  new Benchmark;
-}
-
-/* Database */
+/* Autoloading Classes */
 spl_autoload_register(function ($class) {
     require PRI_DIR . 'class/' . $class . '.php';
 });
+
+if (DEBUG) {
+  ini_set('display_errors', 'stdout');
+  error_reporting (E_ALL | E_STRICT);
+  new Benchmark;
+}
 
 require_once PRI_DIR.'template/layout.php';
 
