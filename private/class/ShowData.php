@@ -23,15 +23,15 @@
  * @brief Methods to display Data data.
  */
 
-final class ShowData extends Crud {
-    use Data, Tag;
+final class ShowData extends Data {
+    use Tag;
 
 /**
  * @fn listOrderByDate
  * @brief To get list order by date.
  */
 
-  public function listOrderByDate($edit = TRUE) {
+  final public function listOrderByDate($edit = TRUE) {
     $table = $this->orderDataByDate();
     foreach ($table as $data) {
       $list = $this->getTags($data['id']);

@@ -26,7 +26,7 @@
 final class ShowTag extends Crud {
   use Tag;
 
-  public function tagCloud() {
+  final public function tagCloud() {
     $table = $this->getCloud();
     $tag = FALSE;
     foreach ($table as $value) {
