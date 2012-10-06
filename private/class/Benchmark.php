@@ -29,14 +29,14 @@
 **/
 
 class Benchmark {
-  private static $timeStart;
-  private static $timeEnd;
-  private static $timeTotal;
-  private static $memoryStart;
-  private static $memoryEnd;
-  private static $memoryMax;
-  private static $memoryTotal;
-  private static $usage;
+  private $timeStart;
+  private $timeEnd;
+  private $timeTotal;
+  private $memoryStart;
+  private $memoryEnd;
+  private $memoryMax;
+  private $memoryTotal;
+  private $usage;
 
 /**
  * @fn __construct
@@ -44,8 +44,8 @@ class Benchmark {
  */
 
   final public function __construct() {
-    self::$timeStart = microtime(TRUE);
-    self::$memoryStart = memory_get_peak_usage();
+    $this->timeStart = microtime(TRUE);
+    $this->memoryStart = memory_get_peak_usage();
   }
 
 /**
@@ -54,27 +54,25 @@ class Benchmark {
  * @return XHTML formated text to add to the template.
  */
 
-  final public static function get() {
-    self::$timeEnd = microtime(TRUE);
-    self::$memoryEnd = memory_get_peak_usage();
-    self::$memoryMax = memory_get_peak_usage(TRUE);
+  final public function get() {
+    $this->timeEnd = microtime(TRUE);
+    $this->memoryEnd = memory_get_peak_usage();
+    $this->memoryMax = memory_get_peak_usage(TRUE);
 
-    self::$timeTotal = number_format(round((self::$timeEnd - self::$timeStart)*1000, 2), 2);
-    self::$memoryTotal = number_format(round((self::$memoryEnd - self::$memoryStart)/1024, 2), 2);
-    self::$memoryEnd = number_format(round(self::$memoryEnd/1024, 2), 2);
-    self::$memoryMax = number_format(round(self::$memoryMax/1024, 2), 2);
+    $this->timeTotal = number_format(round(($this->timeEnd - $this->timeStart)*1000, 2), 2);
+    $this->memoryTotal = number_format(round(($this->memoryEnd - $this->memoryStart)/1024, 2), 2);
+    $this->memoryEnd = number_format(round($this->memoryEnd/1024, 2), 2);
+    $this->memoryMax = number_format(round($this->memoryMax/1024, 2), 2);
 
     return '
       <dl id="debug">
         <dt class="time">Execution time:</dt>
-        <dd>Time: '.self::$timeTotal.' ms.</dd>
+        <dd>Time: ' . $this->timeTotal . ' ms.</dd>
         <dt class="memory">Memory usage:</dt>
-        <dd>Max: '.self::$memoryMax.' KB.</dd>
-        <dd>Used: '.self::$memoryEnd.' KB.</dd>
-        <dd>Script: '.self::$memoryTotal.' KB.</dd>
+        <dd>Max: ' . $this->memoryMax . ' KB.</dd>
+        <dd>Used: ' . $this->memoryEnd . ' KB.</dd>
+        <dd>Script: ' . $this->memoryTotal . ' KB.</dd>
       </dl>';
   }
 
 }
-
-?>

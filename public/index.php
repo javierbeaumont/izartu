@@ -47,7 +47,7 @@ spl_autoload_register(function ($class) {
 if (DEBUG) {
   ini_set('display_errors', 'stdout');
   error_reporting (E_ALL | E_STRICT);
-  new Benchmark;
+  $benchmark = new Benchmark;
 }
 
 require_once PRI_DIR.'template/layout.php';
