@@ -29,8 +29,8 @@
   </head>
   <body>
     <div id="header">
-      <p><a href="admin">Login</a></p>
-      <h1><a href="<?php echo ''; ?>">Izartu</a></h1>
+      <p><a href="?login">Login</a></p>
+      <h1><a href="./">Izartu</a></h1>
     </div>
     <div id="content">
 <?php
