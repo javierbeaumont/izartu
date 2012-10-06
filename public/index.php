@@ -42,17 +42,14 @@ require_once __DIR__.'/config.php';
 if (DEBUG) {
   ini_set('display_errors', 'stdout');
   error_reporting (E_ALL | E_STRICT);
-  require_once PRI_DIR.'class/benchmark.php';
+  require_once PRI_DIR . 'class/Benchmark.php';
   new Benchmark;
 }
 
 /* Database */
-require_once PRI_DIR.'class/database.php';
-require_once PRI_DIR.'class/crud.php';
-require_once PRI_DIR.'class/data.php';
-require_once PRI_DIR.'class/tag.php';
-require_once PRI_DIR.'class/showdata.php';
-require_once PRI_DIR.'class/showtag.php';
+spl_autoload_register(function ($class) {
+    require PRI_DIR . 'class/' . $class . '.php';
+});
 
 require_once PRI_DIR.'template/layout.php';
 
