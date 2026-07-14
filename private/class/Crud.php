@@ -37,7 +37,7 @@ class Crud extends Database {
  * @return Rows in a database table (or an error)
  */
 
-  final private function process($query) {
+  private function process($query) {
     if (empty($query)) {
       trigger_error('Data not found', E_USER_ERROR);
     } else {
@@ -54,7 +54,7 @@ class Crud extends Database {
  * @param $param Query parameters
  */
 
-  final private function save($sql, $param) {
+  private function save($sql, $param) {
     if ($param['id']) {
       $query = static::$db->prepare($sql);
       $query->bindParam($param['id'][0], $param['id'][1], $param['id'][2], $param['id'][3]);
@@ -94,7 +94,7 @@ class Crud extends Database {
  * @param $param Query parameters
  */
 
-  final private function delete($sql, $param) {
+  private function delete($sql, $param) {
     $query = static::$db->prepare($sql);
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);

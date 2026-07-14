@@ -55,7 +55,7 @@ class Database {
  * @return DSN for connecting to MySQL database.
  */
 
-  final private function pdoMySQL() {
+  private function pdoMySQL() {
     $dsn = 'mysql:';
     // Unix Socket
     if (strncmp(DB_HOST, '/', 1)) {

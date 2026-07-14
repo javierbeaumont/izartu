@@ -46,7 +46,7 @@ spl_autoload_register(function ($class) {
 
 if (DEBUG) {
   ini_set('display_errors', 'stdout');
-  error_reporting (E_ALL | E_STRICT);
+  error_reporting (E_ALL);
   $benchmark = new Benchmark;
 }
 

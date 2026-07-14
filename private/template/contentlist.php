@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Izartu. If not, see <http://www.gnu.org/licenses/>.
 ?>
-        <form method="post" action="<?php echo $page ; ?>">
+        <form method="post" action="<?php echo $page ?? '' ; ?>">
           <fieldset class="data">
             <legend>Bookmark</legend>
             <div class="head">

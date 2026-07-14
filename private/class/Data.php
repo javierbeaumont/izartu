@@ -46,7 +46,7 @@ class Data extends Crud {
 * @brief Save data.
 */
 
-  final private function saveData() {
+  private function saveData() {
     if ($this->id) {
       $query = static::$db->prepare('
         UPDATE `'.PREFIX.'data`
@@ -85,7 +85,7 @@ class Data extends Crud {
 * @brief Read data.
 */
 
-  final private function readData($cond, $param) {
+  private function readData($cond, $param) {
     return $this->read('
       SELECT
         `id`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`, `mod`
@@ -98,7 +98,7 @@ class Data extends Crud {
 * @brief Delete data.
 */
 
-  final private function deleteData() {
+  private function deleteData() {
     $query = static::$db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
     $query->bindParam(':id', $this->id, PDO::PARAM_INT, 255);
     $query->execute();

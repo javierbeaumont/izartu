@@ -35,7 +35,7 @@ trait Tag {
 * @brief Get tag for one bookmark.
 */
 
-  final private function getTags($id) {
+  private function getTags($id) {
     $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
     return $this->read('
       SELECT `id`, `name`
@@ -52,7 +52,7 @@ trait Tag {
 * @brief Get tags for tagcloud.
 */
 
-  final private function getCloud($cond = FALSE, $param = FALSE) {
+  private function getCloud($cond = FALSE, $param = FALSE) {
     return $this->read('
       SELECT `tag`.`id`, `tag`.`name`,
         COUNT(`data_tag`.`tag`) AS `value`
@@ -61,7 +61,7 @@ trait Tag {
         `data_tag`.`tag` = `tag`.`id`
       )'.
       $cond.'
-      GROUP BY `tag`.`name`',
+      GROUP BY `tag`.`id`, `tag`.`name`',
       $param);
   }
 
