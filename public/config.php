@@ -33,10 +33,10 @@ define('PRI_DIR', '../private/');
 # DB_PASS -- Password of the database.
 # DB_NAME -- Name of the database.
 
-define('DB_HOST', 'localhost');
-define('DB_USER', 'izartuuser');
-define('DB_PASS', 'izartupass');
-define('DB_NAME', 'izartu');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_USER', getenv('DB_USER'));
+define('DB_PASS', getenv('DB_PASS'));
+define('DB_NAME', getenv('DB_NAME') ?: 'izartu');
 
 ################################################################################
 ############################ ADVANCED CONFIGURATION ############################
