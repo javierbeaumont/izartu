@@ -17,13 +17,24 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
-
 ?>
-        <form>
+      <div class="body">
+        <form method="post" action="login" class="login">
           <fieldset>
             <legend>Login</legend>
-            <div><label for="iam">Email</label> <input type="text" id="iam" name="iam"/></div>
-            <div><label for="dro">Password</label> <input type="password" id="dro" name="dro"/></div>
-            <div><input type="submit" id="login" name="login" value="Login"/></div>
+<?php if (!empty($error)): ?>
+            <p class="error">Wrong email or password.</p>
+<?php endif; ?>
+            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(Auth::csrfToken()); ?>">
+            <div>
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <div><input type="submit" name="login" value="Login"></div>
           </fieldset>
         </form>
+      </div>

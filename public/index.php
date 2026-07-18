@@ -57,13 +57,14 @@ if ($base !== '' && str_starts_with($path, $base)) {
 $path = trim($path, '/');
 $segments = $path === '' ? [] : explode('/', $path);
 
-switch ($segments[0] ?? '') {
-  case '':
-    $view = PRI_DIR.'template/home.php';
-    break;
-  default:
-    http_response_code(404);
-    $view = PRI_DIR.'template/notfound.php';
-}
+[$tpl, $vars] = match ($segments[0] ?? '') {
+  ''       => Controller::home(),
+  'login'  => Controller::login(),
+  'logout' => Controller::logout(),
+  default  => Controller::notFound(),
+};
+
+extract($vars, EXTR_SKIP);
+$view = PRI_DIR.'template/'.$tpl.'.php';
 
 require_once PRI_DIR.'template/layout.php';

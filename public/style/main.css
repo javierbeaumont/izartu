@@ -1,5 +1,3 @@
-@charset "UTF-8";
-
 /*
  *  izartu: web bookmark manager based on tags
  *
@@ -68,7 +66,6 @@ body {
   margin-right: 0;
   width: 30%;
 }
-
 
 #content div.option > div {
   margin: 3.3em 2em 2em auto;
@@ -170,6 +167,65 @@ form .head input:focus, form .head textarea:focus, form .info input:focus, form 
   background-color: #fefefe;
 }
 
+form.login {
+  max-width: 22em;
+  margin: 3em auto;
+}
+
+form.login fieldset {
+  border: .1em dashed #ddd;
+  padding: 0 1.5em 1.5em;
+}
+
+form.login legend {
+  display: block;
+  padding: 0 .5em;
+  font: bold 1.2em sans-serif;
+}
+
+form.login label {
+  display: block;
+  margin-bottom: .3em;
+  color: #666;
+  font-size: .9em;
+}
+
+form.login div {
+  margin-top: 1em;
+}
+
+form.login input[type="email"], form.login input[type="password"] {
+  box-sizing: border-box;
+  border: .1em solid #ccc;
+  border-radius: .2em;
+  padding: .5em;
+  width: 100%;
+  font-size: 1em;
+}
+
+form.login input[type="email"]:focus, form.login input[type="password"]:focus {
+  border-color: #999;
+  outline: none;
+}
+
+form.login input[type="submit"] {
+  border: 0;
+  border-radius: .2em;
+  padding: .6em 1.5em;
+  background-color: #444;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+form.login input[type="submit"]:hover {
+  background-color: #222;
+}
+
+form.login p.error {
+  margin: 1em 0 0;
+}
+
 #footer {
   clear: both;
   display: flow-root;
@@ -200,7 +256,6 @@ form .head input:focus, form .head textarea:focus, form .info input:focus, form 
   color: white;
   text-decoration: none;
 }
-
 
 p.error {
   font-weight: bold;
