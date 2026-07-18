@@ -19,26 +19,20 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Site default page: renders the bookmark data.
+ * Front controller: every request enters here (see `public/.htaccess`, which
+ * rewrites non-file requests to this script) and is dispatched by URL path to a
+ * view template, which is rendered inside `layout.php`. The base path is derived
+ * at runtime (`BASE`) so the app works at a domain root or in a sub-directory.
  *
- * Two view types are planned:
- * - Single: a single bookmark page.            izartu / Bookmark / TITLE
- * - List (default), in two groups:
- *   - Defined:
- *     - By tag:                                 izartu / Tag / NAME
- *     - By linker:                              izartu / Linker / NICK
- *     - By modified date:                       izartu / Date / YEAR/MONTH/DAY
- *     - ...
- *   - Undefined:
- *     - Ordered by title:                       izartu / Title
- *     - Ordered by linker:                      izartu / Linker
- *     - Ordered by modified date (default):     izartu / Date
- *     - ...
+ * Routes:
+ * - `/`  Home: public bookmark feed + tag cloud.
+ *
+ * Later features add their own routes here (`/login`, `/add`, `/tag/NAME`,
+ * `/bookmark/ID`, ...); any unmatched path renders the 404 view.
  */
 
 require_once __DIR__.'/config.php';
 
-/* Autoloading Classes */
 spl_autoload_register(function ($class) {
     require PRI_DIR . 'class/' . $class . '.php';
 });
@@ -47,6 +41,27 @@ if (DEBUG) {
   ini_set('display_errors', 'stdout');
   error_reporting (E_ALL);
   $benchmark = new Benchmark;
+}
+
+// Base path: empty at the domain root, "/sub" in a sub-directory install.
+$base = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+define('BASE', $base);
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+if ($base !== '' && str_starts_with($path, $base)) {
+  $path = substr($path, strlen($base));
+}
+
+$path = trim($path, '/');
+$segments = $path === '' ? [] : explode('/', $path);
+
+switch ($segments[0] ?? '') {
+  case '':
+    $view = PRI_DIR.'template/home.php';
+    break;
+  default:
+    http_response_code(404);
+    $view = PRI_DIR.'template/notfound.php';
 }
 
 require_once PRI_DIR.'template/layout.php';

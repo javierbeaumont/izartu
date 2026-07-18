@@ -22,6 +22,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <base href="<?php echo htmlspecialchars(BASE); ?>/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>izartu</title>
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png">
@@ -31,27 +32,16 @@
   </head>
   <body>
     <div id="header">
-      <p><a href="?login">Login</a></p>
-      <h1><a href="./">izartu</a></h1>
+      <p><a href="login">Login</a></p>
+      <h1><a href=".">izartu</a></h1>
     </div>
     <div id="content">
-<?php
-    $show = new ShowTag;
-    $tag = $show->tagCloud();
-
-    include_once PRI_DIR.'template/option.php';
-?>
-      <div class="body">
-<?php
-  $show = new ShowData;
-  echo $show->listOrderByDate();
-?>
-      </div>
+<?php include $view; ?>
     </div>
     <div id="footer">
       <p class="power">Powered by <a href="https://izartu.org">izartu</a></p>
       <p class="source">Get the source code <a href="https://github.com/javierbeaumont/izartu">on GitHub</a></p>
     </div>
-    <?php if (DEBUG) echo $benchmark->get(); ?>
+<?php if (DEBUG) echo $benchmark->get(); ?>
   </body>
 </html>
