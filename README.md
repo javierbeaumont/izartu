@@ -21,6 +21,24 @@ Then open <http://localhost:8080>. On first run the database is created from
 `izartu.sql`. Bookmarks are managed directly in the database (`data`, `tag` and
 `data_tag` tables) for now.
 
+## Creating users
+
+Users can be created from the command line. This is how you create the first user
+(the owner). It prompts for email, username, password and role, hashes the password
+and inserts the user; then log in at `/login`.
+
+With Docker:
+
+```sh
+docker compose exec app php /var/www/izartu/private/cli/adduser.php
+```
+
+Without Docker:
+
+```sh
+php private/cli/adduser.php
+```
+
 ## Configuration
 
 Database credentials are read from environment variables (set in
