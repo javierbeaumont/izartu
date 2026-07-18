@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
-        <div id="bookmark">'
+        <div id="bookmark">
           <div class="bookmark">
             <h2><a href="<?php echo $bookmark['link'] ; ?>"><?php echo $bookmark['title'] ; ?></a></h2>
             <small><a href="<?php echo $bookmark['link'] ; ?>"><?php echo $bookmark['link'] ; ?></a></small> Vote: 3/10

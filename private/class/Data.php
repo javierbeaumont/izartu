@@ -123,7 +123,7 @@ class Data extends Crud {
     $cond = $param = FALSE;
     if (!empty($search) AND array_key_exists('lang', $search) AND $search['lang']){
       $param[0] = array(':lang', $search['lang'], PDO::PARAM_INT, 255);
-      $cond .= ' WHERE AND `lang` = :lang';
+      $cond .= ' WHERE `lang` = :lang';
     }
     $order ? $order = 'ASC' : $order = 'DESC';
     $cond .= ' ORDER BY `mod` '.$order;
