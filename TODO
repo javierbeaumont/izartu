@@ -3,7 +3,7 @@ Version 0.0 - "Agena"
 * ✘ Web site basic:
   * ✓ Configuration file.
   * ✗ Core pages: main and login.
-  * ✓ Default template: XHTML 1.1 and CSS 2.1. W3C standards.
+  * ✓ Default template: Last web standards.
   * ✓ Project page and source code links.
 * ✘ Database.
   * ✓ MySQL Support.

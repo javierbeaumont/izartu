@@ -172,6 +172,7 @@ form .head input:focus, form .head textarea:focus, form .info input:focus, form 
 
 #footer {
   clear: both;
+  display: flow-root;
   margin: 0;
   border-top: .3em solid #bbb;
   background: #e0e0e0 url('../image/antiheader.png') repeat-x center top;
@@ -192,10 +193,6 @@ form .head input:focus, form .head textarea:focus, form .info input:focus, form 
 
 #footer p.source {
   float: right;
-}
-
-#footer p.standard {
-  text-align: center;
 }
 
 #footer a {

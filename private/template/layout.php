@@ -18,19 +18,21 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
-<?php echo '<?xml version="1.0" encoding="UTF-8"?>'."\n"; ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <title>Izartu</title>
-    <link rel="shortcut icon" type="image/png, image/gif" href="favicon" />
-    <link rel="stylesheet" type="text/css" href="style/main.css" media="all" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>izartu</title>
+    <link rel="apple-touch-icon" href="image/apple-touch-icon.png">
+    <link rel="icon" href="image/favicon.png" type="image/png" sizes="48x48">
+    <link rel="icon" href="image/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style/main.css">
   </head>
   <body>
     <div id="header">
       <p><a href="?login">Login</a></p>
-      <h1><a href="./">Izartu</a></h1>
+      <h1><a href="./">izartu</a></h1>
     </div>
     <div id="content">
 <?php
@@ -47,9 +49,8 @@
       </div>
     </div>
     <div id="footer">
-      <p class="power">Powered by <a href="http://izartu.org">Izartu</a></p>
-      <p class="source">Get the source code <a href="http://github.com/javierbeaumont/izartu">on GitHub</a> or <a href="http://gitorious.org/izartu/izartu">on Gitorious</a></p>
-      <p class="standard"><a href="http://validator.w3.org/check?uri=referer">XHTML 1.1</a> · <a href="http://jigsaw.w3.org/css-validator/check/referer">CSS 2.1</a></p>
+      <p class="power">Powered by <a href="https://izartu.org">izartu</a></p>
+      <p class="source">Get the source code <a href="https://github.com/javierbeaumont/izartu">on GitHub</a></p>
     </div>
     <?php if (DEBUG) echo $benchmark->get(); ?>
   </body>
