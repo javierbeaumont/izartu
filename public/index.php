@@ -47,6 +47,8 @@ if (DEBUG) {
 $base = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
 define('BASE', $base);
 
+Auth::start();
+
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 if ($base !== '' && str_starts_with($path, $base)) {
   $path = substr($path, strlen($base));

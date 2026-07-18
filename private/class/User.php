@@ -19,37 +19,26 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * User lookup queries (authentication helpers).
+ * User records: look up accounts for authentication.
  */
-trait User {
+class User extends Crud {
 
   /**
-   * Count users matching an email and password.
+   * Find a user by email address.
    *
-   * @param string $email Email to match.
-   * @param string $password Plain password; hashed with SHA-512 before matching.
-   * @return int Number of matching rows.
+   * @param string $email Normalised (lower-case) email to look up.
+   * @return array<string, mixed>|null The user row (`id`, `username`, `email`,
+   *   `hash`, `role`), or null if no user has that email.
    */
-  static function search(string $email, string $password): int {
-    $query = $db->prepare('SELECT `id` FROM `user` WHERE `email` = :email AND `hash` = :hash');
-    $query->bindParam(':email', $email, PDO::PARAM_STR, 12);
-    $hash = hash('sha512', $password);
-    $query->bindParam(':hash', $hash, PDO::PARAM_STR, 128);
-    $query->execute();
-    return $query->rowCount();
-  }
+  public function findByEmail(string $email): ?array {
+    $param = [[':email', $email, PDO::PARAM_STR, 255]];
 
-  /**
-   * Count users registered with a given email.
-   *
-   * @param string $email Email to look up.
-   * @return int Number of matching rows.
-   */
-  static function ask(string $email): int {
-    $query = $db->prepare('SELECT `id` FROM `user` WHERE `email` = :email');
-    $query->bindParam(':email', $email, PDO::PARAM_STR, 12);
-    $query->execute();
-    return $query->rowCount();
+    $rows = $this->read('
+      SELECT `id`, `username`, `email`, `hash`, `role`
+      FROM `'.PREFIX.'user`
+      WHERE `email` = :email', $param);
+
+    return $rows[0] ?? null;
   }
 
 }

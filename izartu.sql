@@ -69,9 +69,11 @@ CREATE TABLE IF NOT EXISTS `tag` (
 CREATE TABLE IF NOT EXISTS `user` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(32) COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `hash` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `role` enum('owner','admin','user') COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`)
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
