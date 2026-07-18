@@ -19,7 +19,7 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Create, Read, Update and Delete actions on a database table.
+ * Database access for a table: prepare and run a query, then fetch its rows.
  */
 class Crud extends Database {
 
@@ -40,28 +40,6 @@ class Crud extends Database {
   }
 
   /**
-   * Prepare and run a write query, then return its result.
-   *
-   * @param string $sql SQL query with bind placeholders.
-   * @param array<array-key, array{0: string, 1: mixed, 2: int, 3: int}> $param
-   *   Bind parameters keyed arbitrarily (each: [name, value, PDO type, length]).
-   * @return list<array<string, mixed>> The result rows.
-   */
-  private function save(string $sql, array $param): array {
-    if ($param['id']) {
-      $query = static::$db->prepare($sql);
-      $query->bindParam($param['id'][0], $param['id'][1], $param['id'][2], $param['id'][3]);
-    } else {
-      $query = static::$db->prepare($id);
-    }
-    foreach ($param as $value) {
-      $query->bindParam($value[0], $value[1], $value[2], $value[3]);
-    }
-    $query->execute();
-    return $this->process($query);
-  }
-
-  /**
    * Prepare and run a read query, then return its rows.
    *
    * @param string $sql SQL query with bind placeholders.
@@ -75,23 +53,6 @@ class Crud extends Database {
       foreach ($param as $value) {
         $query->bindParam($value[0], $value[1], $value[2], $value[3]);
       }
-    }
-    $query->execute();
-    return $this->process($query);
-  }
-
-  /**
-   * Prepare and run a delete query, then return its result.
-   *
-   * @param string $sql SQL query with bind placeholders.
-   * @param list<array{0: string, 1: mixed, 2: int, 3: int}> $param
-   *   Bind parameters (each: [name, value, PDO type, length]).
-   * @return list<array<string, mixed>> The result rows.
-   */
-  private function delete(string $sql, array $param): array {
-    $query = static::$db->prepare($sql);
-    foreach ($param as $value) {
-      $query->bindParam($value[0], $value[1], $value[2], $value[3]);
     }
     $query->execute();
     return $this->process($query);

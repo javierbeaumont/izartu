@@ -37,8 +37,6 @@ class Benchmark {
   private $memoryMax;
   /** @var string Script memory delta, formatted (KB). */
   private $memoryTotal;
-  /** @var mixed Unused. */
-  private $usage;
 
   /**
    * Record the start time and peak memory usage.
