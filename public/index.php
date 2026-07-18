@@ -19,21 +19,20 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file index.php
- * @brief Site default page.
+ * Site default page: renders the bookmark data.
  *
- * This page show the bookmarks related data. Two types will be allowed:
- * - Single: bookmark page.                  Izartu / Bookmark / TITLE
- * - List (default): bookmarks list. Two groups:
+ * Two view types are planned:
+ * - Single: a single bookmark page.            izartu / Bookmark / TITLE
+ * - List (default), in two groups:
  *   - Defined:
- *     - By tag:                             Izartu / Tag / NAME
- *     - By linker:                          Izartu / Linker / NICK
- *     - By modified date:                   Izartu / Date / YEAR/MONTH/DAY
+ *     - By tag:                                 izartu / Tag / NAME
+ *     - By linker:                              izartu / Linker / NICK
+ *     - By modified date:                       izartu / Date / YEAR/MONTH/DAY
  *     - ...
  *   - Undefined:
- *     - Ordered by title:                   Izartu / Title
- *     - Ordered by linker:                  Izartu / Linker
- *     - Ordered by modified date (default): Izartu / Date
+ *     - Ordered by title:                       izartu / Title
+ *     - Ordered by linker:                      izartu / Linker
+ *     - Ordered by modified date (default):     izartu / Date
  *     - ...
  */
 
@@ -51,14 +50,3 @@ if (DEBUG) {
 }
 
 require_once PRI_DIR.'template/layout.php';
-
-/**
- * @mainpage
- *   Izartu is a web bookmark manager based on tags.
- *
- * @par Purpose
- *   The primary purpose of its development is learn some programming issues.
- * @par Requisites
- *   Izartu is developer with PHP and MySQL. Doxygen is used for source code
- *   documentation.
- */

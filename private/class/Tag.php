@@ -19,23 +19,17 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file tag.php
- * @brief The tag class.
- *
- * Tag methods..
- *
- * @class Tag
- * @brief Tag related methods.
-**/
-
+ * Tag queries: a bookmark's tags and the tag-cloud data.
+ */
 trait Tag {
 
-/**
-* @fn getTags
-* @brief Get tag for one bookmark.
-*/
-
-  private function getTags($id) {
+  /**
+   * Return the tags attached to a single bookmark.
+   *
+   * @param int $id Bookmark (data) id.
+   * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`).
+   */
+  private function getTags(int $id): array {
     $param[0] = array(':data', $id, PDO::PARAM_INT, 255);
     return $this->read('
       SELECT `id`, `name`
@@ -47,12 +41,15 @@ trait Tag {
       )', $param);
   }
 
-/**
-* @fn getCloud
-* @brief Get tags for tagcloud.
-*/
-
-  private function getCloud($cond = FALSE, $param = FALSE) {
+  /**
+   * Return the tag-cloud data: every tag with its bookmark count.
+   *
+   * @param string|false $cond Extra SQL appended before `GROUP BY`, or false for none.
+   * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
+   *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
+   * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
+   */
+  private function getCloud(string|false $cond = false, array|false $param = false): array {
     return $this->read('
       SELECT `tag`.`id`, `tag`.`name`,
         COUNT(`data_tag`.`tag`) AS `value`

@@ -19,23 +19,18 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file user.php
- * @brief The user class.
- *
- * User methods.
- *
- * @class User
- * @brief User related methods.
-**/
-
+ * User lookup queries (authentication helpers).
+ */
 trait User {
 
-/**
-* @fn search
-* @brief search for an user.
-*/
-
-  static function search($email, $password) {
+  /**
+   * Count users matching an email and password.
+   *
+   * @param string $email Email to match.
+   * @param string $password Plain password; hashed with SHA-512 before matching.
+   * @return int Number of matching rows.
+   */
+  static function search(string $email, string $password): int {
     $query = $db->prepare('SELECT `id` FROM `user` WHERE `email` = :email AND `hash` = :hash');
     $query->bindParam(':email', $email, PDO::PARAM_STR, 12);
     $hash = hash('sha512', $password);
@@ -44,12 +39,13 @@ trait User {
     return $query->rowCount();
   }
 
-/**
-* @fn ask
-* @brief ask for a email.
-*/
-
-  static function ask($email) {
+  /**
+   * Count users registered with a given email.
+   *
+   * @param string $email Email to look up.
+   * @return int Number of matching rows.
+   */
+  static function ask(string $email): int {
     $query = $db->prepare('SELECT `id` FROM `user` WHERE `email` = :email');
     $query->bindParam(':email', $email, PDO::PARAM_STR, 12);
     $query->execute();

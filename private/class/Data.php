@@ -19,34 +19,39 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file data.php
- * @brief The data class.
- *
- * Data methods.
- *
- * @class Data
- * @brief Data related methods.
-**/
-
+ * A bookmark (data) record and its read/write queries.
+ */
 class Data extends Crud {
+
+  /** @var int|null Bookmark id. */
   private $id;
+  /** @var int|null Language id. */
   private $lang;
+  /** @var int|null Type id. */
   private $type;
+  /** @var string|null Title. */
   private $title;
+  /** @var string|null Target URL. */
   private $hlink;
+  /** @var int|null Target language id. */
   private $hlang;
+  /** @var int|null Target type id. */
   private $htype;
+  /** @var string|null Description text. */
   private $text;
+  /** @var string|null Owner nick. */
   private $user;
+  /** @var string|null Creation datetime. */
   private $add;
+  /** @var string|null Last-modified datetime. */
   private $mod;
 
-/**
-* @fn saveData
-* @brief Save data.
-*/
-
-  private function saveData() {
+  /**
+   * Insert or update the current bookmark.
+   *
+   * @return void
+   */
+  private function saveData(): void {
     if ($this->id) {
       $query = static::$db->prepare('
         UPDATE `'.PREFIX.'data`
@@ -80,12 +85,15 @@ class Data extends Crud {
     $query->execute();
   }
 
-/**
-* @fn readData
-* @brief Read data.
-*/
-
-  private function readData($cond, $param) {
+  /**
+   * Read bookmarks matching an SQL condition.
+   *
+   * @param string|false $cond Extra SQL appended to the base SELECT, or false.
+   * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
+   *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
+   * @return list<array<string, mixed>> One row per bookmark.
+   */
+  private function readData(string|false $cond, array|false $param): array {
     return $this->read('
       SELECT
         `id`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`, `mod`
@@ -93,23 +101,25 @@ class Data extends Crud {
       $param);
   }
 
-/**
-* @fn deleteData
-* @brief Delete data.
-*/
-
-  private function deleteData() {
+  /**
+   * Delete the current bookmark.
+   *
+   * @return void
+   */
+  private function deleteData(): void {
     $query = static::$db->prepare('DELETE FROM `'.PREFIX.'data` WHERE `id` = :id');
     $query->bindParam(':id', $this->id, PDO::PARAM_INT, 255);
     $query->execute();
   }
 
-/**
-* @fn orderDataByDate
-* @brief Read data and order by date.
-*/
-
-  final protected function orderDataByDate($search = FALSE, $order = FALSE) {
+  /**
+   * Read bookmarks ordered by modification date.
+   *
+   * @param array<string, mixed>|false $search Filters (e.g. `lang`), or false for none.
+   * @param bool $order true for ascending order, false (default) for descending.
+   * @return list<array<string, mixed>> One row per bookmark.
+   */
+  final protected function orderDataByDate(array|false $search = false, bool $order = false): array {
     $cond = $param = FALSE;
     if (!empty($search) AND array_key_exists('lang', $search) AND $search['lang']){
       $param[0] = array(':lang', $search['lang'], PDO::PARAM_INT, 255);

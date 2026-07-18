@@ -19,25 +19,17 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file crud.php
- * @brief Database table general class.
- *
- * General actions used in a database table.
- *
- * @class Crud
- * @brief  Create, Read, Update and Delete actions class.
+ * Create, Read, Update and Delete actions on a database table.
  */
-
 class Crud extends Database {
 
-/**
- * @fn process
- * @brief To save data in a database table
- * @param $query SQL query
- * @return Rows in a database table (or an error)
- */
-
-  private function process($query) {
+  /**
+   * Return all rows of an executed statement as associative arrays.
+   *
+   * @param PDOStatement $query Executed statement.
+   * @return list<array<string, mixed>> The result rows.
+   */
+  private function process(PDOStatement $query): array {
     if (empty($query)) {
       trigger_error('Data not found', E_USER_ERROR);
     } else {
@@ -47,14 +39,15 @@ class Crud extends Database {
     }
   }
 
-/**
- * @fn save
- * @brief To save data in a database table
- * @param $sql SQL query
- * @param $param Query parameters
- */
-
-  private function save($sql, $param) {
+  /**
+   * Prepare and run a write query, then return its result.
+   *
+   * @param string $sql SQL query with bind placeholders.
+   * @param array<array-key, array{0: string, 1: mixed, 2: int, 3: int}> $param
+   *   Bind parameters keyed arbitrarily (each: [name, value, PDO type, length]).
+   * @return list<array<string, mixed>> The result rows.
+   */
+  private function save(string $sql, array $param): array {
     if ($param['id']) {
       $query = static::$db->prepare($sql);
       $query->bindParam($param['id'][0], $param['id'][1], $param['id'][2], $param['id'][3]);
@@ -68,15 +61,15 @@ class Crud extends Database {
     return $this->process($query);
   }
 
-/**
- * @fn read
- * @brief To read data in a database table
- * @param $sql SQL query
- * @param $param Query parameters
- * @return Rows in a database table
- */
-
-  final protected function read($sql, $param = FALSE) {
+  /**
+   * Prepare and run a read query, then return its rows.
+   *
+   * @param string $sql SQL query with bind placeholders.
+   * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
+   *   Bind parameters (each: [name, value, PDO type, length]), or false for none.
+   * @return list<array<string, mixed>> The result rows.
+   */
+  final protected function read(string $sql, array|false $param = false): array {
     $query = static::$db->prepare($sql);
     if (is_array($param)) {
       foreach ($param as $value) {
@@ -87,14 +80,15 @@ class Crud extends Database {
     return $this->process($query);
   }
 
-/**
- * @fn delete
- * @brief To delete data in a database table
- * @param $sql SQL query
- * @param $param Query parameters
- */
-
-  private function delete($sql, $param) {
+  /**
+   * Prepare and run a delete query, then return its result.
+   *
+   * @param string $sql SQL query with bind placeholders.
+   * @param list<array{0: string, 1: mixed, 2: int, 3: int}> $param
+   *   Bind parameters (each: [name, value, PDO type, length]).
+   * @return list<array<string, mixed>> The result rows.
+   */
+  private function delete(string $sql, array $param): array {
     $query = static::$db->prepare($sql);
     foreach ($param as $value) {
       $query->bindParam($value[0], $value[1], $value[2], $value[3]);

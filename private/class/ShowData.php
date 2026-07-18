@@ -19,19 +19,18 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file showdata.php
- * @brief Methods to display Data data.
+ * Render bookmark listings.
  */
-
 final class ShowData extends Data {
     use Tag;
 
-/**
- * @fn listOrderByDate
- * @brief To get list order by date.
- */
-
-  final public function listOrderByDate($edit = TRUE) {
+  /**
+   * Echo the bookmark list ordered by modification date.
+   *
+   * @param bool $edit Reserved: whether to render edit controls (not yet used).
+   * @return void
+   */
+  final public function listOrderByDate(bool $edit = true): void {
     $table = $this->orderDataByDate();
     foreach ($table as $data) {
       $list = $this->getTags($data['id']);

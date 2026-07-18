@@ -19,42 +19,41 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file benchmark.php
- * @brief Simple class for time and memory use control.
- *
  * Execution time and memory usage statistics.
- *
- * @class Benchmark
- * @brief Execution time and memory usage statistics.
-**/
-
+ */
 class Benchmark {
+
+  /** @var float Wall-clock time at construction (seconds). */
   private $timeStart;
+  /** @var float Wall-clock time when get() is called (seconds). */
   private $timeEnd;
+  /** @var string Elapsed time, formatted (ms). */
   private $timeTotal;
+  /** @var int Peak memory at construction (bytes). */
   private $memoryStart;
+  /** @var int|string Peak memory when get() is called (bytes, then formatted KB). */
   private $memoryEnd;
+  /** @var int|string Real peak memory (bytes, then formatted KB). */
   private $memoryMax;
+  /** @var string Script memory delta, formatted (KB). */
   private $memoryTotal;
+  /** @var mixed Unused. */
   private $usage;
 
-/**
- * @fn __construct
- * @brief To initialize some class variables.
- */
-
+  /**
+   * Record the start time and peak memory usage.
+   */
   final public function __construct() {
     $this->timeStart = microtime(TRUE);
     $this->memoryStart = memory_get_peak_usage();
   }
 
-/**
- * @fn get
- * @brief To get execution time and memory usage statistics.
- * @return XHTML formated text to add to the template.
- */
-
-  final public function get() {
+  /**
+   * Return an XHTML block with elapsed time and memory usage.
+   *
+   * @return string XHTML `<dl>` fragment for the debug template.
+   */
+  final public function get(): string {
     $this->timeEnd = microtime(TRUE);
     $this->memoryEnd = memory_get_peak_usage();
     $this->memoryMax = memory_get_peak_usage(TRUE);

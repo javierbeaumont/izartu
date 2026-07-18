@@ -19,26 +19,22 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file database.php
- * @brief Database initialization.
+ * Configuration checking and the shared PDO instance.
  *
- * Database select to initialize the PDO instance
- *
- * @todo PostgreSQL and SQLite support
- *
- * @class Database
- * @brief  Configuration file checking and PDO instance.
+ * @todo PostgreSQL and SQLite support.
  */
-
 class Database {
-  static protected $db;
 
-/**
- * @fn __construct
- * @brief To open a database connection.
- * @return Connection between PHP and a database server or and E_USER_ERROR.
- */
+  /** @var PDO|null Shared PDO connection, created once on first construction. */
+  protected static ?PDO $db = null;
 
+  /**
+   * Open the shared database connection (once).
+   *
+   * On the first instantiation it builds the PDO instance from the configured
+   * `DB_*` constants; later instantiations reuse it. Triggers `E_USER_ERROR`
+   * if the connection fails.
+   */
   final public function __construct() {
     if(!static::$db) {
       try {
@@ -49,13 +45,12 @@ class Database {
     }
   }
 
-/**
- * @fn pdoMySQL
- * @brief Generic interface to connect to MySQL PDO.
- * @return DSN for connecting to MySQL database.
- */
-
-  private function pdoMySQL() {
+  /**
+   * Build the MySQL DSN string from the configured `DB_*` constants.
+   *
+   * @return string PDO DSN (TCP host/port or Unix socket, plus database name).
+   */
+  private function pdoMySQL(): string {
     $dsn = 'mysql:';
     // Unix Socket
     if (strncmp(DB_HOST, '/', 1)) {

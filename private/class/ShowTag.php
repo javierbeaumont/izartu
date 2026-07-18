@@ -19,14 +19,18 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * @file showtag.php
- * @brief Methods to display Tag data.
+ * Render the tag cloud.
  */
-
 final class ShowTag extends Crud {
   use Tag;
 
-  final public function tagCloud() {
+  /**
+   * Build the tag-cloud text: each tag with its bookmark count.
+   *
+   * @return string|false Comma-separated `name (count)` pairs, or false if there
+   *   are no tags.
+   */
+  final public function tagCloud(): string|false {
     $table = $this->getCloud();
     $tag = FALSE;
     foreach ($table as $value) {
