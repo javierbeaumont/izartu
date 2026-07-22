@@ -89,50 +89,50 @@ body {
   margin-right: 30%;
 }
 
-#list .data {
+#list .bookmark {
   margin: 1.5em;
   border: .1em dashed #ddd;
 }
 
-#list .data * {
+#list .bookmark * {
   margin: 0;
   padding: 0;
 }
 
-#list .data div.head {
+#list .bookmark div.head {
   padding: .2em .5em;
   background-color: #eee;
 }
 
-#list div.data h2, form #title {
+#list div.bookmark h2, form #title {
   font: bold 1.2em sans-serif;
 }
 
-#list div.data p.link-page, form #link {
+#list div.bookmark p.link-page, form #link {
   font: .8em sans-serif;
 }
 
-#list div.data a {
+#list div.bookmark a {
   color: black;
   text-decoration: none;
 }
 
-#list div.data p.link-page a {
+#list div.bookmark p.link-page a {
   cursor: text;
 }
 
-#list div.data p.link-info {
+#list div.bookmark p.link-info {
   margin: .1em 0;
   font-size: .9em;
 }
 
-#list .data div.info {
+#list .bookmark div.info {
   border-top: .1em dashed #ddd;
   padding: .5em;
   text-align: justify;
 }
 
-#list div.data div.info p.tag {
+#list div.bookmark div.info p.tag {
   padding-top: .5em;
   font-size: .8em;
 }

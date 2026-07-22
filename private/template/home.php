@@ -18,14 +18,14 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-$show = new ShowTag;
+$show = new ShowTag();
 $tag = $show->tagCloud();
 
-include_once PRI_DIR.'template/option.php';
+include_once PRI_DIR . 'template/option.php';
 ?>
       <div class="body">
 <?php
-$show = new ShowData;
+$show = new ShowBookmark();
 echo $show->listOrderByDate();
 ?>
       </div>

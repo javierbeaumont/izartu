@@ -21,29 +21,31 @@
 /**
  * Render bookmark listings.
  */
-final class ShowData extends Data {
+final class ShowBookmark extends Bookmark
+{
     use Tag;
 
-  /**
-   * Echo the bookmark list ordered by modification date.
-   *
-   * @param bool $edit Reserved: whether to render edit controls (not yet used).
-   * @return void
-   */
-  final public function listOrderByDate(bool $edit = true): void {
-    $table = $this->orderDataByDate();
-    foreach ($table as $data) {
-      $list = $this->getTags($data['id']);
-      $tag = FALSE;
-      foreach ($list as $value) {
-        $tag .= $value['name'].', ';
-      }
-      echo '
+    /**
+     * Echo the bookmark list ordered by modification date.
+     *
+     * @param bool $edit Reserved: whether to render edit controls (not yet used).
+     * @return void
+     */
+    final public function listOrderByDate(bool $edit = true): void
+    {
+        $table = $this->orderByDate();
+        foreach ($table as $bookmark) {
+            $list = $this->getTags($bookmark['id']);
+            $tag = false;
+            foreach ($list as $value) {
+                $tag .= $value['name'] . ', ';
+            }
+            echo '
         <div id="list">';
-      include PRI_DIR.'template/contentlist.php';
-      echo '
+            include PRI_DIR . 'template/contentlist.php';
+            echo '
         </div>';
+        }
     }
-  }
 
 }

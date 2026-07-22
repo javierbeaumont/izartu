@@ -18,8 +18,8 @@ docker compose up --build
 ```
 
 Then open <http://localhost:8080>. On first run the database is created from
-`izartu.sql`. Bookmarks are managed directly in the database (`data`, `tag` and
-`data_tag` tables) for now.
+`izartu.sql`. Bookmarks are managed directly in the database (`bookmark`, `tag`
+and `bookmark_tag` tables) for now.
 
 ## Creating users
 

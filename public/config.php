@@ -50,12 +50,9 @@ define('DB_TYPE', 'MySQL');
 /** Database port. Only 3306 is supported. */
 define('DB_PORT', 3306);
 
-/** Database table name prefix (e.g. `i_`), or FALSE for none. */
-define('PREFIX', FALSE);
-
 ################################################################################
 ############################ DEVELOPER CONFIGURATION ###########################
 ################################################################################
 
 /** Debug mode: TRUE enables error output and the benchmark. Must be FALSE in production. */
-define('DEBUG', TRUE);
+define('DEBUG', true);

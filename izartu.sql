@@ -15,10 +15,10 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `data`
+-- Table structure for table `bookmark`
 --
 
-CREATE TABLE IF NOT EXISTS `data` (
+CREATE TABLE IF NOT EXISTS `bookmark` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
   `lang` smallint(5) unsigned NOT NULL,
   `type` smallint(5) unsigned NOT NULL,
@@ -37,14 +37,14 @@ CREATE TABLE IF NOT EXISTS `data` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `data_tag`
+-- Table structure for table `bookmark_tag`
 --
 
-CREATE TABLE IF NOT EXISTS `data_tag` (
-  `data` smallint(5) unsigned NOT NULL,
+CREATE TABLE IF NOT EXISTS `bookmark_tag` (
+  `bookmark` smallint(5) unsigned NOT NULL,
   `tag` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`data`,`tag`),
-  UNIQUE KEY `tag_data` (`tag`,`data`)
+  PRIMARY KEY (`bookmark`,`tag`),
+  UNIQUE KEY `tag_bookmark` (`tag`,`bookmark`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------

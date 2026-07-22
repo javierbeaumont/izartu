@@ -21,24 +21,31 @@
 /**
  * User records: look up accounts for authentication.
  */
-class User extends Crud {
+class User extends Crud
+{
+    /**
+     * Find a user by email address.
+     *
+     * @param string $email Normalised (lower-case) email to look up.
+     * @return array<string, mixed>|null The user row (`id`, `username`, `email`,
+     *   `hash`, `role`), or null if no user has that email.
+     */
+    public function findByEmail(string $email): ?array
+    {
+        $param = [[':email', $email, PDO::PARAM_STR, 255]];
 
-  /**
-   * Find a user by email address.
-   *
-   * @param string $email Normalised (lower-case) email to look up.
-   * @return array<string, mixed>|null The user row (`id`, `username`, `email`,
-   *   `hash`, `role`), or null if no user has that email.
-   */
-  public function findByEmail(string $email): ?array {
-    $param = [[':email', $email, PDO::PARAM_STR, 255]];
+        $rows = $this->read(
+            <<<'SQL'
+            SELECT
+                `id`, `username`, `email`, `hash`, `role`
+            FROM
+                `user`
+            WHERE `email` = :email
+            SQL,
+            $param,
+        );
 
-    $rows = $this->read('
-      SELECT `id`, `username`, `email`, `hash`, `role`
-      FROM `'.PREFIX.'user`
-      WHERE `email` = :email', $param);
-
-    return $rows[0] ?? null;
-  }
+        return $rows[0] ?? null;
+    }
 
 }
