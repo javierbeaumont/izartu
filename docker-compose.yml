@@ -1,6 +1,8 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: runtime
     ports:
       - "8080:80"
     volumes:
@@ -14,6 +16,23 @@ services:
       db:
         condition: service_healthy
 
+  test:
+    build:
+      context: .
+      target: test
+    working_dir: /var/www/izartu
+    command: ["vendor/bin/phpunit"]
+    volumes:
+      - .:/var/www/izartu
+    environment:
+      DB_HOST: db
+      DB_USER: izartuuser
+      DB_PASS: izartupass
+      DB_NAME: izartu_test
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: mysql:8.4
     environment:
@@ -23,6 +42,7 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
     volumes:
       - ./izartu.sql:/docker-entrypoint-initdb.d/izartu.sql
+      - ./docker/create-test-db.sh:/docker-entrypoint-initdb.d/zz-create-test-db.sh
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]

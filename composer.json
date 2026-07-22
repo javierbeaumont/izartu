@@ -1,0 +1,18 @@
+{
+    "name": "javierbeaumont/izartu",
+    "description": "Web bookmark manager based on tags.",
+    "type": "project",
+    "license": "AGPL-3.0-or-later",
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3",
+        "phpunit/phpunit": "^13"
+    },
+    "autoload-dev": {
+        "classmap": [
+            "private/class/"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

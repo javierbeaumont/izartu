@@ -39,6 +39,41 @@ Without Docker:
 php private/cli/adduser.php
 ```
 
+## Tests
+
+Tests run with PHPUnit, a **dev-only** dependency (Composer). The suite runs against
+a dedicated `izartu_test` database, created automatically on the first `db` start
+(run `docker compose down -v` once if the volume predates it).
+
+Install the dev dependencies once (writes `vendor/`, gitignored):
+
+```sh
+docker compose run --rm test composer install
+```
+
+Run the suite:
+
+```sh
+docker compose run --rm test
+```
+
+Without Docker (PHP 8.5 + Composer on the host, MySQL reachable):
+
+```sh
+composer install
+DB_NAME=izartu_test vendor/bin/phpunit
+```
+
+## Code style
+
+Code follows [PER Coding Style](https://www.php-fig.org/per/coding-style/) (max
+line length 120), enforced with PHP-CS-Fixer (also a dev-only dependency):
+
+```sh
+docker compose run --rm test vendor/bin/php-cs-fixer fix           # apply
+docker compose run --rm test vendor/bin/php-cs-fixer fix --dry-run # check only
+```
+
 ## Configuration
 
 Database credentials are read from environment variables (set in
