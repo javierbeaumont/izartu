@@ -20,19 +20,15 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
 CREATE TABLE IF NOT EXISTS `bookmark` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `lang` smallint(5) unsigned NOT NULL,
-  `type` smallint(5) unsigned NOT NULL,
   `title` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `hlink` tinytext COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `hlang` smallint(5) unsigned NOT NULL,
-  `htype` smallint(5) unsigned NOT NULL,
   `text` tinytext COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `user` smallint(5) unsigned NOT NULL,
   `visibility` enum('public','private') COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'private',
   `add` datetime NOT NULL,
   `mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci AUTO_INCREMENT=3 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -55,10 +51,10 @@ CREATE TABLE IF NOT EXISTS `bookmark_tag` (
 
 CREATE TABLE IF NOT EXISTS `tag` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `lang` tinyint(3) unsigned NOT NULL,
   `name` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci AUTO_INCREMENT=3 ;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 

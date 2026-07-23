@@ -47,10 +47,10 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`lang`, `type`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`, `mod`)
+                (`title`, `hlink`, `text`, `user`, `add`, `mod`)
             VALUES
-                (1, 1, 'Older', 'https://a.test', 1, 1, 'a', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
-                (1, 1, 'Newer', 'https://b.test', 1, 1, 'b', 1, '2026-01-02 10:00:00', '2026-01-02 10:00:00')
+                ('Older', 'https://a.test', 'a', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
+                ('Newer', 'https://b.test', 'b', 1, '2026-01-02 10:00:00', '2026-01-02 10:00:00')
             SQL,
         );
 
@@ -85,12 +85,12 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `lang`, `type`, `title`, `hlink`, `hlang`, `htype`, `text`, `user`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `add`, `mod`)
             VALUES
-                (1, 1, 1, 'B', 'https://b.test', 1, 1, 't', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00')
+                (1, 'B', 'https://b.test', 't', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,
         );
-        $this->pdo->exec("INSERT INTO `tag` (`id`, `lang`, `name`) VALUES (1, 1, 'php'), (2, 1, 'sql')");
+        $this->pdo->exec("INSERT INTO `tag` (`id`, `name`) VALUES (1, 'php'), (2, 'sql')");
         $this->pdo->exec("INSERT INTO `bookmark_tag` (`bookmark`, `tag`) VALUES (1, 1), (1, 2)");
     }
 
@@ -99,9 +99,9 @@ final class ReadPathTest extends TestCase
         return new class extends Bookmark {
             use Tag;
 
-            public function order(array|false $search = false, bool $order = false): array
+            public function order(bool $order = false): array
             {
-                return $this->orderByDate($search, $order);
+                return $this->orderByDate($order);
             }
 
             public function tagsOf(int $id): array
