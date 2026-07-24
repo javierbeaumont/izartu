@@ -56,10 +56,13 @@ class Bookmark extends Crud
             $query = static::$db->prepare(
                 <<<'SQL'
                 UPDATE `bookmark`
-                SET `title` = :title, `hlink` = :hlink, `text` = :text, `visibility` = :visibility
-                WHERE `id` = :id
+                SET
+                    `title` = :title, `hlink` = :hlink, `text` = :text, `visibility` = :visibility
+                WHERE
+                    `id` = :id
                 SQL,
             );
+
             $query->bindValue(':id', $this->id, PDO::PARAM_INT);
         } else {
             $this->add = date('Y-m-d H:i:s');
@@ -71,6 +74,7 @@ class Bookmark extends Crud
                     (:title, :hlink, :text, :user, :visibility, :add)
                 SQL,
             );
+
             $query->bindValue(':user', $this->user, PDO::PARAM_INT);
             $query->bindValue(':add', $this->add);
         }
@@ -84,6 +88,100 @@ class Bookmark extends Crud
         if (!$this->id) {
             $this->id = (int) static::$db->lastInsertId();
         }
+    }
+
+    /**
+     * Delete this bookmark and its tag links.
+     *
+     * @return void
+     */
+    public function delete(): void
+    {
+        $this->deleteTags();
+
+        $query = static::$db->prepare(
+            <<<'SQL'
+            DELETE FROM `bookmark`
+            WHERE
+                `id` = :id
+            SQL,
+        );
+
+        $query->bindValue(':id', $this->id, PDO::PARAM_INT);
+        $query->execute();
+
+        $this->id = null;
+    }
+
+    /**
+     * Split a comma-separated tag string into normalised tag names.
+     *
+     * @param string $tags Comma-separated tag names, as typed by the user.
+     * @return list<string> Lower-case, trimmed, deduplicated names; empties dropped.
+     */
+    public static function parseTags(string $tags): array
+    {
+        $names = array_map(static fn(string $name): string => mb_strtolower(trim($name)), explode(',', $tags));
+
+        return array_values(array_unique(array_filter($names, static fn(string $name): bool => $name !== '')));
+    }
+
+    /**
+     * Replace this bookmark's tags with the ones in a comma-separated string.
+     *
+     * Each name is upserted into `tag` (reusing the id when the name exists)
+     * and linked in `bookmark_tag`.
+     *
+     * @param string $tags Comma-separated tag names, as typed by the user.
+     * @return void
+     */
+    public function saveTags(string $tags): void
+    {
+        $this->deleteTags();
+
+        $tag = static::$db->prepare(
+            <<<'SQL'
+            INSERT INTO `tag`
+                (`name`)
+            VALUES
+                (:name)
+            ON DUPLICATE KEY UPDATE
+                `id` = LAST_INSERT_ID(`id`)
+            SQL,
+        );
+
+        $link = static::$db->prepare(
+            <<<'SQL'
+            INSERT INTO `bookmark_tag`
+                (`bookmark`, `tag`)
+            VALUES
+                (:bookmark, :tag)
+            SQL,
+        );
+
+        foreach (self::parseTags($tags) as $name) {
+            $tag->execute([':name' => $name]);
+            $link->execute([':bookmark' => $this->id, ':tag' => (int) static::$db->lastInsertId()]);
+        }
+    }
+
+    /**
+     * Unlink every tag from this bookmark.
+     *
+     * @return void
+     */
+    public function deleteTags(): void
+    {
+        $query = static::$db->prepare(
+            <<<'SQL'
+            DELETE FROM `bookmark_tag`
+            WHERE
+                `bookmark` = :id
+            SQL,
+        );
+
+        $query->bindValue(':id', $this->id, PDO::PARAM_INT);
+        $query->execute();
     }
 
     /**
@@ -113,8 +211,7 @@ class Bookmark extends Crud
             <<<SQL
             SELECT
                 `id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`
-            FROM
-                `bookmark`
+            FROM `bookmark`
             $cond
             SQL,
             $param,

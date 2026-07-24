@@ -90,8 +90,26 @@ final class ReadPathTest extends TestCase
                 (1, 'B', 'https://b.test', 't', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,
         );
-        $this->pdo->exec("INSERT INTO `tag` (`id`, `name`) VALUES (1, 'php'), (2, 'sql')");
-        $this->pdo->exec("INSERT INTO `bookmark_tag` (`bookmark`, `tag`) VALUES (1, 1), (1, 2)");
+
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `tag`
+                (`id`, `name`)
+            VALUES
+                (1, 'php'),
+                (2, 'sql')
+            SQL,
+        );
+
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `bookmark_tag`
+                (`bookmark`, `tag`)
+            VALUES
+                (1, 1),
+                (1, 2)
+            SQL,
+        );
     }
 
     private function probe(): Bookmark

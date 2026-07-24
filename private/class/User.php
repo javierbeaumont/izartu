@@ -38,9 +38,9 @@ class User extends Crud
             <<<'SQL'
             SELECT
                 `id`, `username`, `email`, `hash`, `role`
-            FROM
-                `user`
-            WHERE `email` = :email
+            FROM `user`
+            WHERE
+                `email` = :email
             SQL,
             $param,
         );

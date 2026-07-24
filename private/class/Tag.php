@@ -36,13 +36,15 @@ trait Tag
             <<<'SQL'
             SELECT
                 `id`, `name`
-            FROM
-                `tag`
-            WHERE `id` IN (
-                SELECT `tag`
-                FROM `bookmark_tag`
-                WHERE `bookmark` = :bookmark
-            )
+            FROM `tag`
+            WHERE
+                `id` IN (
+                    SELECT
+                        `tag`
+                    FROM `bookmark_tag`
+                    WHERE
+                        `bookmark` = :bookmark
+                )
             SQL,
             $param,
         );
@@ -62,8 +64,7 @@ trait Tag
             <<<SQL
             SELECT
                 `tag`.`id`, `tag`.`name`, COUNT(`bookmark_tag`.`tag`) AS `value`
-            FROM
-                `tag`
+            FROM `tag`
             LEFT JOIN
                 `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
             $cond
