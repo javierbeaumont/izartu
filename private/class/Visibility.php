@@ -19,33 +19,10 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Render bookmark listings.
+ * Whether a bookmark is visible to everyone on the instance or only its owner.
  */
-final class ShowBookmark extends Bookmark
+enum Visibility: string
 {
-    use Tag;
-
-    /**
-     * Echo the bookmark list ordered by modification date.
-     *
-     * @param bool $edit Reserved: whether to render edit controls (not yet used).
-     * @return void
-     */
-    final public function listOrderByDate(bool $edit = true): void
-    {
-        $table = $this->orderByDate();
-        foreach ($table as $bookmark) {
-            $list = $this->getTags($bookmark->id);
-            $tag = false;
-            foreach ($list as $value) {
-                $tag .= $value['name'] . ', ';
-            }
-            echo '
-        <div id="list">';
-            include PRI_DIR . 'template/contentlist.php';
-            echo '
-        </div>';
-        }
-    }
-
+    case Public = 'public';
+    case Private = 'private';
 }

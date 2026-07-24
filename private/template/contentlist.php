@@ -24,17 +24,17 @@
             <div class="head">
               <div>
                 <label for="title">Title</label>
-                <input type="text" id="title" name="title" title="Bookmark's title (maximun 255 caracters)." value="<?php echo $bookmark['title'] ; ?>" maxlength="255" />
+                <input type="text" id="title" name="title" title="Bookmark's title (maximun 255 caracters)." value="<?php echo $bookmark->title ; ?>" maxlength="255" />
               </div>
               <div>
                 <label for="link">Link</label>
-                <input type="text" id="link" name="link" value="<?php echo $bookmark['hlink'] ; ?>" maxlength="255" />
+                <input type="text" id="link" name="link" value="<?php echo $bookmark->hlink ; ?>" maxlength="255" />
               </div>
             </div>
             <div class="info">
               <p title="Bookmark's short description (maximun 511 caracters">
                 <label for="description">Text</label>
-                <textarea id="description" name="description" rows="5" cols="50"><?php echo $bookmark['text'] ; ?></textarea>
+                <textarea id="description" name="description" rows="5" cols="50"><?php echo $bookmark->text ; ?></textarea>
               </p>
               <p title="Bookmark's tags, separated by colons (maximun 255 caracters).">
                 <label for="tags">Tags</label>
@@ -51,16 +51,16 @@
         <div class="form">
           <div class="bookmark">
             <div class="head">
-              <h2><a href="<?php echo $bookmark['hlink'] ; ?>"><?php echo $bookmark['title'] ; ?></a></h2>
-              <p class="link-page"><a href="<?php echo $bookmark['hlink'] ; ?>"><?php echo $bookmark['hlink'] ; ?></a></p>
+              <h2><a href="<?php echo $bookmark->hlink ; ?>"><?php echo $bookmark->title ; ?></a></h2>
+              <p class="link-page"><a href="<?php echo $bookmark->hlink ; ?>"><?php echo $bookmark->hlink ; ?></a></p>
               <p class="link-info">
-                <span class="linker">Added by <?php echo $bookmark['user'] ; ?></span>
-                <span class="added">on <?php echo $bookmark['add'] ; ?>.</span>
-                <span class="modified">Last modified: <?php echo $bookmark['mod'] ; ?></span>
+                <span class="linker">Added by <?php echo $bookmark->user ; ?></span>
+                <span class="added">on <?php echo $bookmark->add ; ?>.</span>
+                <span class="modified">Last modified: <?php echo $bookmark->mod ; ?></span>
               </p>
             </div>
             <div class="info">
-              <p class="text"><?php echo $bookmark['text'] ; ?></p>
+              <p class="text"><?php echo $bookmark->text ; ?></p>
   <?php if ($tag): ?>
               <p class="tag">Tags: <?php echo $tag; ?></p>
   <?php endif; ?>

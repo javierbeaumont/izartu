@@ -19,24 +19,100 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * A bookmark record and its read queries.
+ * A bookmark: a typed record plus its own persistence (Active Record).
  */
 class Bookmark extends Crud
 {
+    public ?int $id = null;
+    public string $title = '';
+    public string $hlink = '';
+    public string $text = '';
+    public int $user = 0;
+    public Visibility $visibility = Visibility::Private;
+    public ?string $add = null;
+    public ?string $mod = null;
+
     /**
-     * Read bookmarks matching an SQL condition.
+     * Find a bookmark by id.
+     *
+     * @param int $id The bookmark id.
+     * @return self|null The hydrated bookmark, or null if none has that id.
+     */
+    public static function find(int $id): ?self
+    {
+        $rows = (new self())->select(' WHERE `id` = :id', [[':id', $id, PDO::PARAM_INT, 255]]);
+
+        return $rows ? self::hydrate($rows[0]) : null;
+    }
+
+    /**
+     * Insert this bookmark when it is new, or update it when it has an id.
+     *
+     * @return void
+     */
+    public function save(): void
+    {
+        if ($this->id) {
+            $query = static::$db->prepare(
+                <<<'SQL'
+                UPDATE `bookmark`
+                SET `title` = :title, `hlink` = :hlink, `text` = :text, `visibility` = :visibility
+                WHERE `id` = :id
+                SQL,
+            );
+            $query->bindValue(':id', $this->id, PDO::PARAM_INT);
+        } else {
+            $this->add = date('Y-m-d H:i:s');
+            $query = static::$db->prepare(
+                <<<'SQL'
+                INSERT INTO `bookmark`
+                    (`title`, `hlink`, `text`, `user`, `visibility`, `add`)
+                VALUES
+                    (:title, :hlink, :text, :user, :visibility, :add)
+                SQL,
+            );
+            $query->bindValue(':user', $this->user, PDO::PARAM_INT);
+            $query->bindValue(':add', $this->add);
+        }
+
+        $query->bindValue(':title', $this->title);
+        $query->bindValue(':hlink', $this->hlink);
+        $query->bindValue(':text', $this->text);
+        $query->bindValue(':visibility', $this->visibility->value);
+        $query->execute();
+
+        if (!$this->id) {
+            $this->id = (int) static::$db->lastInsertId();
+        }
+    }
+
+    /**
+     * Read bookmarks ordered by modification date.
+     *
+     * @param bool $order true for ascending order, false (default) for descending.
+     * @return list<self> One bookmark per row, newest first by default.
+     */
+    final protected function orderByDate(bool $order = false): array
+    {
+        $order = $order ? 'ASC' : 'DESC';
+
+        return array_map(self::hydrate(...), $this->select(' ORDER BY `mod` ' . $order, false));
+    }
+
+    /**
+     * Read bookmark rows matching an SQL condition.
      *
      * @param string|false $cond Extra SQL appended to the base SELECT, or false.
      * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
      *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
-     * @return list<array<string, mixed>> One row per bookmark.
+     * @return list<array<string, mixed>> One raw row per bookmark.
      */
     private function select(string|false $cond, array|false $param): array
     {
         return $this->read(
             <<<SQL
             SELECT
-                `id`, `title`, `hlink`, `text`, `user`, `add`, `mod`
+                `id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`
             FROM
                 `bookmark`
             $cond
@@ -46,16 +122,24 @@ class Bookmark extends Crud
     }
 
     /**
-     * Read bookmarks ordered by modification date.
+     * Build a Bookmark from a database row.
      *
-     * @param bool $order true for ascending order, false (default) for descending.
-     * @return list<array<string, mixed>> One row per bookmark.
+     * @param array<string, mixed> $row A bookmark row with the selected columns.
+     * @return self The hydrated bookmark.
      */
-    final protected function orderByDate(bool $order = false): array
+    private static function hydrate(array $row): self
     {
-        $order = $order ? 'ASC' : 'DESC';
+        $bookmark = new self();
+        $bookmark->id = (int) $row['id'];
+        $bookmark->title = $row['title'];
+        $bookmark->hlink = $row['hlink'];
+        $bookmark->text = $row['text'];
+        $bookmark->user = (int) $row['user'];
+        $bookmark->visibility = Visibility::from($row['visibility']);
+        $bookmark->add = $row['add'];
+        $bookmark->mod = $row['mod'];
 
-        return $this->select(' ORDER BY `mod` ' . $order, false);
+        return $bookmark;
     }
 
 }
