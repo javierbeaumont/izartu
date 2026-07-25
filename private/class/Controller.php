@@ -32,7 +32,34 @@ class Controller
      */
     public static function home(): array
     {
-        return ['home', ['page' => max(1, (int) ($_GET['page'] ?? 1))]];
+        return ['home', [
+            'page' => max(1, (int) ($_GET['page'] ?? 1)),
+            'tagName' => null,
+            'route' => '',
+        ]];
+    }
+
+    /**
+     * Tag page: the feed filtered by one tag name (`/tag/NAME`), paginated.
+     *
+     * An unknown tag renders an empty page rather than a 404, so the response
+     * does not reveal whether a (possibly private) tag exists.
+     *
+     * @param string $name Tag name from the URL (second path segment, encoded).
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function tag(string $name): array
+    {
+        $name = rawurldecode($name);
+        if ($name === '') {
+            return self::notFound();
+        }
+
+        return ['home', [
+            'page' => max(1, (int) ($_GET['page'] ?? 1)),
+            'tagName' => $name,
+            'route' => 'tag/' . rawurlencode($name),
+        ]];
     }
 
     /**

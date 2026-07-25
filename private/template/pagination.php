@@ -21,7 +21,7 @@
 <?php if ($pages > 1): ?>
         <div class="pagination">
 <?php if ($page > 1): ?>
-          <a class="previous" href="?page=<?php echo $page - 1; ?>">&lsaquo; Previous</a>
+          <a class="previous" href="<?php echo $route; ?>?page=<?php echo $page - 1; ?>">&lsaquo; Previous</a>
 <?php endif; ?>
 <?php foreach (ShowBookmark::pageWindow($page, $pages) as $number): ?>
 <?php if ($number === null): ?>
@@ -29,11 +29,11 @@
 <?php elseif ($number === $page): ?>
           <strong><?php echo $number; ?></strong>
 <?php else: ?>
-          <a href="?page=<?php echo $number; ?>"><?php echo $number; ?></a>
+          <a href="<?php echo $route; ?>?page=<?php echo $number; ?>"><?php echo $number; ?></a>
 <?php endif; ?>
 <?php endforeach; ?>
 <?php if ($page < $pages): ?>
-          <a class="next" href="?page=<?php echo $page + 1; ?>">Next &rsaquo;</a>
+          <a class="next" href="<?php echo $route; ?>?page=<?php echo $page + 1; ?>">Next &rsaquo;</a>
 <?php endif; ?>
         </div>
 <?php endif; ?>

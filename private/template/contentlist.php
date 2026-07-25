@@ -30,8 +30,8 @@
           </div>
           <div class="info">
             <p class="text"><?php echo $bookmark->text ; ?></p>
-<?php if ($tag): ?>
-            <p class="tag">Tags: <?php echo $tag; ?></p>
+<?php if ($tags): ?>
+            <p class="tag">Tags: <?php echo $tags; ?></p>
 <?php endif; ?>
 <?php if ($edit && Auth::canManage($bookmark->user)): ?>
             <div class="manage">

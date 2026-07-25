@@ -105,6 +105,24 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, (int) $full['secret']);
     }
 
+    public function testListFiltersByTag(): void
+    {
+        $this->seedPublicAndPrivate();
+
+        $anonymous = $this->probe()->order(true, 1, 'php');
+        $this->assertSame(['Public'], array_column($anonymous['bookmarks'], 'title'));
+
+        $full = $this->probe()->order(false, 1, 'php');
+        $this->assertSame(['Public', 'Secret'], array_column($full['bookmarks'], 'title'));
+
+        $secret = $this->probe()->order(false, 1, 'secret');
+        $this->assertSame(['Secret'], array_column($secret['bookmarks'], 'title'));
+
+        $unknown = $this->probe()->order(false, 1, 'nope');
+        $this->assertSame([], $unknown['bookmarks']);
+        $this->assertSame(1, $unknown['pages']);
+    }
+
     public function testListIsPaginated(): void
     {
         $insert = $this->pdo->prepare(
@@ -181,9 +199,9 @@ final class ReadPathTest extends TestCase
         return new class extends Bookmark {
             use Tag;
 
-            public function order(bool $publicOnly = false, int $page = 1): array
+            public function order(bool $publicOnly = false, int $page = 1, ?string $tag = null): array
             {
-                return $this->orderByDate($publicOnly, $page);
+                return $this->orderByDate($publicOnly, $page, $tag);
             }
 
             public function tagsOf(int $id): array

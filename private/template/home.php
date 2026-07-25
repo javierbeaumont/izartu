@@ -24,9 +24,13 @@ $tag = $show->tagCloud(!Auth::check());
 include_once PRI_DIR . 'template/option.php';
 ?>
       <div class="body">
+<?php if ($tagName !== null): ?>
+        <p class="filter">Bookmarks tagged <strong><?php echo htmlspecialchars($tagName); ?></strong>
+          (<a href=".">show all</a>)</p>
+<?php endif; ?>
 <?php
 $show = new ShowBookmark();
-$pages = $show->listOrderByDate(Auth::check(), !Auth::check(), $page);
+$pages = $show->listOrderByDate(Auth::check(), !Auth::check(), $page, $tagName);
 
 include PRI_DIR . 'template/pagination.php';
 ?>

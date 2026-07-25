@@ -33,16 +33,22 @@ final class ShowBookmark extends Bookmark
      * @param bool $publicOnly Whether to list only public bookmarks (pass
      *   `!Auth::check()`; anonymous visitors never see private bookmarks).
      * @param int $page 1-based page number.
+     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
      * @return int The total number of pages (at least 1).
      */
-    final public function listOrderByDate(bool $edit = false, bool $publicOnly = true, int $page = 1): int
-    {
-        ['bookmarks' => $table, 'pages' => $pages] = $this->orderByDate($publicOnly, $page);
+    final public function listOrderByDate(
+        bool $edit = false,
+        bool $publicOnly = true,
+        int $page = 1,
+        ?string $tag = null,
+    ): int {
+        ['bookmarks' => $table, 'pages' => $pages] = $this->orderByDate($publicOnly, $page, $tag);
         foreach ($table as $bookmark) {
             $list = $this->getTags($bookmark->id);
-            $tag = false;
+            $tags = false;
             foreach ($list as $value) {
-                $tag .= $value['name'] . ', ';
+                $tags .= '<a href="tag/' . rawurlencode($value['name']) . '">'
+                    . htmlspecialchars($value['name']) . '</a>, ';
             }
             echo '
         <div id="list">';

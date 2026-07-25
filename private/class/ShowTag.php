@@ -38,7 +38,8 @@ final class ShowTag extends Crud
         $table = $this->getCloud($publicOnly);
         $tag = false;
         foreach ($table as $value) {
-            $tag .= $value['name'] . ' (' . $value['value'] . '), ';
+            $tag .= '<a href="tag/' . rawurlencode($value['name']) . '">'
+                . htmlspecialchars($value['name']) . '</a> (' . $value['value'] . '), ';
         }
         return $tag;
     }

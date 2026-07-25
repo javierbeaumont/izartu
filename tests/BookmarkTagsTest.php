@@ -50,6 +50,14 @@ final class BookmarkTagsTest extends TestCase
         );
     }
 
+    public function testParseTagsCollapsesInnerWhitespace(): void
+    {
+        $this->assertSame(
+            ['web dev'],
+            Bookmark::parseTags("web  dev, web\tdev, web dev"),
+        );
+    }
+
     public function testSaveTagsCreatesAndLinksTags(): void
     {
         $bookmark = $this->savedBookmark();

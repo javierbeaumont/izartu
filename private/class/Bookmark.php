@@ -117,11 +117,15 @@ class Bookmark extends Crud
      * Split a comma-separated tag string into normalised tag names.
      *
      * @param string $tags Comma-separated tag names, as typed by the user.
-     * @return list<string> Lower-case, trimmed, deduplicated names; empties dropped.
+     * @return list<string> Lower-case, trimmed names with inner whitespace
+     *   collapsed, deduplicated; empties dropped.
      */
     public static function parseTags(string $tags): array
     {
-        $names = array_map(static fn(string $name): string => mb_strtolower(trim($name)), explode(',', $tags));
+        $names = array_map(
+            static fn(string $name): string => mb_strtolower(trim(preg_replace('/\s+/', ' ', $name))),
+            explode(',', $tags),
+        );
 
         return array_values(array_unique(array_filter($names, static fn(string $name): bool => $name !== '')));
     }
@@ -219,31 +223,68 @@ class Bookmark extends Crud
      * @param bool $publicOnly true (default) to return only public bookmarks
      *   (anonymous visitors); false to return every bookmark.
      * @param int $page 1-based page number; each page holds `PAGE_SIZE` bookmarks.
+     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
      * @param bool $order true for ascending order, false (default) for descending.
      * @return array{bookmarks: list<self>, pages: int} The page's bookmarks
      *   (newest first by default) and the total number of pages (at least 1).
      */
-    final protected function orderByDate(bool $publicOnly = true, int $page = 1, bool $order = false): array
-    {
-        $cond = $publicOnly ? " WHERE `visibility` = 'public'" : '';
+    final protected function orderByDate(
+        bool $publicOnly = true,
+        int $page = 1,
+        ?string $tag = null,
+        bool $order = false,
+    ): array {
+        [$cond, $param] = $this->filter($publicOnly, $tag);
         $cond .= ' ORDER BY `mod` ' . ($order ? 'ASC' : 'DESC');
         $cond .= ' LIMIT ' . PAGE_SIZE . ' OFFSET ' . (($page - 1) * PAGE_SIZE);
 
         return [
-            'bookmarks' => array_map(self::hydrate(...), $this->select($cond, false)),
-            'pages' => max(1, (int) ceil($this->count($publicOnly) / PAGE_SIZE)),
+            'bookmarks' => array_map(self::hydrate(...), $this->select($cond, $param)),
+            'pages' => max(1, (int) ceil($this->count($publicOnly, $tag) / PAGE_SIZE)),
         ];
+    }
+
+    /**
+     * Build the WHERE clause a listing needs (visibility and tag filters).
+     *
+     * @param bool $publicOnly true to keep only public bookmarks.
+     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @return array{0: string, 1: list<array{0: string, 1: mixed, 2: int, 3: int}>|false}
+     *   The WHERE clause (may be empty) and its bind parameters.
+     */
+    private function filter(bool $publicOnly, ?string $tag): array
+    {
+        $where = [];
+        $param = false;
+
+        if ($publicOnly) {
+            $where[] = "`visibility` = 'public'";
+        }
+        if ($tag !== null) {
+            $where[] = <<<'SQL'
+                `id` IN (
+                    SELECT `bookmark`
+                    FROM `bookmark_tag`
+                    JOIN `tag` ON (`tag`.`id` = `bookmark_tag`.`tag`)
+                    WHERE `tag`.`name` = :tag
+                )
+                SQL;
+            $param = [[':tag', $tag, PDO::PARAM_STR, 255]];
+        }
+
+        return [$where ? ' WHERE ' . implode(' AND ', $where) : '', $param];
     }
 
     /**
      * Count the bookmarks the current listing can see.
      *
      * @param bool $publicOnly true to count only public bookmarks.
+     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
      * @return int The bookmark count.
      */
-    private function count(bool $publicOnly): int
+    private function count(bool $publicOnly, ?string $tag = null): int
     {
-        $cond = $publicOnly ? "WHERE `visibility` = 'public'" : '';
+        [$cond, $param] = $this->filter($publicOnly, $tag);
 
         $rows = $this->read(
             <<<SQL
@@ -252,6 +293,7 @@ class Bookmark extends Crud
             FROM `bookmark`
             $cond
             SQL,
+            $param,
         );
 
         return (int) $rows[0]['total'];
