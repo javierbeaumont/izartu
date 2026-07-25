@@ -28,6 +28,8 @@ class Bookmark extends Crud
     public string $hlink = '';
     public string $text = '';
     public int $user = 0;
+    /** Owner's display name, read via JOIN; never written back. */
+    public string $username = '';
     public Visibility $visibility = Visibility::Private;
     public ?string $add = null;
     public ?string $mod = null;
@@ -40,7 +42,7 @@ class Bookmark extends Crud
      */
     public static function find(int $id): ?self
     {
-        $rows = (new self())->select(' WHERE `id` = :id', [[':id', $id, PDO::PARAM_INT, 255]]);
+        $rows = (new self())->select(' WHERE `bookmark`.`id` = :id', [[':id', $id, PDO::PARAM_INT, 255]]);
 
         return $rows ? self::hydrate($rows[0]) : null;
     }
@@ -235,7 +237,7 @@ class Bookmark extends Crud
         bool $order = false,
     ): array {
         [$cond, $param] = $this->filter($publicOnly, $tag);
-        $cond .= ' ORDER BY `mod` ' . ($order ? 'ASC' : 'DESC');
+        $cond .= ' ORDER BY `bookmark`.`mod` ' . ($order ? 'ASC' : 'DESC');
         $cond .= ' LIMIT ' . PAGE_SIZE . ' OFFSET ' . (($page - 1) * PAGE_SIZE);
 
         return [
@@ -258,11 +260,11 @@ class Bookmark extends Crud
         $param = false;
 
         if ($publicOnly) {
-            $where[] = "`visibility` = 'public'";
+            $where[] = "`bookmark`.`visibility` = 'public'";
         }
         if ($tag !== null) {
             $where[] = <<<'SQL'
-                `id` IN (
+                `bookmark`.`id` IN (
                     SELECT `bookmark`
                     FROM `bookmark_tag`
                     JOIN `tag` ON (`tag`.`id` = `bookmark_tag`.`tag`)
@@ -312,8 +314,12 @@ class Bookmark extends Crud
         return $this->read(
             <<<SQL
             SELECT
-                `id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`
+                `bookmark`.`id`, `bookmark`.`title`, `bookmark`.`hlink`, `bookmark`.`text`,
+                `bookmark`.`user`, `bookmark`.`visibility`, `bookmark`.`add`, `bookmark`.`mod`,
+                `user`.`username`
             FROM `bookmark`
+            LEFT JOIN
+                `user` ON (`user`.`id` = `bookmark`.`user`)
             $cond
             SQL,
             $param,
@@ -334,6 +340,7 @@ class Bookmark extends Crud
         $bookmark->hlink = $row['hlink'];
         $bookmark->text = $row['text'];
         $bookmark->user = (int) $row['user'];
+        $bookmark->username = (string) ($row['username'] ?? '');
         $bookmark->visibility = Visibility::from($row['visibility']);
         $bookmark->add = $row['add'];
         $bookmark->mod = $row['mod'];

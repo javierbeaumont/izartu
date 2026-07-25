@@ -105,6 +105,31 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, (int) $full['secret']);
     }
 
+    public function testRowsCarryTheOwnersUsername(): void
+    {
+        $this->pdo->exec('TRUNCATE `user`');
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'javi', 'javi@izartu.test', 'x', 'user')
+            SQL,
+        );
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `bookmark`
+                (`title`, `hlink`, `text`, `user`, `add`, `mod`)
+            VALUES
+                ('Mine', 'https://m.test', 'm', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00')
+            SQL,
+        );
+
+        $page = $this->probe()->order();
+
+        $this->assertSame('javi', $page['bookmarks'][0]->username);
+    }
+
     public function testListFiltersByTag(): void
     {
         $this->seedPublicAndPrivate();

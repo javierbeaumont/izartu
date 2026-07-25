@@ -25,7 +25,8 @@ Expect rough edges and breaking changes while the rebuild is under way.
 ## Features
 
 * Public bookmark feed, browsable anonymously: newest first, paginated, and
-  filterable by tag (`/tag/NAME`), with a tag cloud.
+  filterable by tag (`/tag/NAME`), with a tag cloud. Each bookmark shows who
+  added it and when.
 * Log in to add, edit and delete bookmarks; editing is restricted to the
   bookmark's owner (or an admin).
 * Per-bookmark visibility: public (anyone on the instance) or private (only
@@ -110,7 +111,8 @@ plus a benchmark box; set it to `FALSE` in production).
 
 Users are created from the command line. It prompts for email, username,
 password and role (`owner`, `admin` or `user`), hashes the password and
-inserts the user. Login is by email.
+inserts the user. Login is by email; the username is the public display name
+shown next to the user's bookmarks.
 
 With Docker:
 
