@@ -104,11 +104,11 @@ body {
   background-color: #eee;
 }
 
-#list div.bookmark h2, form #title {
+#list div.bookmark h2 {
   font: bold 1.2em sans-serif;
 }
 
-#list div.bookmark p.link-page, form #link {
+#list div.bookmark p.link-page {
   font: .8em sans-serif;
 }
 
@@ -137,8 +137,24 @@ body {
   font-size: .8em;
 }
 
-form, .form {
-  position: relative;
+#list div.bookmark div.manage {
+  padding-top: .5em;
+  font-size: .8em;
+}
+
+#list div.bookmark div.manage form {
+  display: inline;
+}
+
+#list div.bookmark div.manage a,
+#list div.bookmark div.manage input[type="submit"] {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: black;
+  font-size: 1em;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 form, fieldset {
@@ -148,23 +164,6 @@ form, fieldset {
 
 legend, label {
   display: none;
-}
-
-form .head input, form .head textarea, form .info input, form .info textarea  {
-  margin: 0;
-  border: .1em solid white;
-  background-color: inherit;
-  padding: 0;
-  width: 100%;
-}
-
-form .head input:hover, form .head textarea:hover, form .info input:hover, form .info textarea:hover  {
-  border: .1em solid #ddd;
-}
-
-form .head input:focus, form .head textarea:focus, form .info input:focus, form .info textarea:focus  {
-    border: .1em solid #ddd;
-  background-color: #fefefe;
 }
 
 form.login {
@@ -224,6 +223,31 @@ form.login input[type="submit"]:hover {
 
 form.login p.error {
   margin: 1em 0 0;
+}
+
+form.bookmarkform {
+  max-width: 30em;
+}
+
+form.bookmarkform input[type="text"], form.bookmarkform input[type="url"], form.bookmarkform textarea {
+  box-sizing: border-box;
+  border: .1em solid #ccc;
+  border-radius: .2em;
+  padding: .5em;
+  width: 100%;
+  font-size: 1em;
+  font-family: inherit;
+}
+
+form.bookmarkform input[type="text"]:focus, form.bookmarkform input[type="url"]:focus, form.bookmarkform textarea:focus {
+  border-color: #999;
+  outline: none;
+}
+
+form.bookmarkform div.check label {
+  display: inline;
+  color: #333;
+  font-size: 1em;
 }
 
 #footer {

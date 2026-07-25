@@ -81,6 +81,14 @@ final class BookmarkTagsTest extends TestCase
         $this->assertSame(['web'], $this->linkedTagNames($bookmark->id));
     }
 
+    public function testTagsReturnsTheNamesAlphabetically(): void
+    {
+        $bookmark = $this->savedBookmark();
+        $bookmark->saveTags('sql, php');
+
+        $this->assertSame(['php', 'sql'], $bookmark->tags());
+    }
+
     public function testDeleteRemovesTheBookmarkAndItsLinks(): void
     {
         $bookmark = $this->savedBookmark();

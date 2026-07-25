@@ -166,6 +166,35 @@ class Bookmark extends Crud
     }
 
     /**
+     * The names of this bookmark's tags.
+     *
+     * @return list<string> Tag names, alphabetical.
+     */
+    public function tags(): array
+    {
+        $rows = $this->read(
+            <<<'SQL'
+            SELECT
+                `name`
+            FROM `tag`
+            WHERE
+                `id` IN (
+                    SELECT
+                        `tag`
+                    FROM `bookmark_tag`
+                    WHERE
+                        `bookmark` = :id
+                )
+            ORDER BY
+                `name`
+            SQL,
+            [[':id', $this->id, PDO::PARAM_INT, 255]],
+        );
+
+        return array_column($rows, 'name');
+    }
+
+    /**
      * Unlink every tag from this bookmark.
      *
      * @return void

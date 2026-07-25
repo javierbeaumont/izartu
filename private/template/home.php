@@ -26,6 +26,6 @@ include_once PRI_DIR . 'template/option.php';
       <div class="body">
 <?php
 $show = new ShowBookmark();
-echo $show->listOrderByDate();
+echo $show->listOrderByDate(Auth::check());
 ?>
       </div>

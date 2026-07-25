@@ -32,7 +32,11 @@
   </head>
   <body>
     <div id="header">
+<?php if (Auth::check()): ?>
+      <p><a href="add">Add bookmark</a> <a href="logout">Logout</a></p>
+<?php else: ?>
       <p><a href="login">Login</a></p>
+<?php endif; ?>
       <h1><a href=".">izartu</a></h1>
     </div>
     <div id="content">
@@ -42,6 +46,8 @@
       <p class="power">Powered by <a href="https://izartu.org">izartu</a></p>
       <p class="source">Get the source code <a href="https://github.com/javierbeaumont/izartu">on GitHub</a></p>
     </div>
-<?php if (DEBUG) echo $benchmark->get(); ?>
+<?php if (DEBUG) {
+    echo $benchmark->get();
+} ?>
   </body>
 </html>

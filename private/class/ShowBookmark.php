@@ -28,10 +28,11 @@ final class ShowBookmark extends Bookmark
     /**
      * Echo the bookmark list ordered by modification date.
      *
-     * @param bool $edit Reserved: whether to render edit controls (not yet used).
+     * @param bool $edit Whether to render the edit/delete controls on rows the
+     *   current user may manage (pass `Auth::check()`).
      * @return void
      */
-    final public function listOrderByDate(bool $edit = true): void
+    final public function listOrderByDate(bool $edit = false): void
     {
         $table = $this->orderByDate();
         foreach ($table as $bookmark) {

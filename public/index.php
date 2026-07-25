@@ -25,22 +25,27 @@
  * at runtime (`BASE`) so the app works at a domain root or in a sub-directory.
  *
  * Routes:
- * - `/`  Home: public bookmark feed + tag cloud.
+ * - `/`          Home: public bookmark feed + tag cloud.
+ * - `/login`     Login form (GET) + handler (POST).
+ * - `/logout`    Destroy the session, redirect home.
+ * - `/add`       Add bookmark form (GET) + handler (POST). Login required.
+ * - `/edit/ID`   Edit bookmark form (GET) + handler (POST). Owner/admin only.
+ * - `/delete/ID` Delete bookmark (POST only). Owner/admin only.
  *
- * Later features add their own routes here (`/login`, `/add`, `/tag/NAME`,
- * `/bookmark/ID`, ...); any unmatched path renders the 404 view.
+ * Later features add their own routes here (`/tag/NAME`, `/bookmark/ID`, ...);
+ * any unmatched path renders the 404 view.
  */
 
-require_once __DIR__.'/config.php';
+require_once __DIR__ . '/config.php';
 
 spl_autoload_register(function ($class) {
     require PRI_DIR . 'class/' . $class . '.php';
 });
 
 if (DEBUG) {
-  ini_set('display_errors', 'stdout');
-  error_reporting (E_ALL);
-  $benchmark = new Benchmark;
+    ini_set('display_errors', 'stdout');
+    error_reporting(E_ALL);
+    $benchmark = new Benchmark();
 }
 
 // Base path: empty at the domain root, "/sub" in a sub-directory install.
@@ -51,20 +56,23 @@ Auth::start();
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 if ($base !== '' && str_starts_with($path, $base)) {
-  $path = substr($path, strlen($base));
+    $path = substr($path, strlen($base));
 }
 
 $path = trim($path, '/');
 $segments = $path === '' ? [] : explode('/', $path);
 
 [$tpl, $vars] = match ($segments[0] ?? '') {
-  ''       => Controller::home(),
-  'login'  => Controller::login(),
-  'logout' => Controller::logout(),
-  default  => Controller::notFound(),
+    ''       => Controller::home(),
+    'login'  => Controller::login(),
+    'logout' => Controller::logout(),
+    'add'    => Controller::add(),
+    'edit'   => Controller::edit($segments[1] ?? ''),
+    'delete' => Controller::delete($segments[1] ?? ''),
+    default  => Controller::notFound(),
 };
 
 extract($vars, EXTR_SKIP);
-$view = PRI_DIR.'template/'.$tpl.'.php';
+$view = PRI_DIR . 'template/' . $tpl . '.php';
 
-require_once PRI_DIR.'template/layout.php';
+require_once PRI_DIR . 'template/layout.php';

@@ -23,66 +23,211 @@
  * one route and returns a `[template, variables]` pair to render, or redirects
  * and exits directly.
  */
-class Controller {
-
-  /**
-   * Home page: the public bookmark feed and tag cloud.
-   *
-   * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
-   */
-  public static function home(): array {
-    return ['home', []];
-  }
-
-  /**
-   * Login: show the form (GET) or process it (POST).
-   *
-   * On a valid POST (CSRF token plus credentials) the user is logged in and
-   * redirected to the home page. Otherwise the form is shown, with an `error`
-   * flag after a failed attempt.
-   *
-   * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
-   */
-  public static function login(): array {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      if (Auth::csrfCheck($_POST['csrf'] ?? null)
-          && Auth::attempt($_POST['email'] ?? '', $_POST['password'] ?? '')) {
-        self::redirect(BASE.'/');
-      }
-      return ['login', ['error' => true]];
+class Controller
+{
+    /**
+     * Home page: the public bookmark feed and tag cloud.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function home(): array
+    {
+        return ['home', []];
     }
-    return ['login', []];
-  }
 
-  /**
-   * Logout: destroy the session and redirect to the home page.
-   *
-   * @return never
-   */
-  public static function logout(): never {
-    Auth::logout();
-    self::redirect(BASE.'/');
-  }
+    /**
+     * Login: show the form (GET) or process it (POST).
+     *
+     * On a valid POST (CSRF token plus credentials) the user is logged in and
+     * redirected to the home page. Otherwise the form is shown, with an `error`
+     * flag after a failed attempt.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function login(): array
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (Auth::csrfCheck($_POST['csrf'] ?? null)
+                && Auth::attempt($_POST['email'] ?? '', $_POST['password'] ?? '')) {
+                self::redirect(BASE . '/');
+            }
+            return ['login', ['error' => true]];
+        }
+        return ['login', []];
+    }
 
-  /**
-   * Not found: send a 404 status and render the not-found view.
-   *
-   * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
-   */
-  public static function notFound(): array {
-    http_response_code(404);
-    return ['notfound', []];
-  }
+    /**
+     * Logout: destroy the session and redirect to the home page.
+     *
+     * @return never
+     */
+    public static function logout(): never
+    {
+        Auth::logout();
+        self::redirect(BASE . '/');
+    }
 
-  /**
-   * Send a redirect to the given path and stop the request.
-   *
-   * @param string $path Absolute URL path to redirect to.
-   * @return never
-   */
-  public static function redirect(string $path): never {
-    header('Location: '.$path);
-    exit;
-  }
+    /**
+     * Add bookmark: show the empty form (GET) or validate and create it (POST).
+     *
+     * Requires a logged-in user. On a valid POST the bookmark and its tags are
+     * saved and the request redirects home; otherwise the form is re-rendered
+     * with the errors and the typed values.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function add(): array
+    {
+        Auth::guard();
+
+        $bookmark = new Bookmark();
+        $tags = '';
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tags = trim($_POST['tags'] ?? '');
+            $errors = self::apply($bookmark, $_POST);
+
+            if (!$errors) {
+                $bookmark->user = Auth::user()['id'];
+                $bookmark->save();
+                $bookmark->saveTags($tags);
+                self::redirect(BASE . '/');
+            }
+        }
+
+        return ['bookmarkform', [
+            'bookmark' => $bookmark, 'tags' => $tags, 'errors' => $errors, 'action' => 'add',
+        ]];
+    }
+
+    /**
+     * Edit bookmark: show the pre-filled form (GET) or validate and save (POST).
+     *
+     * Requires a logged-in user who may manage the bookmark; a missing id or a
+     * foreign bookmark renders the 404 view (existence is not revealed).
+     *
+     * @param string $id Bookmark id from the URL (second path segment).
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function edit(string $id): array
+    {
+        Auth::guard();
+
+        $bookmark = Bookmark::find((int) $id);
+        if (!$bookmark || !Auth::canManage($bookmark->user)) {
+            return self::notFound();
+        }
+
+        $tags = implode(', ', $bookmark->tags());
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tags = trim($_POST['tags'] ?? '');
+            $errors = self::apply($bookmark, $_POST);
+
+            if (!$errors) {
+                $bookmark->save();
+                $bookmark->saveTags($tags);
+                self::redirect(BASE . '/');
+            }
+        }
+
+        return ['bookmarkform', [
+            'bookmark' => $bookmark, 'tags' => $tags, 'errors' => $errors, 'action' => 'edit/' . $bookmark->id,
+        ]];
+    }
+
+    /**
+     * Delete bookmark (POST only), then redirect home.
+     *
+     * Requires a logged-in user who may manage the bookmark and a valid CSRF
+     * token; anything else (including GET requests) renders the 404 view.
+     *
+     * @param string $id Bookmark id from the URL (second path segment).
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function delete(string $id): array
+    {
+        Auth::guard();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Auth::csrfCheck($_POST['csrf'] ?? null)) {
+            return self::notFound();
+        }
+
+        $bookmark = Bookmark::find((int) $id);
+        if (!$bookmark || !Auth::canManage($bookmark->user)) {
+            return self::notFound();
+        }
+
+        $bookmark->delete();
+        self::redirect(BASE . '/');
+    }
+
+    /**
+     * Validate a bookmark's user-supplied fields.
+     *
+     * @param Bookmark $bookmark The bookmark to check (already filled).
+     * @return array<string, string> Error message per invalid field; empty if valid.
+     */
+    public static function validate(Bookmark $bookmark): array
+    {
+        $errors = [];
+
+        if ($bookmark->title === '') {
+            $errors['title'] = 'A title is required.';
+        }
+        if ($bookmark->hlink === '' || !filter_var($bookmark->hlink, FILTER_VALIDATE_URL)) {
+            $errors['link'] = 'A valid URL is required.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Fill a bookmark from form input and validate it (CSRF included).
+     *
+     * @param Bookmark $bookmark The bookmark to fill.
+     * @param array<string, mixed> $input The submitted form fields (`$_POST`).
+     * @return array<string, string> Error message per invalid field; empty if valid.
+     */
+    private static function apply(Bookmark $bookmark, array $input): array
+    {
+        $bookmark->title = trim($input['title'] ?? '');
+        $bookmark->hlink = trim($input['link'] ?? '');
+        $bookmark->text = trim($input['description'] ?? '');
+        $bookmark->visibility = isset($input['visibility']) ? Visibility::Public : Visibility::Private;
+
+        $errors = self::validate($bookmark);
+
+        if (!Auth::csrfCheck($input['csrf'] ?? null)) {
+            $errors['csrf'] = 'The session expired; please try again.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Not found: send a 404 status and render the not-found view.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function notFound(): array
+    {
+        http_response_code(404);
+        return ['notfound', []];
+    }
+
+    /**
+     * Send a redirect to the given path and stop the request.
+     *
+     * @param string $path Absolute URL path to redirect to.
+     * @return never
+     */
+    public static function redirect(string $path): never
+    {
+        header('Location: ' . $path);
+        exit;
+    }
 
 }
