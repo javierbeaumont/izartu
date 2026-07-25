@@ -214,19 +214,47 @@ class Bookmark extends Crud
     }
 
     /**
-     * Read bookmarks ordered by modification date.
+     * Read one page of bookmarks ordered by modification date.
      *
      * @param bool $publicOnly true (default) to return only public bookmarks
      *   (anonymous visitors); false to return every bookmark.
+     * @param int $page 1-based page number; each page holds `PAGE_SIZE` bookmarks.
      * @param bool $order true for ascending order, false (default) for descending.
-     * @return list<self> One bookmark per row, newest first by default.
+     * @return array{bookmarks: list<self>, pages: int} The page's bookmarks
+     *   (newest first by default) and the total number of pages (at least 1).
      */
-    final protected function orderByDate(bool $publicOnly = true, bool $order = false): array
+    final protected function orderByDate(bool $publicOnly = true, int $page = 1, bool $order = false): array
     {
         $cond = $publicOnly ? " WHERE `visibility` = 'public'" : '';
         $cond .= ' ORDER BY `mod` ' . ($order ? 'ASC' : 'DESC');
+        $cond .= ' LIMIT ' . PAGE_SIZE . ' OFFSET ' . (($page - 1) * PAGE_SIZE);
 
-        return array_map(self::hydrate(...), $this->select($cond, false));
+        return [
+            'bookmarks' => array_map(self::hydrate(...), $this->select($cond, false)),
+            'pages' => max(1, (int) ceil($this->count($publicOnly) / PAGE_SIZE)),
+        ];
+    }
+
+    /**
+     * Count the bookmarks the current listing can see.
+     *
+     * @param bool $publicOnly true to count only public bookmarks.
+     * @return int The bookmark count.
+     */
+    private function count(bool $publicOnly): int
+    {
+        $cond = $publicOnly ? "WHERE `visibility` = 'public'" : '';
+
+        $rows = $this->read(
+            <<<SQL
+            SELECT
+                COUNT(*) AS `total`
+            FROM `bookmark`
+            $cond
+            SQL,
+        );
+
+        return (int) $rows[0]['total'];
     }
 
     /**

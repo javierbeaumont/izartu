@@ -157,6 +157,17 @@ body {
   cursor: pointer;
 }
 
+div.pagination {
+  margin: 0 30% 1.5em 0;
+  padding: 0 1.5em;
+  font-size: .9em;
+}
+
+div.pagination a, div.pagination strong, div.pagination span.gap {
+  margin-right: .5em;
+  color: black;
+}
+
 form, fieldset {
   margin: 0;
   padding: 0;

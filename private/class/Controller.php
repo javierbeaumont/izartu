@@ -26,13 +26,13 @@
 class Controller
 {
     /**
-     * Home page: the public bookmark feed and tag cloud.
+     * Home page: one page of the bookmark feed (`?page=N`) and the tag cloud.
      *
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
     public static function home(): array
     {
-        return ['home', []];
+        return ['home', ['page' => max(1, (int) ($_GET['page'] ?? 1))]];
     }
 
     /**

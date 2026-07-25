@@ -17,17 +17,23 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
-
-$show = new ShowTag();
-$tag = $show->tagCloud(!Auth::check());
-
-include_once PRI_DIR . 'template/option.php';
 ?>
-      <div class="body">
-<?php
-$show = new ShowBookmark();
-$pages = $show->listOrderByDate(Auth::check(), !Auth::check(), $page);
-
-include PRI_DIR . 'template/pagination.php';
-?>
-      </div>
+<?php if ($pages > 1): ?>
+        <div class="pagination">
+<?php if ($page > 1): ?>
+          <a class="previous" href="?page=<?php echo $page - 1; ?>">&lsaquo; Previous</a>
+<?php endif; ?>
+<?php foreach (ShowBookmark::pageWindow($page, $pages) as $number): ?>
+<?php if ($number === null): ?>
+          <span class="gap">&hellip;</span>
+<?php elseif ($number === $page): ?>
+          <strong><?php echo $number; ?></strong>
+<?php else: ?>
+          <a href="?page=<?php echo $number; ?>"><?php echo $number; ?></a>
+<?php endif; ?>
+<?php endforeach; ?>
+<?php if ($page < $pages): ?>
+          <a class="next" href="?page=<?php echo $page + 1; ?>">Next &rsaquo;</a>
+<?php endif; ?>
+        </div>
+<?php endif; ?>

@@ -41,6 +41,9 @@ define('DB_PASS', getenv('DB_PASS'));
 /** Database name ('izartu' by default). */
 define('DB_NAME', getenv('DB_NAME') ?: 'izartu');
 
+/** Bookmarks per page on the feed. */
+define('PAGE_SIZE', 10);
+
 ################################################################################
 ############################ ADVANCED CONFIGURATION ############################
 ################################################################################
