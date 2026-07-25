@@ -51,27 +51,42 @@ trait Tag
     }
 
     /**
-     * Return the tag-cloud data: every tag with its bookmark count.
+     * Return the tag-cloud data: tags with their bookmark count.
      *
-     * @param string|false $cond Extra SQL appended before `GROUP BY`, or false for none.
-     * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
-     *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
+     * @param bool $publicOnly true to count only public bookmarks and hide tags
+     *   without any (anonymous visitors); false (default) for the full cloud.
      * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
      */
-    private function getCloud(string|false $cond = false, array|false $param = false): array
+    private function getCloud(bool $publicOnly = false): array
     {
+        if ($publicOnly) {
+            return $this->read(
+                <<<'SQL'
+                SELECT
+                    `tag`.`id`, `tag`.`name`, COUNT(`bookmark_tag`.`tag`) AS `value`
+                FROM `tag`
+                JOIN
+                    `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
+                JOIN
+                    `bookmark` ON (`bookmark`.`id` = `bookmark_tag`.`bookmark`)
+                WHERE
+                    `bookmark`.`visibility` = 'public'
+                GROUP BY
+                    `tag`.`id`, `tag`.`name`
+                SQL,
+            );
+        }
+
         return $this->read(
-            <<<SQL
+            <<<'SQL'
             SELECT
                 `tag`.`id`, `tag`.`name`, COUNT(`bookmark_tag`.`tag`) AS `value`
             FROM `tag`
             LEFT JOIN
                 `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
-            $cond
             GROUP BY
                 `tag`.`id`, `tag`.`name`
             SQL,
-            $param,
         );
     }
 

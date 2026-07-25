@@ -21,22 +21,26 @@
 /**
  * Render the tag cloud.
  */
-final class ShowTag extends Crud {
-  use Tag;
+final class ShowTag extends Crud
+{
+    use Tag;
 
-  /**
-   * Build the tag-cloud text: each tag with its bookmark count.
-   *
-   * @return string|false Comma-separated `name (count)` pairs, or false if there
-   *   are no tags.
-   */
-  final public function tagCloud(): string|false {
-    $table = $this->getCloud();
-    $tag = FALSE;
-    foreach ($table as $value) {
-      $tag .= $value['name'].' ('.$value['value'].'), ';
+    /**
+     * Build the tag-cloud text: each tag with its bookmark count.
+     *
+     * @param bool $publicOnly Whether to count only public bookmarks and hide
+     *   tags without any (pass `!Auth::check()`).
+     * @return string|false Comma-separated `name (count)` pairs, or false if there
+     *   are no tags.
+     */
+    final public function tagCloud(bool $publicOnly = false): string|false
+    {
+        $table = $this->getCloud($publicOnly);
+        $tag = false;
+        foreach ($table as $value) {
+            $tag .= $value['name'] . ' (' . $value['value'] . '), ';
+        }
+        return $tag;
     }
-    return $tag;
-  }
 
 }

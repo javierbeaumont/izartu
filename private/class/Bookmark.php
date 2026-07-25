@@ -216,14 +216,17 @@ class Bookmark extends Crud
     /**
      * Read bookmarks ordered by modification date.
      *
+     * @param bool $publicOnly true (default) to return only public bookmarks
+     *   (anonymous visitors); false to return every bookmark.
      * @param bool $order true for ascending order, false (default) for descending.
      * @return list<self> One bookmark per row, newest first by default.
      */
-    final protected function orderByDate(bool $order = false): array
+    final protected function orderByDate(bool $publicOnly = true, bool $order = false): array
     {
-        $order = $order ? 'ASC' : 'DESC';
+        $cond = $publicOnly ? " WHERE `visibility` = 'public'" : '';
+        $cond .= ' ORDER BY `mod` ' . ($order ? 'ASC' : 'DESC');
 
-        return array_map(self::hydrate(...), $this->select(' ORDER BY `mod` ' . $order, false));
+        return array_map(self::hydrate(...), $this->select($cond, false));
     }
 
     /**

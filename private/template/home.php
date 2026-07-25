@@ -19,13 +19,13 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 $show = new ShowTag();
-$tag = $show->tagCloud();
+$tag = $show->tagCloud(!Auth::check());
 
 include_once PRI_DIR . 'template/option.php';
 ?>
       <div class="body">
 <?php
 $show = new ShowBookmark();
-echo $show->listOrderByDate(Auth::check());
+echo $show->listOrderByDate(Auth::check(), !Auth::check());
 ?>
       </div>

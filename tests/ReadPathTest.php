@@ -80,6 +80,42 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, (int) $counts['sql']);
     }
 
+    public function testAnonymousListShowsOnlyPublicBookmarks(): void
+    {
+        $this->seedPublicAndPrivate();
+
+        $this->assertSame(['Public'], array_column($this->probe()->order(true), 'title'));
+        $this->assertSame(['Public', 'Secret'], array_column($this->probe()->order(), 'title'));
+    }
+
+    public function testAnonymousCloudCountsOnlyPublicBookmarks(): void
+    {
+        $this->seedPublicAndPrivate();
+
+        $anonymous = array_column($this->probe()->cloud(true), 'value', 'name');
+        $this->assertSame(1, (int) $anonymous['php']);
+        $this->assertArrayNotHasKey('secret', $anonymous);
+
+        $full = array_column($this->probe()->cloud(), 'value', 'name');
+        $this->assertSame(2, (int) $full['php']);
+        $this->assertSame(1, (int) $full['secret']);
+    }
+
+    private function seedPublicAndPrivate(): void
+    {
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `bookmark`
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+            VALUES
+                (1, 'Public', 'https://p.test', 'p', 1, 'public', '2026-01-02 10:00:00', '2026-01-02 10:00:00'),
+                (2, 'Secret', 'https://s.test', 's', 1, 'private', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
+            SQL,
+        );
+        $this->pdo->exec("INSERT INTO `tag` (`id`, `name`) VALUES (1, 'php'), (2, 'secret')");
+        $this->pdo->exec("INSERT INTO `bookmark_tag` (`bookmark`, `tag`) VALUES (1, 1), (2, 1), (2, 2)");
+    }
+
     private function seedBookmarkWithTags(): void
     {
         $this->pdo->exec(
@@ -117,9 +153,9 @@ final class ReadPathTest extends TestCase
         return new class extends Bookmark {
             use Tag;
 
-            public function order(bool $order = false): array
+            public function order(bool $publicOnly = false): array
             {
-                return $this->orderByDate($order);
+                return $this->orderByDate($publicOnly);
             }
 
             public function tagsOf(int $id): array
@@ -127,9 +163,9 @@ final class ReadPathTest extends TestCase
                 return $this->getTags($id);
             }
 
-            public function cloud(): array
+            public function cloud(bool $publicOnly = false): array
             {
-                return $this->getCloud();
+                return $this->getCloud($publicOnly);
             }
         };
     }

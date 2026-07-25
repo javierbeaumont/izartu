@@ -30,11 +30,13 @@ final class ShowBookmark extends Bookmark
      *
      * @param bool $edit Whether to render the edit/delete controls on rows the
      *   current user may manage (pass `Auth::check()`).
+     * @param bool $publicOnly Whether to list only public bookmarks (pass
+     *   `!Auth::check()`; anonymous visitors never see private bookmarks).
      * @return void
      */
-    final public function listOrderByDate(bool $edit = false): void
+    final public function listOrderByDate(bool $edit = false, bool $publicOnly = true): void
     {
-        $table = $this->orderByDate();
+        $table = $this->orderByDate($publicOnly);
         foreach ($table as $bookmark) {
             $list = $this->getTags($bookmark->id);
             $tag = false;
