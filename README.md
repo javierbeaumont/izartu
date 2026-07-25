@@ -1,31 +1,116 @@
 # izartu
 
-Web bookmark manager based on tags.
+izartu is a lightweight, self-hosted web bookmark manager based on tags:
+your bookmarks are private by default, and making one public shares it on
+your instance's feed. Plain PHP and MySQL, **zero runtime dependencies** (no
+framework, no packages in production), released under the GNU AGPLv3.
+
+## Why izartu
+
+* **Personal first, social second.** Every bookmark is private (only you) or
+  public (anyone on your instance). The public feed, tag pages and tag cloud
+  emerge from personal use.
+* **Self-contained.** No build step, no framework to upgrade, nothing to
+  `npm install`. A production install is just these files, PHP and MySQL.
+* **Yours.** Self-hosted and AGPL-licensed: your bookmarks live on your
+  server, and so does the public layer, scoped to your instance.
+
+## Status
+
+izartu is being rebuilt toward its first release (v0.0) and has no published
+release yet. The core already works: login, bookmark add/edit/delete with
+tags and visibility, and the public feed with pagination and tag filtering.
+Expect rough edges and breaking changes while the rebuild is under way.
+
+## Features
+
+* Public bookmark feed, browsable anonymously: newest first, paginated, and
+  filterable by tag (`/tag/NAME`), with a tag cloud.
+* Log in to add, edit and delete bookmarks; editing is restricted to the
+  bookmark's owner (or an admin).
+* Per-bookmark visibility: public (anyone on the instance) or private (only
+  you). Anonymous visitors never see private bookmarks or their tags.
+* Comma-separated tags, normalised automatically (trimmed, lower-cased,
+  deduplicated).
+* Runs at a domain root or in a sub-directory (base path is auto-detected).
+* Hardened sessions (HttpOnly, SameSite, Secure on HTTPS) and CSRF-protected
+  forms.
 
 ## Requirements
 
-* PHP   >= 8.2
+* PHP >= 8.2 with the `pdo_mysql` extension
 * MySQL >= 8.4
+* A web server that routes requests to `public/index.php`. Apache works out
+  of the box through the shipped `.htaccess` (needs `mod_rewrite`).
 
-Older releases may still run *izartu*, but they are officially end-of-life and unsupported.
+Or skip all of the above and use the included Docker setup.
 
-## Running with Docker
-
-A LAMP setup (Apache + MySQL + PHP) with Docker is included:
+## Quick start (Docker)
 
 ```sh
+git clone https://github.com/javierbeaumont/izartu.git
+cd izartu
 docker compose up --build
 ```
 
-Then open <http://localhost:8080>. On first run the database is created from
-`izartu.sql`. Bookmarks are managed directly in the database (`bookmark`, `tag`
-and `bookmark_tag` tables) for now.
+Open <http://localhost:8080>. The database is created from `izartu.sql` on
+first start. Create your first user (interactive; give it the `owner` role):
 
-## Creating users
+```sh
+docker compose exec app php /var/www/izartu/private/cli/adduser.php
+```
 
-Users can be created from the command line. This is how you create the first user
-(the owner). It prompts for email, username, password and role, hashes the password
-and inserts the user; then log in at `/login`.
+Log in at `/login` and start adding bookmarks.
+
+## Manual installation
+
+1. Copy the repository to the server. Point the web server's document root
+   at `public/`; `private/` must stay outside the web root (as shipped).
+2. Create a MySQL database and load the schema: `mysql izartu < izartu.sql`.
+3. Provide the `DB_*` environment variables (see Configuration) to the PHP
+   process. With Apache and mod_php, a minimal vhost looks like:
+
+   ```apache
+   <VirtualHost *:80>
+     ServerName bookmarks.example.org
+     DocumentRoot /var/www/izartu/public
+
+     <Directory /var/www/izartu/public>
+       AllowOverride All
+       Require all granted
+     </Directory>
+
+     SetEnv DB_USER user_name
+     SetEnv DB_PASS user_password
+   </VirtualHost>
+   ```
+
+   (With PHP-FPM, set the same variables in the pool's `env[...]` entries.)
+4. Create the first user: `php private/cli/adduser.php`.
+5. Log in at `/login`.
+
+izartu also runs from a sub-directory (e.g. `https://example.org/bookmarks/`);
+no configuration is needed, the base path is detected automatically.
+
+## Configuration
+
+Database credentials are read from environment variables (set in
+[`docker-compose.yml`](docker-compose.yml) for the Docker setup):
+
+* `DB_HOST`: optional, defaults to `localhost`.
+* `DB_NAME`: optional, defaults to `izartu`.
+* `DB_PASS`: required, no default.
+* `DB_USER`: required, no default.
+
+Other settings are constants in [`public/config.php`](public/config.php):
+`PAGE_SIZE` (bookmarks per feed page, default 10) and `DEBUG` (error output
+plus a benchmark box; set it to `FALSE` in production).
+
+## Managing users
+
+Users are created from the command line. It prompts for email, username,
+password and role (`owner`, `admin` or `user`), hashes the password and
+inserts the user. Login is by email.
 
 With Docker:
 
@@ -39,11 +124,13 @@ Without Docker:
 php private/cli/adduser.php
 ```
 
-## Tests
+## Development
 
-Tests run with PHPUnit, a **dev-only** dependency (Composer). The suite runs against
-a dedicated `izartu_test` database, created automatically on the first `db` start
-(run `docker compose down -v` once if the volume predates it).
+### Tests
+
+Tests run with PHPUnit, a **dev-only** dependency (Composer). The suite runs
+against a dedicated `izartu_test` database, created automatically on the
+first `db` start (run `docker compose down -v` once if the volume predates it).
 
 Install the dev dependencies once (writes `vendor/`, gitignored):
 
@@ -64,25 +151,16 @@ composer install
 DB_NAME=izartu_test vendor/bin/phpunit
 ```
 
-## Code style
+### Code style
 
-Code follows [PER Coding Style](https://www.php-fig.org/per/coding-style/) (max
-line length 120), enforced with PHP-CS-Fixer (also a dev-only dependency):
+Code follows [PER Coding Style](https://www.php-fig.org/per/coding-style/)
+(max line length 120), enforced with PHP-CS-Fixer (also a dev-only
+dependency):
 
 ```sh
 docker compose run --rm test vendor/bin/php-cs-fixer fix           # apply
 docker compose run --rm test vendor/bin/php-cs-fixer fix --dry-run # check only
 ```
-
-## Configuration
-
-Database credentials are read from environment variables (set in
-[`docker-compose.yml`](docker-compose.yml)):
-
-* `DB_HOST`: optional, defaults to `localhost`.
-* `DB_NAME`: optional, defaults to `izartu`.
-* `DB_PASS`: required, no default.
-* `DB_USER`: required, no default.
 
 ## License
 
