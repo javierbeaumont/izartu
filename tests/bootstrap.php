@@ -20,3 +20,6 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../public/config.php';
+
+// A CLI session, so Auth::attempt()'s session_regenerate_id() works in tests.
+session_start();
