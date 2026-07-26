@@ -51,7 +51,7 @@
       <p class="source">Get the source code <a href="https://github.com/javierbeaumont/izartu">on GitHub</a></p>
     </div>
 <?php if (DEBUG) {
-    echo $benchmark->get();
+    include PRI_DIR . 'template/debug.php';
 } ?>
   </body>
 </html>

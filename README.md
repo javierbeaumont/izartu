@@ -107,8 +107,12 @@ Database credentials are read from environment variables (set in
 * `DB_USER`: required, no default.
 
 Other settings are constants in [`public/config.php`](public/config.php):
-`PAGE_SIZE` (bookmarks per feed page, default 10) and `DEBUG` (error output
-plus a benchmark box; set it to `FALSE` in production).
+`PAGE_SIZE` (bookmarks per feed page, default 10) and `DEBUG` (set it to
+`FALSE` in production). Debug mode enables error output, a `Server-Timing`
+response header with request metrics (PHP time, database time and query
+count, peak memory; shown natively in the browser devtools network panel)
+and a collapsible per-query timing panel at the bottom of every page, where
+repeated queries are flagged.
 
 ## Managing users
 

@@ -48,7 +48,6 @@ spl_autoload_register(function ($class) {
 if (DEBUG) {
     ini_set('display_errors', 'stdout');
     error_reporting(E_ALL);
-    $benchmark = new Benchmark();
 }
 
 // Base path: empty at the domain root, "/sub" in a sub-directory install.
@@ -81,4 +80,10 @@ $segments = $path === '' ? [] : explode('/', $path);
 extract($vars, EXTR_SKIP);
 $view = PRI_DIR . 'template/' . $tpl . '.php';
 
+// Buffer the render so the Server-Timing header can be set after it.
+ob_start();
 require_once PRI_DIR . 'template/layout.php';
+
+if (DEBUG) {
+    header('Server-Timing: ' . Debug::serverTiming());
+}

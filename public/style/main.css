@@ -326,15 +326,28 @@ p.error {
 }
 
 #debug {
-  position: relative;
-  margin: -13.6em 0 0 auto;
-  border: .3em double red;
-  padding: .5em;
-  background-color: #fee;
-  width: 13em;
+  margin: 1em;
+  border: 1px dashed #999;
+  padding: .5em 1em;
+  background-color: #eee;
+  color: #666;
+  font-size: .8em;
 }
 
-#debug dd {
-  margin: 0;
+#debug summary {
+  cursor: pointer;
+}
+
+#debug ol {
+  margin: .5em 0 0;
+}
+
+#debug .ms {
+  display: inline-block;
+  min-width: 4.5em;
   text-align: right;
+}
+
+#debug .repeat {
+  color: #a00;
 }

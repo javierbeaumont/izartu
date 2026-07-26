@@ -23,49 +23,55 @@
  *
  * @todo PostgreSQL and SQLite support.
  */
-class Database {
+class Database
+{
+    /** @var PDO|null Shared PDO connection, created once on first construction. */
+    protected static ?PDO $db = null;
 
-  /** @var PDO|null Shared PDO connection, created once on first construction. */
-  protected static ?PDO $db = null;
-
-  /**
-   * Open the shared database connection (once).
-   *
-   * On the first instantiation it builds the PDO instance from the configured
-   * `DB_*` constants; later instantiations reuse it. Triggers `E_USER_ERROR`
-   * if the connection fails.
-   */
-  final public function __construct() {
-    if(!static::$db) {
-      try {
-        static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
-      } catch (PDOException $e) {
-        trigger_error($e->getMessage(), E_USER_ERROR);
-      }
+    /**
+     * Open the shared database connection (once).
+     *
+     * On the first instantiation it builds the PDO instance from the configured
+     * `DB_*` constants; later instantiations reuse it. Triggers `E_USER_ERROR`
+     * if the connection fails. With DEBUG on, statements are created as
+     * DebugStatement so every query execution is timed.
+     */
+    final public function __construct()
+    {
+        if (!static::$db) {
+            try {
+                static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
+                if (DEBUG) {
+                    static::$db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [DebugStatement::class]);
+                }
+            } catch (PDOException $e) {
+                trigger_error($e->getMessage(), E_USER_ERROR);
+            }
+        }
     }
-  }
 
-  /**
-   * Build the MySQL DSN string from the configured `DB_*` constants.
-   *
-   * @return string PDO DSN (TCP host/port or Unix socket, plus database name).
-   */
-  private function pdoMySQL(): string {
-    $dsn = 'mysql:';
-    // Unix Socket
-    if (strncmp(DB_HOST, '/', 1)) {
-      // DB Host
-      DB_HOST? $dsn .= 'host='.DB_HOST: $dsn .= 'host=localhost';
-      // DB Port
-      if (DB_PORT AND is_int(DB_PORT) AND DB_PORT != 3306)
-        $dsn .= ';port='.DB_PORT;
-    } else {
-      $dsn .= 'unix_socket='.DB_HOST;
+    /**
+     * Build the MySQL DSN string from the configured `DB_*` constants.
+     *
+     * @return string PDO DSN (TCP host/port or Unix socket, plus database name).
+     */
+    private function pdoMySQL(): string
+    {
+        $dsn = 'mysql:';
+
+        if (strncmp(DB_HOST, '/', 1)) {
+            $dsn .= 'host=' . (DB_HOST ?: 'localhost');
+            if (DB_PORT && is_int(DB_PORT) && DB_PORT != 3306) {
+                $dsn .= ';port=' . DB_PORT;
+            }
+        } else {
+            $dsn .= 'unix_socket=' . DB_HOST;
+        }
+
+        if (DB_NAME) {
+            $dsn .= ';dbname=' . DB_NAME;
+        }
+
+        return $dsn;
     }
-    // DB Name
-    if (DB_NAME)
-      $dsn .= ';dbname='.DB_NAME;
-    return $dsn;
-  }
-
 }
