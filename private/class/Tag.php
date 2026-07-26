@@ -51,42 +51,39 @@ trait Tag
     }
 
     /**
-     * Return the tag-cloud data: tags with their bookmark count.
+     * Return the tag-cloud data: tags with their visible-bookmark count.
      *
-     * @param bool $publicOnly true to count only public bookmarks and hide tags
-     *   without any (anonymous visitors); false (default) for the full cloud.
+     * A viewer counts public bookmarks plus their own private ones; tags with
+     * no visible bookmark are not returned.
+     *
+     * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
      * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
      */
-    private function getCloud(bool $publicOnly = false): array
+    private function getCloud(?int $viewer = null): array
     {
-        if ($publicOnly) {
-            return $this->read(
-                <<<'SQL'
-                SELECT
-                    `tag`.`id`, `tag`.`name`, COUNT(`bookmark_tag`.`tag`) AS `value`
-                FROM `tag`
-                JOIN
-                    `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
-                JOIN
-                    `bookmark` ON (`bookmark`.`id` = `bookmark_tag`.`bookmark`)
-                WHERE
-                    `bookmark`.`visibility` = 'public'
-                GROUP BY
-                    `tag`.`id`, `tag`.`name`
-                SQL,
-            );
+        $cond = '';
+        $param = false;
+
+        if ($viewer !== null) {
+            $cond .= ' OR `bookmark`.`user` = :viewer';
+            $param = [[':viewer', $viewer, PDO::PARAM_INT, 255]];
         }
 
         return $this->read(
-            <<<'SQL'
+            <<<SQL
             SELECT
                 `tag`.`id`, `tag`.`name`, COUNT(`bookmark_tag`.`tag`) AS `value`
             FROM `tag`
-            LEFT JOIN
+            JOIN
                 `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
+            JOIN
+                `bookmark` ON (`bookmark`.`id` = `bookmark_tag`.`bookmark`)
+            WHERE
+                (`bookmark`.`visibility` = 'public' $cond)
             GROUP BY
                 `tag`.`id`, `tag`.`name`
             SQL,
+            $param,
         );
     }
 

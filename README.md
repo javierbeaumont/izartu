@@ -30,7 +30,8 @@ Expect rough edges and breaking changes while the rebuild is under way.
 * Log in to add, edit and delete bookmarks; editing is restricted to the
   bookmark's owner (or an admin).
 * Per-bookmark visibility: public (anyone on the instance) or private (only
-  you). Anonymous visitors never see private bookmarks or their tags.
+  its owner: no other account sees it, whatever its role, and neither do its
+  tags leak into the cloud).
 * Comma-separated tags, normalised automatically (trimmed, lower-cased,
   deduplicated).
 * Runs at a domain root or in a sub-directory (base path is auto-detected).

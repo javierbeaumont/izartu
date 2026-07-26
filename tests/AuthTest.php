@@ -47,6 +47,14 @@ final class AuthTest extends TestCase
         $_SESSION = [];
     }
 
+    public function testIdIsNullForAnonymousAndSetWhenLoggedIn(): void
+    {
+        $this->assertNull(Auth::id());
+
+        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+        $this->assertSame(7, Auth::id());
+    }
+
     public function testAnonymousCannotManage(): void
     {
         $this->assertFalse(Auth::canManage(1));

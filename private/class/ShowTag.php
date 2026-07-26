@@ -26,16 +26,16 @@ final class ShowTag extends Crud
     use Tag;
 
     /**
-     * Build the tag-cloud text: each tag with its bookmark count.
+     * Build the tag-cloud text: each tag with its visible-bookmark count.
      *
-     * @param bool $publicOnly Whether to count only public bookmarks and hide
-     *   tags without any (pass `!Auth::check()`).
+     * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
+     *   anonymous.
      * @return string|false Comma-separated `name (count)` pairs, or false if there
      *   are no tags.
      */
-    final public function tagCloud(bool $publicOnly = false): string|false
+    final public function tagCloud(?int $viewer = null): string|false
     {
-        $table = $this->getCloud($publicOnly);
+        $table = $this->getCloud($viewer);
         $tag = false;
         foreach ($table as $value) {
             $tag .= '<a href="tag/' . rawurlencode($value['name']) . '">'

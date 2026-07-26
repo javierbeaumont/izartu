@@ -19,7 +19,7 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 $show = new ShowTag();
-$tag = $show->tagCloud(!Auth::check());
+$tag = $show->tagCloud(Auth::id());
 
 include_once PRI_DIR . 'template/option.php';
 ?>
@@ -30,7 +30,7 @@ include_once PRI_DIR . 'template/option.php';
 <?php endif; ?>
 <?php
 $show = new ShowBookmark();
-$pages = $show->listOrderByDate(Auth::check(), !Auth::check(), $page, $tagName);
+$pages = $show->listOrderByDate(Auth::check(), Auth::id(), $page, $tagName);
 
 include PRI_DIR . 'template/pagination.php';
 ?>

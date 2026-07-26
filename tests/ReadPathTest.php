@@ -54,7 +54,7 @@ final class ReadPathTest extends TestCase
             SQL,
         );
 
-        $page = $this->probe()->order();
+        $page = $this->probe()->order(1);
 
         $this->assertSame(['Newer', 'Older'], array_column($page['bookmarks'], 'title'));
         $this->assertSame(1, $page['pages']);
@@ -81,28 +81,35 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, (int) $counts['sql']);
     }
 
-    public function testAnonymousListShowsOnlyPublicBookmarks(): void
+    public function testViewersSeePublicBookmarksPlusTheirOwn(): void
     {
         $this->seedPublicAndPrivate();
 
-        $anonymous = $this->probe()->order(true);
+        $anonymous = $this->probe()->order();
         $this->assertSame(['Public'], array_column($anonymous['bookmarks'], 'title'));
 
-        $full = $this->probe()->order();
-        $this->assertSame(['Public', 'Secret'], array_column($full['bookmarks'], 'title'));
+        $owner = $this->probe()->order(1);
+        $this->assertSame(['Public', 'Secret'], array_column($owner['bookmarks'], 'title'));
+
+        $otherUser = $this->probe()->order(2);
+        $this->assertSame(['Public'], array_column($otherUser['bookmarks'], 'title'));
     }
 
-    public function testAnonymousCloudCountsOnlyPublicBookmarks(): void
+    public function testCloudCountsOnlyBookmarksVisibleToTheViewer(): void
     {
         $this->seedPublicAndPrivate();
 
-        $anonymous = array_column($this->probe()->cloud(true), 'value', 'name');
+        $anonymous = array_column($this->probe()->cloud(), 'value', 'name');
         $this->assertSame(1, (int) $anonymous['php']);
         $this->assertArrayNotHasKey('secret', $anonymous);
 
-        $full = array_column($this->probe()->cloud(), 'value', 'name');
-        $this->assertSame(2, (int) $full['php']);
-        $this->assertSame(1, (int) $full['secret']);
+        $owner = array_column($this->probe()->cloud(1), 'value', 'name');
+        $this->assertSame(2, (int) $owner['php']);
+        $this->assertSame(1, (int) $owner['secret']);
+
+        $otherUser = array_column($this->probe()->cloud(2), 'value', 'name');
+        $this->assertSame(1, (int) $otherUser['php']);
+        $this->assertArrayNotHasKey('secret', $otherUser);
     }
 
     public function testRowsCarryTheOwnersUsername(): void
@@ -125,7 +132,7 @@ final class ReadPathTest extends TestCase
             SQL,
         );
 
-        $page = $this->probe()->order();
+        $page = $this->probe()->order(1);
 
         $this->assertSame('javi', $page['bookmarks'][0]->username);
     }
@@ -134,16 +141,16 @@ final class ReadPathTest extends TestCase
     {
         $this->seedPublicAndPrivate();
 
-        $anonymous = $this->probe()->order(true, 1, 'php');
+        $anonymous = $this->probe()->order(null, 1, 'php');
         $this->assertSame(['Public'], array_column($anonymous['bookmarks'], 'title'));
 
-        $full = $this->probe()->order(false, 1, 'php');
-        $this->assertSame(['Public', 'Secret'], array_column($full['bookmarks'], 'title'));
+        $owner = $this->probe()->order(1, 1, 'php');
+        $this->assertSame(['Public', 'Secret'], array_column($owner['bookmarks'], 'title'));
 
-        $secret = $this->probe()->order(false, 1, 'secret');
+        $secret = $this->probe()->order(1, 1, 'secret');
         $this->assertSame(['Secret'], array_column($secret['bookmarks'], 'title'));
 
-        $unknown = $this->probe()->order(false, 1, 'nope');
+        $unknown = $this->probe()->order(1, 1, 'nope');
         $this->assertSame([], $unknown['bookmarks']);
         $this->assertSame(1, $unknown['pages']);
     }
@@ -162,12 +169,12 @@ final class ReadPathTest extends TestCase
             $insert->execute([':title' => 'B' . $i, ':stamp' => sprintf('2026-01-01 10:%02d:00', $i)]);
         }
 
-        $first = $this->probe()->order(true);
+        $first = $this->probe()->order();
         $this->assertCount(PAGE_SIZE, $first['bookmarks']);
         $this->assertSame(2, $first['pages']);
         $this->assertSame('B' . (PAGE_SIZE + 2), $first['bookmarks'][0]->title);
 
-        $second = $this->probe()->order(true, 2);
+        $second = $this->probe()->order(null, 2);
         $this->assertSame(['B2', 'B1'], array_column($second['bookmarks'], 'title'));
         $this->assertSame(2, $second['pages']);
     }
@@ -192,9 +199,9 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
             VALUES
-                (1, 'B', 'https://b.test', 't', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00')
+                (1, 'B', 'https://b.test', 't', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,
         );
 
@@ -224,9 +231,9 @@ final class ReadPathTest extends TestCase
         return new class extends Bookmark {
             use Tag;
 
-            public function order(bool $publicOnly = false, int $page = 1, ?string $tag = null): array
+            public function order(?int $viewer = null, int $page = 1, ?string $tag = null): array
             {
-                return $this->orderByDate($publicOnly, $page, $tag);
+                return $this->orderByDate($viewer, $page, $tag);
             }
 
             public function tagsOf(int $id): array
@@ -234,9 +241,9 @@ final class ReadPathTest extends TestCase
                 return $this->getTags($id);
             }
 
-            public function cloud(bool $publicOnly = false): array
+            public function cloud(?int $viewer = null): array
             {
-                return $this->getCloud($publicOnly);
+                return $this->getCloud($viewer);
             }
         };
     }

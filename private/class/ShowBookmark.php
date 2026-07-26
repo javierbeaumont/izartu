@@ -30,19 +30,19 @@ final class ShowBookmark extends Bookmark
      *
      * @param bool $edit Whether to render the edit/delete controls on rows the
      *   current user may manage (pass `Auth::check()`).
-     * @param bool $publicOnly Whether to list only public bookmarks (pass
-     *   `!Auth::check()`; anonymous visitors never see private bookmarks).
+     * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
+     *   anonymous. A viewer sees public bookmarks plus their own private ones.
      * @param int $page 1-based page number.
      * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
      * @return int The total number of pages (at least 1).
      */
     final public function listOrderByDate(
         bool $edit = false,
-        bool $publicOnly = true,
+        ?int $viewer = null,
         int $page = 1,
         ?string $tag = null,
     ): int {
-        ['bookmarks' => $table, 'pages' => $pages] = $this->orderByDate($publicOnly, $page, $tag);
+        ['bookmarks' => $table, 'pages' => $pages] = $this->orderByDate($viewer, $page, $tag);
         foreach ($table as $bookmark) {
             $list = $this->getTags($bookmark->id);
             $tags = false;

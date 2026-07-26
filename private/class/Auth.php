@@ -128,6 +128,16 @@ class Auth
     }
 
     /**
+     * The logged-in user's id, or null if the request is anonymous.
+     *
+     * @return int|null
+     */
+    public static function id(): ?int
+    {
+        return $_SESSION['user']['id'] ?? null;
+    }
+
+    /**
      * Whether the logged-in user may manage (edit/delete) a bookmark.
      *
      * True for the bookmark's owner and for `owner`/`admin` roles; false for

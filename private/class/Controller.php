@@ -142,7 +142,7 @@ class Controller
         Auth::guard();
 
         $bookmark = Bookmark::find((int) $id);
-        if (!$bookmark || !Auth::canManage($bookmark->user)) {
+        if (!$bookmark || !$bookmark->visibleTo(Auth::id()) || !Auth::canManage($bookmark->user)) {
             return self::notFound();
         }
 
@@ -183,7 +183,7 @@ class Controller
         }
 
         $bookmark = Bookmark::find((int) $id);
-        if (!$bookmark || !Auth::canManage($bookmark->user)) {
+        if (!$bookmark || !$bookmark->visibleTo(Auth::id()) || !Auth::canManage($bookmark->user)) {
             return self::notFound();
         }
 
