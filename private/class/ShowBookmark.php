@@ -34,6 +34,7 @@ final class ShowBookmark extends Bookmark
      *   anonymous. A viewer sees public bookmarks plus their own private ones.
      * @param int $page 1-based page number.
      * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param string|null $username Only bookmarks added by this user, or null for all.
      * @return int The total number of pages (at least 1).
      */
     final public function listOrderByDate(
@@ -41,8 +42,9 @@ final class ShowBookmark extends Bookmark
         ?int $viewer = null,
         int $page = 1,
         ?string $tag = null,
+        ?string $username = null,
     ): int {
-        ['bookmarks' => $table, 'pages' => $pages] = $this->orderByDate($viewer, $page, $tag);
+        ['bookmarks' => $table, 'pages' => $pages] = $this->orderByDate($viewer, $page, $tag, $username);
         foreach ($table as $bookmark) {
             $list = $this->getTags($bookmark->id);
             $tags = false;

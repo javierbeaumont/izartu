@@ -35,6 +35,7 @@ class Controller
         return ['home', [
             'page' => max(1, (int) ($_GET['page'] ?? 1)),
             'tagName' => null,
+            'userName' => null,
             'route' => '',
         ]];
     }
@@ -58,7 +59,32 @@ class Controller
         return ['home', [
             'page' => max(1, (int) ($_GET['page'] ?? 1)),
             'tagName' => $name,
+            'userName' => null,
             'route' => 'tag/' . rawurlencode($name),
+        ]];
+    }
+
+    /**
+     * User page: the feed filtered by one username (`/user/USERNAME`), paginated.
+     *
+     * An unknown username renders an empty page rather than a 404, so the
+     * response does not reveal whether an account exists.
+     *
+     * @param string $name Username from the URL (second path segment, encoded).
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function user(string $name): array
+    {
+        $name = rawurldecode($name);
+        if ($name === '') {
+            return self::notFound();
+        }
+
+        return ['home', [
+            'page' => max(1, (int) ($_GET['page'] ?? 1)),
+            'tagName' => null,
+            'userName' => $name,
+            'route' => 'user/' . rawurlencode($name),
         ]];
     }
 

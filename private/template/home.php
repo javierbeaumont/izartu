@@ -26,11 +26,14 @@ include_once PRI_DIR . 'template/option.php';
       <div class="body">
 <?php if ($tagName !== null): ?>
         <p class="filter">Bookmarks tagged <strong><?php echo htmlspecialchars($tagName); ?></strong>
-          (<a href=".">show all</a>)</p>
+          (<a href=".">all bookmarks</a>)</p>
+<?php elseif ($userName !== null): ?>
+        <p class="filter">Bookmarks added by <strong><?php echo htmlspecialchars($userName); ?></strong>
+          (<a href=".">all bookmarks</a>)</p>
 <?php endif; ?>
 <?php
 $show = new ShowBookmark();
-$pages = $show->listOrderByDate(Auth::check(), Auth::id(), $page, $tagName);
+$pages = $show->listOrderByDate(Auth::check(), Auth::id(), $page, $tagName, $userName);
 
 include PRI_DIR . 'template/pagination.php';
 ?>

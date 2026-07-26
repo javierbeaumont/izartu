@@ -241,6 +241,7 @@ class Bookmark extends Crud
      *   anonymous. A viewer sees public bookmarks plus their own private ones.
      * @param int $page 1-based page number; each page holds `PAGE_SIZE` bookmarks.
      * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param string|null $username Only bookmarks added by this user, or null for all.
      * @param bool $order true for ascending order, false (default) for descending.
      * @return array{bookmarks: list<self>, pages: int} The page's bookmarks
      *   (newest first by default) and the total number of pages (at least 1).
@@ -249,15 +250,16 @@ class Bookmark extends Crud
         ?int $viewer = null,
         int $page = 1,
         ?string $tag = null,
+        ?string $username = null,
         bool $order = false,
     ): array {
-        [$cond, $param] = $this->filter($viewer, $tag);
+        [$cond, $param] = $this->filter($viewer, $tag, $username);
         $cond .= ' ORDER BY `bookmark`.`mod` ' . ($order ? 'ASC' : 'DESC');
         $cond .= ' LIMIT ' . PAGE_SIZE . ' OFFSET ' . (($page - 1) * PAGE_SIZE);
 
         return [
             'bookmarks' => array_map(self::hydrate(...), $this->select($cond, $param)),
-            'pages' => max(1, (int) ceil($this->count($viewer, $tag) / PAGE_SIZE)),
+            'pages' => max(1, (int) ceil($this->count($viewer, $tag, $username) / PAGE_SIZE)),
         ];
     }
 
@@ -266,10 +268,11 @@ class Bookmark extends Crud
      *
      * @param int|null $viewer The viewer's user id, or null for anonymous.
      * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param string|null $username Only bookmarks added by this user, or null for all.
      * @return array{0: string, 1: list<array{0: string, 1: mixed, 2: int, 3: int}>|false}
      *   The WHERE clause (never empty) and its bind parameters.
      */
-    private function filter(?int $viewer, ?string $tag): array
+    private function filter(?int $viewer, ?string $tag, ?string $username = null): array
     {
         $where = [];
         $param = [];
@@ -291,6 +294,10 @@ class Bookmark extends Crud
                 SQL;
             $param[] = [':tag', $tag, PDO::PARAM_STR, 255];
         }
+        if ($username !== null) {
+            $where[] = '`user`.`username` = :username';
+            $param[] = [':username', $username, PDO::PARAM_STR, 255];
+        }
 
         return [' WHERE ' . implode(' AND ', $where), $param ?: false];
     }
@@ -300,17 +307,20 @@ class Bookmark extends Crud
      *
      * @param int|null $viewer The viewer's user id, or null for anonymous.
      * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param string|null $username Only bookmarks added by this user, or null for all.
      * @return int The bookmark count.
      */
-    private function count(?int $viewer, ?string $tag = null): int
+    private function count(?int $viewer, ?string $tag = null, ?string $username = null): int
     {
-        [$cond, $param] = $this->filter($viewer, $tag);
+        [$cond, $param] = $this->filter($viewer, $tag, $username);
 
         $rows = $this->read(
             <<<SQL
             SELECT
                 COUNT(*) AS `total`
             FROM `bookmark`
+            LEFT JOIN
+                `user` ON (`user`.`id` = `bookmark`.`user`)
             $cond
             SQL,
             $param,

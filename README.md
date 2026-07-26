@@ -25,8 +25,9 @@ Expect rough edges and breaking changes while the rebuild is under way.
 ## Features
 
 * Public bookmark feed, browsable anonymously: newest first, paginated, and
-  filterable by tag (`/tag/NAME`), with a tag cloud. Each bookmark shows who
-  added it and when.
+  filterable by tag (`/tag/NAME`) or by user (`/user/USERNAME`), with a tag
+  cloud. Each bookmark shows who added it and when, linking to that user's
+  bookmarks.
 * Log in to add, edit and delete bookmarks; editing is restricted to the
   bookmark's owner (or an admin).
 * Per-bookmark visibility: public (anyone on the instance) or private (only

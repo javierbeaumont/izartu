@@ -27,6 +27,7 @@
  * Routes:
  * - `/`          Home: public bookmark feed + tag cloud.
  * - `/tag/NAME`  The feed filtered by one tag.
+ * - `/user/NAME` The feed filtered by one user.
  * - `/login`     Login form (GET) + handler (POST).
  * - `/logout`    Destroy the session, redirect home.
  * - `/add`       Add bookmark form (GET) + handler (POST). Login required.
@@ -66,6 +67,7 @@ $segments = $path === '' ? [] : explode('/', $path);
 [$tpl, $vars] = match ($segments[0] ?? '') {
     ''       => Controller::home(),
     'tag'    => Controller::tag($segments[1] ?? ''),
+    'user'   => Controller::user($segments[1] ?? ''),
     'login'  => Controller::login(),
     'logout' => Controller::logout(),
     'add'    => Controller::add(),

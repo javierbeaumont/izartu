@@ -23,7 +23,7 @@
             <h2><a href="<?php echo $bookmark->hlink ; ?>"><?php echo $bookmark->title ; ?></a></h2>
             <p class="link-page"><a href="<?php echo $bookmark->hlink ; ?>"><?php echo $bookmark->hlink ; ?></a></p>
             <p class="link-info">
-              <span class="linker">Added by <?php echo htmlspecialchars($bookmark->username) ; ?></span>
+              <span class="linker">Added by <a href="user/<?php echo rawurlencode($bookmark->username); ?>"><?php echo htmlspecialchars($bookmark->username) ; ?></a></span>
               <span class="added">on <?php echo $bookmark->add ; ?>.</span>
               <span class="modified">Last modified: <?php echo $bookmark->mod ; ?></span>
             </p>

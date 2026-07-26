@@ -155,6 +155,42 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, $unknown['pages']);
     }
 
+    public function testListFiltersByUsername(): void
+    {
+        $this->pdo->exec('TRUNCATE `user`');
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'javi', 'javi@izartu.test', 'x', 'user'),
+                (2, 'bob', 'bob@izartu.test', 'x', 'user')
+            SQL,
+        );
+        $this->seedPublicAndPrivate();
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `bookmark`
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+            VALUES
+                (3, 'BobPublic', 'https://bp.test', 'b', 2, 'public', '2026-01-03 10:00:00', '2026-01-03 10:00:00')
+            SQL,
+        );
+
+        $anonymous = $this->probe()->order(null, 1, null, 'javi');
+        $this->assertSame(['Public'], array_column($anonymous['bookmarks'], 'title'));
+
+        $owner = $this->probe()->order(1, 1, null, 'javi');
+        $this->assertSame(['Public', 'Secret'], array_column($owner['bookmarks'], 'title'));
+
+        $bob = $this->probe()->order(null, 1, null, 'bob');
+        $this->assertSame(['BobPublic'], array_column($bob['bookmarks'], 'title'));
+
+        $unknown = $this->probe()->order(null, 1, null, 'ghost');
+        $this->assertSame([], $unknown['bookmarks']);
+        $this->assertSame(1, $unknown['pages']);
+    }
+
     public function testListIsPaginated(): void
     {
         $insert = $this->pdo->prepare(
@@ -231,9 +267,13 @@ final class ReadPathTest extends TestCase
         return new class extends Bookmark {
             use Tag;
 
-            public function order(?int $viewer = null, int $page = 1, ?string $tag = null): array
-            {
-                return $this->orderByDate($viewer, $page, $tag);
+            public function order(
+                ?int $viewer = null,
+                int $page = 1,
+                ?string $tag = null,
+                ?string $username = null,
+            ): array {
+                return $this->orderByDate($viewer, $page, $tag, $username);
             }
 
             public function tagsOf(int $id): array
