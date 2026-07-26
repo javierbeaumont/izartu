@@ -21,8 +21,8 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 CREATE TABLE IF NOT EXISTS `bookmark` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `hlink` tinytext COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `text` tinytext COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `hlink` varchar(2048) COLLATE utf8mb4_bin NOT NULL,
+  `text` varchar(1024) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `user` smallint(5) unsigned NOT NULL,
   `visibility` enum('public','private') COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'private',
   `add` datetime NOT NULL,

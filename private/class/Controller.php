@@ -229,12 +229,67 @@ class Controller
 
         if ($bookmark->title === '') {
             $errors['title'] = 'A title is required.';
+        } elseif (mb_strlen($bookmark->title) > 255) {
+            $errors['title'] = 'The title is too long (max 255 characters).';
         }
-        if ($bookmark->hlink === '' || !filter_var($bookmark->hlink, FILTER_VALIDATE_URL)) {
-            $errors['link'] = 'A valid URL is required.';
+
+        if ($bookmark->hlink === '') {
+            $errors['link'] = 'A URL is required.';
+        } elseif (!self::isValidLink($bookmark->hlink)) {
+            $errors['link'] = 'Enter a valid http:// or https:// URL.';
+        } elseif (mb_strlen($bookmark->hlink) > 2048) {
+            $errors['link'] = 'The URL is too long (max 2048 characters).';
+        }
+
+        if (mb_strlen($bookmark->text) > 1024) {
+            $errors['description'] = 'The description is too long (max 1024 characters).';
         }
 
         return $errors;
+    }
+
+    /**
+     * Validate a bookmark's normalised tag names.
+     *
+     * @param list<string> $names Parsed tag names (see `Bookmark::parseTags()`).
+     * @return string|null An error message, or null when the tags are fine.
+     */
+    public static function tagError(array $names): ?string
+    {
+        if (count($names) > 25) {
+            return 'Too many tags (max 25).';
+        }
+        if (array_filter($names, static fn(string $name): bool => mb_strlen($name) > 255)) {
+            return 'A tag is too long (max 255 characters).';
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether a string is an acceptable bookmark URL.
+     *
+     * Accepts only `http`/`https`, requires a host, and rejects embedded
+     * whitespace/control characters and userinfo (`user:pass@`, a phishing
+     * vector). Host shape is left permissive on purpose (IPs, `localhost` and
+     * intranet hosts are valid targets for a self-hosted instance).
+     *
+     * @param string $url The URL to check.
+     * @return bool
+     */
+    private static function isValidLink(string $url): bool
+    {
+        if (preg_match('/[\s\x00-\x1f\x7f]/', $url) || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        $parts = parse_url($url);
+
+        return is_array($parts)
+            && in_array(strtolower($parts['scheme'] ?? ''), ['http', 'https'], true)
+            && ($parts['host'] ?? '') !== ''
+            && !isset($parts['user'])
+            && !isset($parts['pass']);
     }
 
     /**
@@ -252,6 +307,11 @@ class Controller
         $bookmark->visibility = isset($input['visibility']) ? Visibility::Public : Visibility::Private;
 
         $errors = self::validate($bookmark);
+
+        $tagError = self::tagError(Bookmark::parseTags($input['tags'] ?? ''));
+        if ($tagError !== null) {
+            $errors['tags'] = $tagError;
+        }
 
         if (!Auth::csrfCheck($input['csrf'] ?? null)) {
             $errors['csrf'] = 'The session expired; please try again.';

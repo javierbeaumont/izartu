@@ -32,11 +32,11 @@
             </div>
             <div>
               <label for="link">URL</label>
-              <input type="url" id="link" name="link" value="<?php echo htmlspecialchars($bookmark->hlink); ?>" maxlength="255" required>
+              <input type="url" id="link" name="link" value="<?php echo htmlspecialchars($bookmark->hlink); ?>" maxlength="2048" required>
             </div>
             <div>
               <label for="description">Description</label>
-              <textarea id="description" name="description" rows="5"><?php echo htmlspecialchars($bookmark->text); ?></textarea>
+              <textarea id="description" name="description" rows="5" maxlength="1024"><?php echo htmlspecialchars($bookmark->text); ?></textarea>
             </div>
             <div>
               <label for="tags">Tags (comma-separated)</label>
