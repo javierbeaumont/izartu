@@ -33,7 +33,7 @@
   <body>
     <div id="header">
 <?php if (Auth::check()): ?>
-      <p><a href="add">Add bookmark</a> <a href="logout">Logout</a></p>
+      <p><a href="dashboard">Dashboard</a> <a href="add">Add bookmark</a> <a href="logout">Logout</a></p>
 <?php else: ?>
       <p><a href="login">Login</a></p>
 <?php endif; ?>

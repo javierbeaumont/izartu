@@ -108,7 +108,7 @@ final class AuthTest extends TestCase
 
         $this->assertTrue(Auth::attempt('  OWNER@Izartu.Test ', 'secret123'));
         $this->assertTrue(Auth::check());
-        $this->assertSame(['id' => 1, 'role' => 'owner'], Auth::user());
+        $this->assertSame(['id' => 1, 'username' => 'owner', 'role' => 'owner'], Auth::user());
     }
 
     public function testAttemptRejectsAWrongPassword(): void

@@ -78,6 +78,18 @@ final class ControllerAccessTest extends TestCase
         $this->assertSame('Secret', $vars['bookmark']->title);
     }
 
+    public function testDashboardListsTheLoggedInUsersOwnBookmarks(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'username' => 'javi', 'role' => 'user'];
+
+        [$template, $vars] = Controller::dashboard();
+
+        $this->assertSame('home', $template);
+        $this->assertTrue($vars['dashboard']);
+        $this->assertSame('javi', $vars['userName']);
+        $this->assertSame('dashboard', $vars['route']);
+    }
+
     public function testLoginRejectsAMalformedEmailWithoutTouchingTheDatabase(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';

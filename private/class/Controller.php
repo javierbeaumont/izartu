@@ -36,7 +36,27 @@ class Controller
             'page' => max(1, (int) ($_GET['page'] ?? 1)),
             'tagName' => null,
             'userName' => null,
+            'dashboard' => false,
             'route' => '',
+        ]];
+    }
+
+    /**
+     * Dashboard: the logged-in user's own bookmarks (public and private), with
+     * edit/delete controls. Login required.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function dashboard(): array
+    {
+        Auth::guard();
+
+        return ['home', [
+            'page' => max(1, (int) ($_GET['page'] ?? 1)),
+            'tagName' => null,
+            'userName' => Auth::user()['username'],
+            'dashboard' => true,
+            'route' => 'dashboard',
         ]];
     }
 
@@ -60,6 +80,7 @@ class Controller
             'page' => max(1, (int) ($_GET['page'] ?? 1)),
             'tagName' => $name,
             'userName' => null,
+            'dashboard' => false,
             'route' => 'tag/' . rawurlencode($name),
         ]];
     }
@@ -84,6 +105,7 @@ class Controller
             'page' => max(1, (int) ($_GET['page'] ?? 1)),
             'tagName' => null,
             'userName' => $name,
+            'dashboard' => false,
             'route' => 'user/' . rawurlencode($name),
         ]];
     }

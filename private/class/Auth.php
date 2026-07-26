@@ -70,7 +70,11 @@ class Auth
 
         session_regenerate_id(true);
 
-        $_SESSION['user'] = ['id' => (int) $user['id'], 'role' => $user['role']];
+        $_SESSION['user'] = [
+            'id' => (int) $user['id'],
+            'username' => $user['username'],
+            'role' => $user['role'],
+        ];
 
         return true;
     }
@@ -106,7 +110,7 @@ class Auth
     /**
      * The logged-in user's session data, or null if the request is anonymous.
      *
-     * @return array{id: int, role: string}|null
+     * @return array{id: int, username: string, role: string}|null
      */
     public static function user(): ?array
     {

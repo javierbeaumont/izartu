@@ -29,7 +29,8 @@ Expect rough edges and breaking changes while the rebuild is under way.
   cloud. Each bookmark shows who added it and when, linking to that user's
   bookmarks.
 * Log in to add, edit and delete bookmarks; editing is restricted to the
-  bookmark's owner (or an admin).
+  bookmark's owner (or an admin). A dashboard lists your own bookmarks
+  (public and private) with edit/delete controls.
 * Per-bookmark visibility: public (anyone on the instance) or private (only
   its owner: no other account sees it, whatever its role, and neither do its
   tags leak into the cloud).

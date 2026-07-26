@@ -24,7 +24,9 @@ $tag = $show->tagCloud(Auth::id());
 include_once PRI_DIR . 'template/option.php';
 ?>
       <div class="body">
-<?php if ($tagName !== null): ?>
+<?php if ($dashboard): ?>
+        <p class="filter">Your bookmarks</p>
+<?php elseif ($tagName !== null): ?>
         <p class="filter">Bookmarks tagged <strong><?php echo htmlspecialchars($tagName); ?></strong>
           (<a href=".">all bookmarks</a>)</p>
 <?php elseif ($userName !== null): ?>

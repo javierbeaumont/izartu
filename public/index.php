@@ -26,6 +26,7 @@
  *
  * Routes:
  * - `/`          Home: public bookmark feed + tag cloud.
+ * - `/dashboard` The logged-in user's own bookmarks (public + private).
  * - `/tag/NAME`  The feed filtered by one tag.
  * - `/user/NAME` The feed filtered by one user.
  * - `/login`     Login form (GET) + handler (POST).
@@ -65,15 +66,16 @@ $path = trim($path, '/');
 $segments = $path === '' ? [] : explode('/', $path);
 
 [$tpl, $vars] = match ($segments[0] ?? '') {
-    ''       => Controller::home(),
-    'tag'    => Controller::tag($segments[1] ?? ''),
-    'user'   => Controller::user($segments[1] ?? ''),
-    'login'  => Controller::login(),
-    'logout' => Controller::logout(),
-    'add'    => Controller::add(),
-    'edit'   => Controller::edit($segments[1] ?? ''),
-    'delete' => Controller::delete($segments[1] ?? ''),
-    default  => Controller::notFound(),
+    ''          => Controller::home(),
+    'dashboard' => Controller::dashboard(),
+    'tag'       => Controller::tag($segments[1] ?? ''),
+    'user'      => Controller::user($segments[1] ?? ''),
+    'login'     => Controller::login(),
+    'logout'    => Controller::logout(),
+    'add'       => Controller::add(),
+    'edit'      => Controller::edit($segments[1] ?? ''),
+    'delete'    => Controller::delete($segments[1] ?? ''),
+    default     => Controller::notFound(),
 };
 
 extract($vars, EXTR_SKIP);
