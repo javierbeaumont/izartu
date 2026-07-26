@@ -147,6 +147,7 @@ class Controller
                 $bookmark->user = Auth::user()['id'];
                 $bookmark->save();
                 $bookmark->saveTags($tags);
+                Flash::set('Bookmark added.');
                 self::redirect(BASE . '/');
             }
         }
@@ -184,6 +185,7 @@ class Controller
             if (!$errors) {
                 $bookmark->save();
                 $bookmark->saveTags($tags);
+                Flash::set('Bookmark saved.');
                 self::redirect(BASE . '/');
             }
         }
@@ -216,6 +218,7 @@ class Controller
         }
 
         $bookmark->delete();
+        Flash::set('Bookmark deleted.');
         self::redirect(BASE . '/');
     }
 

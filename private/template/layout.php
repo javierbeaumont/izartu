@@ -40,6 +40,10 @@
       <h1><a href=".">izartu</a></h1>
     </div>
     <div id="content">
+<?php $flash = Flash::pull(); ?>
+<?php if ($flash !== null): ?>
+      <p class="flash"><?php echo htmlspecialchars($flash); ?></p>
+<?php endif; ?>
 <?php include $view; ?>
     </div>
     <div id="footer">

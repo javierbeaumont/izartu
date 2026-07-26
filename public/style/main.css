@@ -161,6 +161,14 @@ body {
   cursor: pointer;
 }
 
+p.flash {
+  margin: 1.5em 1.5em 0;
+  border: .1em dashed #9c9;
+  padding: .5em 1em;
+  background-color: #efe;
+  font-size: .9em;
+}
+
 p.filter {
   margin: 1.5em 30% 0 1.5em;
   font-size: .9em;
