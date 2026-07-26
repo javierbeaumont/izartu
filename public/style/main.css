@@ -141,6 +141,17 @@ body {
   text-decoration: underline;
 }
 
+#list div.bookmark h2 span.private {
+  margin-left: .5em;
+  border: .1em dashed #c99;
+  padding: 0 .4em;
+  vertical-align: middle;
+  background-color: #fee;
+  color: #966;
+  font-size: .6em;
+  font-weight: normal;
+}
+
 #list div.bookmark div.manage {
   padding-top: .5em;
   font-size: .8em;

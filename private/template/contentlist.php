@@ -20,7 +20,7 @@
 ?>
         <div class="bookmark">
           <div class="head">
-            <h2><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->title) ; ?></a></h2>
+            <h2><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->title) ; ?></a><?php if ($bookmark->visibility === Visibility::Private): ?> <span class="private">private</span><?php endif; ?></h2>
             <p class="link-page"><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->hlink) ; ?></a></p>
             <p class="link-info">
               <span class="linker">Added by <a href="user/<?php echo rawurlencode($bookmark->username); ?>"><?php echo htmlspecialchars($bookmark->username) ; ?></a></span>
