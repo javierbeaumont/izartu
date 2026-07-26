@@ -23,6 +23,38 @@
  */
 class User extends Crud
 {
+    /** The roles a user account may hold. */
+    public const ROLES = ['owner', 'admin', 'user'];
+
+    /**
+     * Validate the fields needed to create a user account.
+     *
+     * @param string $email Email address (identity + login).
+     * @param string $username Public display name.
+     * @param string $password Plain password (checked before hashing).
+     * @param string $role One of `self::ROLES`.
+     * @return array<string, string> Error message per invalid field; empty if valid.
+     */
+    public static function validate(string $email, string $username, string $password, string $role): array
+    {
+        $errors = [];
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 255) {
+            $errors['email'] = 'A valid email address (max 255 characters) is required.';
+        }
+        if (!preg_match('/^[A-Za-z0-9_-]{3,32}$/', $username)) {
+            $errors['username'] = 'Username must be 3-32 characters of letters, digits, "_" or "-".';
+        }
+        if (mb_strlen($password) < 8) {
+            $errors['password'] = 'Password must be at least 8 characters.';
+        }
+        if (!in_array($role, self::ROLES, true)) {
+            $errors['role'] = 'Role must be one of: ' . implode(', ', self::ROLES) . '.';
+        }
+
+        return $errors;
+    }
+
     /**
      * Find a user by email address.
      *

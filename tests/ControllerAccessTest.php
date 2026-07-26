@@ -77,4 +77,19 @@ final class ControllerAccessTest extends TestCase
         $this->assertSame('bookmarkform', $template);
         $this->assertSame('Secret', $vars['bookmark']->title);
     }
+
+    public function testLoginRejectsAMalformedEmailWithoutTouchingTheDatabase(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SESSION['csrf'] = 'token';
+        $_POST = ['csrf' => 'token', 'email' => 'not an email', 'password' => 'secret123'];
+
+        [$template, $vars] = Controller::login();
+
+        $this->assertSame('login', $template);
+        $this->assertTrue($vars['error']);
+        $this->assertFalse(Auth::check());
+
+        $_POST = [];
+    }
 }

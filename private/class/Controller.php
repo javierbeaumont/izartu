@@ -100,8 +100,10 @@ class Controller
     public static function login(): array
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim($_POST['email'] ?? '');
             if (Auth::csrfCheck($_POST['csrf'] ?? null)
-                && Auth::attempt($_POST['email'] ?? '', $_POST['password'] ?? '')) {
+                && filter_var($email, FILTER_VALIDATE_EMAIL)
+                && Auth::attempt($email, $_POST['password'] ?? '')) {
                 self::redirect(BASE . '/');
             }
             return ['login', ['error' => true]];

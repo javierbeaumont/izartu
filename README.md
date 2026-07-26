@@ -116,6 +116,9 @@ password and role (`owner`, `admin` or `user`), hashes the password and
 inserts the user. Login is by email; the username is the public display name
 shown next to the user's bookmarks.
 
+Inputs are validated: a real email address, a username of 3-32 characters
+(letters, digits, `_` or `-`), and a password of at least 8 characters.
+
 With Docker:
 
 ```sh
