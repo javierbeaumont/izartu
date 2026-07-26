@@ -36,8 +36,8 @@ Expect rough edges and breaking changes while the rebuild is under way.
 * Comma-separated tags, normalised automatically (trimmed, lower-cased,
   deduplicated).
 * Runs at a domain root or in a sub-directory (base path is auto-detected).
-* Hardened sessions (HttpOnly, SameSite, Secure on HTTPS) and CSRF-protected
-  forms.
+* Hardened sessions (HttpOnly, SameSite, Secure on HTTPS), CSRF-protected
+  forms, and HTML-escaped output.
 
 ## Requirements
 

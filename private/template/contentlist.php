@@ -20,8 +20,8 @@
 ?>
         <div class="bookmark">
           <div class="head">
-            <h2><a href="<?php echo $bookmark->hlink ; ?>"><?php echo $bookmark->title ; ?></a></h2>
-            <p class="link-page"><a href="<?php echo $bookmark->hlink ; ?>"><?php echo $bookmark->hlink ; ?></a></p>
+            <h2><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->title) ; ?></a></h2>
+            <p class="link-page"><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->hlink) ; ?></a></p>
             <p class="link-info">
               <span class="linker">Added by <a href="user/<?php echo rawurlencode($bookmark->username); ?>"><?php echo htmlspecialchars($bookmark->username) ; ?></a></span>
               <span class="added">on <?php echo $bookmark->add ; ?>.</span>
@@ -29,7 +29,7 @@
             </p>
           </div>
           <div class="info">
-            <p class="text"><?php echo $bookmark->text ; ?></p>
+            <p class="text"><?php echo htmlspecialchars($bookmark->text) ; ?></p>
 <?php if ($tags): ?>
             <p class="tag">Tags: <?php echo $tags; ?></p>
 <?php endif; ?>
