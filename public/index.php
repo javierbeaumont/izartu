@@ -39,11 +39,7 @@
  * any unmatched path renders the 404 view.
  */
 
-require_once __DIR__ . '/config.php';
-
-spl_autoload_register(function ($class) {
-    require PRI_DIR . 'class/' . $class . '.php';
-});
+require_once dirname(__DIR__) . '/private/bootstrap.php';
 
 if (DEBUG) {
     ini_set('display_errors', 'stdout');
@@ -78,11 +74,11 @@ $segments = $path === '' ? [] : explode('/', $path);
 };
 
 extract($vars, EXTR_SKIP);
-$view = PRI_DIR . 'template/' . $tpl . '.php';
+$view = PRIVATE_DIR . 'template/' . $tpl . '.php';
 
 // Buffer the render so the Server-Timing header can be set after it.
 ob_start();
-require_once PRI_DIR . 'template/layout.php';
+require_once PRIVATE_DIR . 'template/layout.php';
 
 if (DEBUG) {
     header('Server-Timing: ' . Debug::serverTiming());

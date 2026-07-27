@@ -37,11 +37,7 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
-require dirname(__DIR__, 2) . '/public/config.php';
-
-spl_autoload_register(function ($class) {
-    require dirname(__DIR__) . '/class/' . $class . '.php';
-});
+require dirname(__DIR__) . '/bootstrap.php';
 
 function prompt(string $label): string
 {

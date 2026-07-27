@@ -19,7 +19,7 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../public/config.php';
+require __DIR__ . '/../private/bootstrap.php';
 
 // A CLI session, so Auth::attempt()'s session_regenerate_id() works in tests.
 session_start();

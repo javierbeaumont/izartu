@@ -51,7 +51,7 @@
       <p class="source">Get the source code <a href="https://github.com/javierbeaumont/izartu">on GitHub</a></p>
     </div>
 <?php if (DEBUG) {
-    include PRI_DIR . 'template/debug.php';
+    include PRIVATE_DIR . 'template/debug.php';
 } ?>
   </body>
 </html>

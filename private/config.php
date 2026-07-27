@@ -19,18 +19,13 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Site configuration: paths, database connection and runtime flags.
+ * Site configuration: the operator-editable settings (database connection,
+ * feed size, runtime flags). Fixed wiring lives in `bootstrap.php`.
  */
 
 ################################################################################
 ############################# BASIC CONFIGURATION ##############################
 ################################################################################
-
-/**
- * Location (and name, ending with '/') of the `private/` directory, absolute or
- * relative to this file. An absolute path is best for performance.
- */
-define('PRI_DIR', '../private/');
 
 /** Database host ('localhost' by default). */
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');

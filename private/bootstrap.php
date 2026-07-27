@@ -18,25 +18,19 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-$show = new ShowTag();
-$tag = $show->tagCloud(Auth::id());
+/**
+ * Application bootstrap: fixed paths, class autoloading and configuration.
+ * Every entry point (`public/index.php`, `private/cli/*`, the test suite)
+ * requires this file; `config.php` holds the operator-editable settings.
+ */
 
-include_once PRIVATE_DIR . 'template/option.php';
-?>
-      <div class="body">
-<?php if ($dashboard): ?>
-        <p class="filter">Your bookmarks</p>
-<?php elseif ($tagName !== null): ?>
-        <p class="filter">Bookmarks tagged <strong><?php echo htmlspecialchars($tagName); ?></strong>
-          (<a href=".">all bookmarks</a>)</p>
-<?php elseif ($userName !== null): ?>
-        <p class="filter">Bookmarks added by <strong><?php echo htmlspecialchars($userName); ?></strong>
-          (<a href=".">all bookmarks</a>)</p>
-<?php endif; ?>
-<?php
-$show = new ShowBookmark();
-$pages = $show->listOrderByDate(Auth::check(), Auth::id(), $page, $tagName, $userName);
+define('PRIVATE_DIR', __DIR__ . '/');
 
-include PRIVATE_DIR . 'template/pagination.php';
-?>
-      </div>
+spl_autoload_register(function ($class) {
+    $file = PRIVATE_DIR . 'class/' . $class . '.php';
+    if (is_file($file)) {
+        require $file;
+    }
+});
+
+require_once __DIR__ . '/config.php';

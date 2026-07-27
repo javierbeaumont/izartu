@@ -54,7 +54,7 @@ final class ShowBookmark extends Bookmark
             }
             echo '
         <div id="list">';
-            include PRI_DIR . 'template/contentlist.php';
+            include PRIVATE_DIR . 'template/contentlist.php';
             echo '
         </div>';
         }
