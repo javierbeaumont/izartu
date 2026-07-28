@@ -57,6 +57,7 @@ final class ControllerAccessTest extends TestCase
     protected function tearDown(): void
     {
         $_SESSION = [];
+        $_POST = [];
     }
 
     public function testAdminsCannotEditAForeignPrivateBookmark(): void
@@ -68,14 +69,48 @@ final class ControllerAccessTest extends TestCase
         $this->assertSame('notfound', $template);
     }
 
-    public function testTheOwnerCanEditTheirPrivateBookmark(): void
+    public function testTheOwnerEditFormRerendersInlineOnInvalidInput(): void
     {
-        $_SESSION['user'] = ['id' => 1, 'role' => 'user'];
+        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SESSION['csrf'] = 'token';
+        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'https://s.test', 'return' => 'dashboard'];
 
         [$template, $vars] = Controller::edit('1');
 
-        $this->assertSame('bookmarkform', $template);
-        $this->assertSame('Secret', $vars['bookmark']->title);
+        $this->assertSame('home', $template);
+        $this->assertSame(1, $vars['editId']);
+        $this->assertArrayHasKey('title', $vars['formErrors']);
+        $this->assertSame('https://s.test', $vars['formBookmark']->hlink, 'typed values survive the re-render');
+    }
+
+    public function testAddRerendersInlineAndRejectsAForeignReturn(): void
+    {
+        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SESSION['csrf'] = 'token';
+        $_POST = ['csrf' => 'token', 'title' => 'x', 'link' => 'nope', 'return' => 'https://evil.test/'];
+
+        [$template, $vars] = Controller::add();
+
+        $this->assertSame('home', $template);
+        $this->assertTrue($vars['adding']);
+        $this->assertSame('dashboard', $vars['route'], 'a foreign return falls back to the dashboard');
+        $this->assertArrayHasKey('link', $vars['formErrors']);
+    }
+
+    public function testAValidReturnRebuildsTheOriginList(): void
+    {
+        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SESSION['csrf'] = 'token';
+        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'nope', 'return' => 'tag/php?page=2'];
+
+        [, $vars] = Controller::add();
+
+        $this->assertSame('tag/php', $vars['route']);
+        $this->assertSame('php', $vars['tagName']);
+        $this->assertSame(2, $vars['page']);
     }
 
     public function testDashboardListsTheLoggedInUsersOwnBookmarks(): void

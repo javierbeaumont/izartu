@@ -23,7 +23,7 @@
 <?php if ($page > 1): ?>
           <a class="previous" href="<?php echo $route; ?>?page=<?php echo $page - 1; ?>">&lsaquo; Previous</a>
 <?php endif; ?>
-<?php foreach (ShowBookmark::pageWindow($page, $pages) as $number): ?>
+<?php foreach (Bookmark::pageWindow($page, $pages) as $number): ?>
 <?php if ($number === null): ?>
           <span class="gap">&hellip;</span>
 <?php elseif ($number === $page): ?>

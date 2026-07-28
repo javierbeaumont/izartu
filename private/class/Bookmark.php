@@ -246,7 +246,7 @@ class Bookmark extends Crud
      * @return array{bookmarks: list<self>, pages: int} The page's bookmarks
      *   (newest first by default) and the total number of pages (at least 1).
      */
-    final protected function orderByDate(
+    final public function orderByDate(
         ?int $viewer = null,
         int $page = 1,
         ?string $tag = null,
@@ -374,6 +374,37 @@ class Bookmark extends Crud
         $bookmark->mod = $row['mod'];
 
         return $bookmark;
+    }
+
+    /**
+     * The page numbers a pager should display: first, last, and a window
+     * around the current page, with null marking each gap (an ellipsis).
+     *
+     * @param int $page Current 1-based page number.
+     * @param int $pages Total number of pages.
+     * @param int $radius How many pages to show on each side of the current one.
+     * @return list<int|null> Page numbers in order, null where pages are skipped.
+     */
+    public static function pageWindow(int $page, int $pages, int $radius = 2): array
+    {
+        $numbers = [1, $pages];
+        for ($n = $page - $radius; $n <= $page + $radius; $n++) {
+            if ($n >= 1 && $n <= $pages) {
+                $numbers[] = $n;
+            }
+        }
+        $numbers = array_values(array_unique($numbers));
+        sort($numbers);
+
+        $window = [];
+        foreach ($numbers as $i => $n) {
+            if ($i > 0 && $n > $numbers[$i - 1] + 1) {
+                $window[] = null;
+            }
+            $window[] = $n;
+        }
+
+        return $window;
     }
 
 }

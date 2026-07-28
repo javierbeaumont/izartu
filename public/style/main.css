@@ -264,29 +264,76 @@ form.login p.error {
   margin: 1em 0 0;
 }
 
-form.bookmarkform {
-  max-width: 30em;
-}
-
-form.bookmarkform input[type="text"], form.bookmarkform input[type="url"], form.bookmarkform textarea {
+#list form.bookmarkform input, #list form.bookmarkform textarea, #list form.bookmarkform button {
   box-sizing: border-box;
-  border: .1em solid #ccc;
-  border-radius: .2em;
-  padding: .5em;
-  width: 100%;
-  font-size: 1em;
   font-family: inherit;
 }
 
-form.bookmarkform input[type="text"]:focus, form.bookmarkform input[type="url"]:focus, form.bookmarkform textarea:focus {
-  border-color: #999;
-  outline: none;
+#list form.bookmarkform div.head input {
+  display: block;
+  border: 0;
+  background: none;
+  width: 100%;
 }
 
-form.bookmarkform div.check label {
-  display: inline;
-  color: #333;
+#list form.bookmarkform input.title {
+  font: bold 1.2em sans-serif;
+}
+
+#list form.bookmarkform input.link {
+  font: .8em sans-serif;
+}
+
+#list form.bookmarkform div.info textarea, #list form.bookmarkform input.tags {
+  display: block;
+  margin: .3em 0;
+  border: .1em dashed #ccc;
+  padding: .3em;
+  width: 100%;
+  background-color: white;
   font-size: 1em;
+  text-align: left;
+}
+
+#list form.bookmarkform input:focus, #list form.bookmarkform textarea:focus {
+  outline: none;
+  border-color: #999;
+}
+
+#list form.bookmarkform p.check {
+  padding-top: .3em;
+  font-size: .9em;
+}
+
+#list form.bookmarkform p.check input {
+  vertical-align: middle;
+}
+
+#list form.bookmarkform p.check label {
+  display: inline;
+}
+
+#list form.bookmarkform div.manage {
+  padding-top: .5em;
+  font-size: .8em;
+}
+
+#list form.bookmarkform div.manage input, #list form.bookmarkform div.manage button,
+#list form.bookmarkform div.manage a {
+  margin-right: .8em;
+  border: 0;
+  background: none;
+  color: black;
+  font-size: 1em;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#list form.bookmarkform p.error {
+  padding: .3em .5em;
+  color: red;
+  font-weight: bold;
+  font-size: .9em;
 }
 
 #footer {

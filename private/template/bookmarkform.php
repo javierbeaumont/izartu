@@ -17,36 +17,36 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
+
+# Inline bookmark form, rendered in place of a list row (edit) or on top of
+# the list (add). Expects: $formAction, $formBookmark, $formTags, $formErrors,
+# plus the list context ($route, $page) for the return field and Cancel link.
+$listUrl = $route . ($page > 1 ? '?page=' . $page : '');
 ?>
-      <div class="body">
-        <form method="post" action="<?php echo htmlspecialchars($action); ?>" class="login bookmarkform">
-          <fieldset>
-            <legend><?php echo $action === 'add' ? 'Add bookmark' : 'Edit bookmark'; ?></legend>
-<?php foreach ($errors as $error): ?>
-            <p class="error"><?php echo htmlspecialchars($error); ?></p>
+        <form method="post" action="<?php echo htmlspecialchars($formAction); ?>" class="bookmark bookmarkform">
+          <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(Auth::csrfToken()); ?>">
+          <input type="hidden" name="return" value="<?php echo htmlspecialchars($listUrl); ?>">
+<?php foreach ($formErrors as $error): ?>
+          <p class="error"><?php echo htmlspecialchars($error); ?></p>
 <?php endforeach; ?>
-            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(Auth::csrfToken()); ?>">
-            <div>
-              <label for="title">Title</label>
-              <input type="text" id="title" name="title" value="<?php echo htmlspecialchars($bookmark->title); ?>" maxlength="255" required>
-            </div>
-            <div>
-              <label for="link">URL</label>
-              <input type="url" id="link" name="link" value="<?php echo htmlspecialchars($bookmark->hlink); ?>" maxlength="2048" required>
-            </div>
-            <div>
-              <label for="description">Description</label>
-              <textarea id="description" name="description" rows="5" maxlength="1024"><?php echo htmlspecialchars($bookmark->text); ?></textarea>
-            </div>
-            <div>
-              <label for="tags">Tags (comma-separated)</label>
-              <input type="text" id="tags" name="tags" value="<?php echo htmlspecialchars($tags); ?>" maxlength="255">
-            </div>
-            <div class="check">
-              <input type="checkbox" id="visibility" name="visibility" value="public"<?php echo $bookmark->visibility === Visibility::Public ? ' checked' : ''; ?>>
+          <div class="head">
+            <input class="title" type="text" name="title" value="<?php echo htmlspecialchars($formBookmark->title); ?>" placeholder="Title" maxlength="255" required>
+            <input class="link" type="url" name="link" value="<?php echo htmlspecialchars($formBookmark->hlink); ?>" placeholder="https://" maxlength="2048" required>
+          </div>
+          <div class="info">
+            <textarea name="description" rows="3" maxlength="1024" placeholder="Description"><?php echo htmlspecialchars($formBookmark->text); ?></textarea>
+            <input class="tags" type="text" name="tags" value="<?php echo htmlspecialchars($formTags); ?>" placeholder="Tags (comma-separated)" maxlength="255">
+            <p class="check">
+              <input type="checkbox" id="visibility" name="visibility" value="public"<?php echo $formBookmark->visibility === Visibility::Public ? ' checked' : ''; ?>>
               <label for="visibility">Public (visible to anyone on this instance)</label>
+            </p>
+            <div class="manage">
+              <input type="submit" name="save" value="Save">
+              <input type="reset" value="Reset">
+<?php if ($formBookmark->id): ?>
+              <button type="submit" formaction="delete/<?php echo $formBookmark->id; ?>">Delete</button>
+<?php endif; ?>
+              <a href="<?php echo $listUrl === '' ? '.' : htmlspecialchars($listUrl); ?>">Cancel</a>
             </div>
-            <div><input type="submit" name="save" value="Save"></div>
-          </fieldset>
+          </div>
         </form>
-      </div>

@@ -24,19 +24,19 @@ final class PageWindowTest extends TestCase
 {
     public function testASinglePageHasNoGaps(): void
     {
-        $this->assertSame([1], ShowBookmark::pageWindow(1, 1));
+        $this->assertSame([1], Bookmark::pageWindow(1, 1));
     }
 
     public function testFewPagesShowEveryNumber(): void
     {
-        $this->assertSame([1, 2, 3, 4], ShowBookmark::pageWindow(2, 4));
+        $this->assertSame([1, 2, 3, 4], Bookmark::pageWindow(2, 4));
     }
 
     public function testAGapToTheLastPageBecomesNull(): void
     {
         $this->assertSame(
             [1, 2, 3, null, 3124],
-            ShowBookmark::pageWindow(1, 3124),
+            Bookmark::pageWindow(1, 3124),
         );
     }
 
@@ -44,7 +44,7 @@ final class PageWindowTest extends TestCase
     {
         $this->assertSame(
             [1, null, 48, 49, 50, 51, 52, null, 100],
-            ShowBookmark::pageWindow(50, 100),
+            Bookmark::pageWindow(50, 100),
         );
     }
 
@@ -52,7 +52,7 @@ final class PageWindowTest extends TestCase
     {
         $this->assertSame(
             [1, null, 98, 99, 100],
-            ShowBookmark::pageWindow(100, 100),
+            Bookmark::pageWindow(100, 100),
         );
     }
 }

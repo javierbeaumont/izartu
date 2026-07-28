@@ -32,18 +32,12 @@ class Controller
      */
     public static function home(): array
     {
-        return ['home', [
-            'page' => max(1, (int) ($_GET['page'] ?? 1)),
-            'tagName' => null,
-            'userName' => null,
-            'dashboard' => false,
-            'route' => '',
-        ]];
+        return self::feed(self::page(), null, null, false, '');
     }
 
     /**
      * Dashboard: the logged-in user's own bookmarks (public and private), with
-     * edit/delete controls. Login required.
+     * edit controls. Login required.
      *
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
@@ -51,13 +45,7 @@ class Controller
     {
         Auth::guard();
 
-        return ['home', [
-            'page' => max(1, (int) ($_GET['page'] ?? 1)),
-            'tagName' => null,
-            'userName' => Auth::user()['username'],
-            'dashboard' => true,
-            'route' => 'dashboard',
-        ]];
+        return self::feed(self::page(), null, Auth::user()['username'], true, 'dashboard');
     }
 
     /**
@@ -76,13 +64,7 @@ class Controller
             return self::notFound();
         }
 
-        return ['home', [
-            'page' => max(1, (int) ($_GET['page'] ?? 1)),
-            'tagName' => $name,
-            'userName' => null,
-            'dashboard' => false,
-            'route' => 'tag/' . rawurlencode($name),
-        ]];
+        return self::feed(self::page(), $name, null, false, 'tag/' . rawurlencode($name));
     }
 
     /**
@@ -101,13 +83,43 @@ class Controller
             return self::notFound();
         }
 
+        return self::feed(self::page(), null, $name, false, 'user/' . rawurlencode($name));
+    }
+
+    /**
+     * The variables every list view shares. Inline form state comes from the
+     * query string: `?edit=ID` renders that row as an in-place edit form (the
+     * template still gates it with `Auth::canManage`) and `?add` renders an
+     * empty form on top of the list. Both are view states of the list, so they
+     * live in the query string; mutations POST to the `/add`, `/edit/ID` and
+     * `/delete/ID` action routes.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    private static function feed(
+        int $page,
+        ?string $tagName,
+        ?string $userName,
+        bool $dashboard,
+        string $route,
+    ): array {
         return ['home', [
-            'page' => max(1, (int) ($_GET['page'] ?? 1)),
-            'tagName' => null,
-            'userName' => $name,
-            'dashboard' => false,
-            'route' => 'user/' . rawurlencode($name),
+            'page' => $page,
+            'tagName' => $tagName,
+            'userName' => $userName,
+            'dashboard' => $dashboard,
+            'route' => $route,
+            'editId' => Auth::check() ? (int) ($_GET['edit'] ?? 0) : 0,
+            'adding' => Auth::check() && isset($_GET['add']),
         ]];
+    }
+
+    /**
+     * The requested list page number (`?page=N`, 1-based).
+     */
+    private static function page(): int
+    {
+        return max(1, (int) ($_GET['page'] ?? 1));
     }
 
     /**
@@ -145,11 +157,12 @@ class Controller
     }
 
     /**
-     * Add bookmark: show the empty form (GET) or validate and create it (POST).
+     * Add bookmark (POST action): validate and create it, then return to the
+     * list the form was on. A GET redirects to the dashboard with the inline
+     * add form open (`?add`).
      *
-     * Requires a logged-in user. On a valid POST the bookmark and its tags are
-     * saved and the request redirects home; otherwise the form is re-rendered
-     * with the errors and the typed values.
+     * Requires a logged-in user. On invalid input the origin list is
+     * re-rendered with the inline form, the typed values and the errors.
      *
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
@@ -157,33 +170,38 @@ class Controller
     {
         Auth::guard();
 
-        $bookmark = new Bookmark();
-        $tags = '';
-        $errors = [];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $tags = trim($_POST['tags'] ?? '');
-            $errors = self::apply($bookmark, $_POST);
-
-            if (!$errors) {
-                $bookmark->user = Auth::user()['id'];
-                $bookmark->save();
-                $bookmark->saveTags($tags);
-                Flash::set('Bookmark added.');
-                self::redirect(BASE . '/');
-            }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            self::redirect(BASE . '/dashboard?add');
         }
 
-        return ['bookmarkform', [
-            'bookmark' => $bookmark, 'tags' => $tags, 'errors' => $errors, 'action' => 'add',
-        ]];
+        $bookmark = new Bookmark();
+        $tags = trim($_POST['tags'] ?? '');
+        $errors = self::apply($bookmark, $_POST);
+
+        if (!$errors) {
+            $bookmark->user = Auth::user()['id'];
+            $bookmark->save();
+            $bookmark->saveTags($tags);
+            Flash::set('Bookmark added.');
+            self::redirect(BASE . '/' . self::returnPath());
+        }
+
+        [$template, $vars] = self::listFromReturn();
+
+        return [$template, array_merge($vars, [
+            'adding' => true, 'formBookmark' => $bookmark, 'formTags' => $tags, 'formErrors' => $errors,
+        ])];
     }
 
     /**
-     * Edit bookmark: show the pre-filled form (GET) or validate and save (POST).
+     * Edit bookmark (POST action): validate and save it, then return to the
+     * list the form was on. A GET redirects to the dashboard with that row's
+     * inline edit form open (`?edit=ID`).
      *
      * Requires a logged-in user who may manage the bookmark; a missing id or a
-     * foreign bookmark renders the 404 view (existence is not revealed).
+     * foreign bookmark renders the 404 view (existence is not revealed). On
+     * invalid input the origin list is re-rendered with the inline form, the
+     * typed values and the errors.
      *
      * @param string $id Bookmark id from the URL (second path segment).
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
@@ -197,28 +215,30 @@ class Controller
             return self::notFound();
         }
 
-        $tags = implode(', ', $bookmark->tags());
-        $errors = [];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $tags = trim($_POST['tags'] ?? '');
-            $errors = self::apply($bookmark, $_POST);
-
-            if (!$errors) {
-                $bookmark->save();
-                $bookmark->saveTags($tags);
-                Flash::set('Bookmark saved.');
-                self::redirect(BASE . '/');
-            }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            self::redirect(BASE . '/dashboard?edit=' . $bookmark->id);
         }
 
-        return ['bookmarkform', [
-            'bookmark' => $bookmark, 'tags' => $tags, 'errors' => $errors, 'action' => 'edit/' . $bookmark->id,
-        ]];
+        $tags = trim($_POST['tags'] ?? '');
+        $errors = self::apply($bookmark, $_POST);
+
+        if (!$errors) {
+            $bookmark->save();
+            $bookmark->saveTags($tags);
+            Flash::set('Bookmark saved.');
+            self::redirect(BASE . '/' . self::returnPath());
+        }
+
+        [$template, $vars] = self::listFromReturn();
+
+        return [$template, array_merge($vars, [
+            'editId' => $bookmark->id, 'formBookmark' => $bookmark, 'formTags' => $tags, 'formErrors' => $errors,
+        ])];
     }
 
     /**
-     * Delete bookmark (POST only), then redirect home.
+     * Delete bookmark (POST action, the Delete button of the inline edit
+     * form), then return to the list the form was on.
      *
      * Requires a logged-in user who may manage the bookmark and a valid CSRF
      * token; anything else (including GET requests) renders the 404 view.
@@ -241,7 +261,43 @@ class Controller
 
         $bookmark->delete();
         Flash::set('Bookmark deleted.');
-        self::redirect(BASE . '/');
+        self::redirect(BASE . '/' . self::returnPath());
+    }
+
+    /**
+     * The list the submitted form was on, as a safe relative path: the form's
+     * hidden `return` field, accepted only when it matches a known list route
+     * plus an optional page (never an absolute URL, so it cannot be turned
+     * into an open redirect). Falls back to the dashboard.
+     */
+    private static function returnPath(): string
+    {
+        $return = $_POST['return'] ?? '';
+
+        return preg_match('#\A(?:dashboard|tag/[^/?\#\s]+|user/[^/?\#\s]+)?(?:\?page=[1-9][0-9]*)?\z#', $return)
+            ? $return
+            : 'dashboard';
+    }
+
+    /**
+     * Rebuild the list view the submitted form was on (see `returnPath()`),
+     * to re-render it with the inline form when validation fails.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    private static function listFromReturn(): array
+    {
+        [$path, $query] = array_pad(explode('?', self::returnPath(), 2), 2, '');
+        parse_str($query, $params);
+        $page = max(1, (int) ($params['page'] ?? 1));
+        $segments = explode('/', $path);
+
+        return match ($segments[0]) {
+            'tag' => self::feed($page, rawurldecode($segments[1]), null, false, $path),
+            'user' => self::feed($page, null, rawurldecode($segments[1]), false, $path),
+            'dashboard' => self::feed($page, null, Auth::user()['username'], true, 'dashboard'),
+            default => self::feed($page, null, null, false, ''),
+        };
     }
 
     /**

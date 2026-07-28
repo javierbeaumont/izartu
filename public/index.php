@@ -31,12 +31,17 @@
  * - `/user/NAME` The feed filtered by one user.
  * - `/login`     Login form (GET) + handler (POST).
  * - `/logout`    Destroy the session, redirect home.
- * - `/add`       Add bookmark form (GET) + handler (POST). Login required.
- * - `/edit/ID`   Edit bookmark form (GET) + handler (POST). Owner/admin only.
- * - `/delete/ID` Delete bookmark (POST only). Owner/admin only.
+ * - `/add`       Create bookmark (POST action). Login required.
+ * - `/edit/ID`   Save bookmark (POST action). Owner/admin only.
+ * - `/delete/ID` Delete bookmark (POST action). Owner/admin only.
  *
- * Later features add their own routes here (`/tag/NAME`, `/bookmark/ID`, ...);
- * any unmatched path renders the 404 view.
+ * Editing is inline: on any list, `?edit=ID` renders that row as an in-place
+ * form and `?add` renders an empty one on top (a GET to `/add` or `/edit/ID`
+ * redirects to the dashboard with that state). The forms POST to the action
+ * routes above and return to the list they were on.
+ *
+ * Later features add their own routes here (`/bookmark/ID`, ...); any
+ * unmatched path renders the 404 view.
  */
 
 require_once dirname(__DIR__) . '/private/bootstrap.php';

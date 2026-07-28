@@ -18,6 +18,17 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
+<?php if ($editId === $bookmark->id && Auth::canManage($bookmark->user)): ?>
+<?php
+$formAction = 'edit/' . $bookmark->id;
+if (!isset($formBookmark) || $formBookmark->id !== $bookmark->id) {
+    $formBookmark = $bookmark;
+    $formTags = implode(', ', $bookmark->tags());
+    $formErrors = [];
+}
+include PRIVATE_DIR . 'template/bookmarkform.php';
+?>
+<?php else: ?>
         <div class="bookmark">
           <div class="head">
             <h2><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->title) ; ?></a><?php if ($bookmark->visibility === Visibility::Private): ?> <span class="private">private</span><?php endif; ?></h2>
@@ -30,17 +41,15 @@
           </div>
           <div class="info">
             <p class="text"><?php echo htmlspecialchars($bookmark->text) ; ?></p>
-<?php if ($tags): ?>
-            <p class="tag">Tags: <?php echo $tags; ?></p>
+<?php $names = $bookmark->tags(); ?>
+<?php if ($names): ?>
+            <p class="tag">Tags: <?php foreach ($names as $i => $name): ?><?php echo $i ? ', ' : ''; ?><a href="tag/<?php echo rawurlencode($name); ?>"><?php echo htmlspecialchars($name); ?></a><?php endforeach; ?></p>
 <?php endif; ?>
-<?php if ($edit && Auth::canManage($bookmark->user)): ?>
+<?php if (Auth::canManage($bookmark->user)): ?>
             <div class="manage">
-              <a href="edit/<?php echo $bookmark->id; ?>">Edit</a>
-              <form method="post" action="delete/<?php echo $bookmark->id; ?>">
-                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(Auth::csrfToken()); ?>">
-                <input type="submit" value="Delete">
-              </form>
+              <a href="<?php echo $route; ?>?<?php echo $page > 1 ? 'page=' . $page . '&amp;' : ''; ?>edit=<?php echo $bookmark->id; ?>">Edit</a>
             </div>
 <?php endif; ?>
           </div>
         </div>
+<?php endif; ?>

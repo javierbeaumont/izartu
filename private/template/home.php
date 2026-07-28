@@ -34,9 +34,25 @@ include_once PRIVATE_DIR . 'template/option.php';
           (<a href=".">all bookmarks</a>)</p>
 <?php endif; ?>
 <?php
-$show = new ShowBookmark();
-$pages = $show->listOrderByDate(Auth::check(), Auth::id(), $page, $tagName, $userName);
-
-include PRIVATE_DIR . 'template/pagination.php';
+['bookmarks' => $bookmarks, 'pages' => $pages] = (new Bookmark())->orderByDate(Auth::id(), $page, $tagName, $userName);
 ?>
+<?php if ($adding || $bookmarks): ?>
+        <div id="list">
+<?php if ($adding): ?>
+<?php
+$formAction = 'add';
+if (!isset($formBookmark)) {
+    $formBookmark = new Bookmark();
+    $formTags = '';
+    $formErrors = [];
+}
+include PRIVATE_DIR . 'template/bookmarkform.php';
+?>
+<?php endif; ?>
+<?php foreach ($bookmarks as $bookmark): ?>
+<?php include PRIVATE_DIR . 'template/contentlist.php'; ?>
+<?php endforeach; ?>
+        </div>
+<?php endif; ?>
+<?php include PRIVATE_DIR . 'template/pagination.php'; ?>
       </div>
