@@ -336,6 +336,37 @@ form.login p.error {
   font-size: .9em;
 }
 
+form.tagsearch input[type="search"] {
+  box-sizing: border-box;
+  border: .1em dashed #ccc;
+  padding: .3em;
+  width: 100%;
+  font-family: inherit;
+  font-size: 1em;
+}
+
+form.tagsearch input[type="search"]:focus {
+  outline: none;
+  border-color: #999;
+}
+
+.option form.tagsearch {
+  margin-top: .8em;
+}
+
+.tags form.tagsearch {
+  margin: 1em 0;
+  max-width: 20em;
+}
+
+.tags form.tagsearch input[type="search"] {
+  width: 70%;
+}
+
+.tags p.notag {
+  color: #666;
+}
+
 #footer {
   clear: both;
   display: flow-root;

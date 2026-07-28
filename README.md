@@ -25,9 +25,10 @@ Expect rough edges and breaking changes while the rebuild is under way.
 ## Features
 
 * Public bookmark feed, browsable anonymously: newest first, paginated, and
-  filterable by tag (`/tag/NAME`) or by user (`/user/USERNAME`), with a tag
-  cloud. Each bookmark shows who added it and when, linking to that user's
-  bookmarks.
+  filterable by tag (`/tag/NAME`) or by user (`/user/USERNAME`). A tag cloud
+  shows the most-used tags; `/tags` lists all of them, paginated and
+  searchable. Each bookmark shows who added it and when, linking to that
+  user's bookmarks.
 * Log in to add, edit and delete bookmarks, all inline: a bookmark is edited
   in place in the list (same look, editable), where it can also be deleted,
   and new bookmarks are added the same way on top of the list. Editing is
@@ -109,8 +110,9 @@ Database credentials are read from environment variables (set in
 * `DB_USER`: required, no default.
 
 Other settings are constants in [`private/config.php`](private/config.php):
-`PAGE_SIZE` (bookmarks per feed page, default 10) and `DEBUG` (set it to
-`FALSE` in production). Debug mode enables error output, a `Server-Timing`
+`PAGE_SIZE` (bookmarks per feed page, default 10), `CLOUD_SIZE` (most-used
+tags shown in the tag cloud, default 50), `TAGS_PAGE_SIZE` (tags per page on
+the tag index, default 100) and `DEBUG` (set it to `FALSE` in production). Debug mode enables error output, a `Server-Timing`
 response header with request metrics (PHP time, database time and query
 count, peak memory; shown natively in the browser devtools network panel)
 and a collapsible per-query timing panel at the bottom of every page, where

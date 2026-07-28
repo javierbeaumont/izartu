@@ -18,14 +18,18 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
-<?php if($tag): ?>
-        <div class="option">
-          <div class="tag">
-            <div class="title"><a href="tags">Tags</a></div>
-            <p class="tag"><?php echo $tag; ?></p>
-            <form method="get" action="tags" class="tagsearch">
-              <input type="search" name="q" placeholder="Find a tag" maxlength="255">
-            </form>
-          </div>
-        </div>
+      <div class="body tags">
+        <p class="filter">Tags
+          (<a href=".">all bookmarks</a>)</p>
+        <form method="get" action="tags" class="tagsearch">
+          <input type="search" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Find a tag" maxlength="255">
+          <input type="submit" value="Search">
+        </form>
+<?php ['tags' => $results, 'pages' => $pages] = (new ShowTag())->tagSearch(Auth::id(), $q, $page); ?>
+<?php if ($results): ?>
+        <p class="tag"><?php echo $results; ?></p>
+<?php elseif ($q !== ''): ?>
+        <p class="notag">No tags match <strong><?php echo htmlspecialchars($q); ?></strong>.</p>
 <?php endif; ?>
+<?php include PRIVATE_DIR . 'template/pagination.php'; ?>
+      </div>

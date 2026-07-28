@@ -27,6 +27,8 @@
  * Routes:
  * - `/`          Home: public bookmark feed + tag cloud.
  * - `/tag/NAME`  The feed filtered by one tag.
+ * - `/tags`      Tag index: every visible tag with its count, paginated;
+ *                `?q=TERM` narrows it to the matching tags.
  * - `/user/NAME` The feed filtered by one user (your own page shows your
  *                private bookmarks too when logged in). `/user/me` is a
  *                reserved alias for the logged-in user's own page.
@@ -69,6 +71,7 @@ $segments = $path === '' ? [] : explode('/', $path);
 [$tpl, $vars] = match ($segments[0] ?? '') {
     ''       => Controller::home(),
     'tag'    => Controller::tag($segments[1] ?? ''),
+    'tags'   => Controller::tags(),
     'user'   => Controller::user($segments[1] ?? ''),
     'login'  => Controller::login(),
     'logout' => Controller::logout(),

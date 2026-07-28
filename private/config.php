@@ -39,6 +39,12 @@ define('DB_NAME', getenv('DB_NAME') ?: 'izartu');
 /** Bookmarks per page on the feed. */
 define('PAGE_SIZE', 10);
 
+/** Most-used tags shown in the tag cloud. */
+define('CLOUD_SIZE', 50);
+
+/** Tags per page on the tag index (`/tags`). */
+define('TAGS_PAGE_SIZE', 100);
+
 ################################################################################
 ############################ ADVANCED CONFIGURATION ############################
 ################################################################################

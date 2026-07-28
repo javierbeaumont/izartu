@@ -18,10 +18,11 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
+<?php $sep = str_contains($route, '?') ? '&amp;' : '?'; ?>
 <?php if ($pages > 1): ?>
         <div class="pagination">
 <?php if ($page > 1): ?>
-          <a class="previous" href="<?php echo $route; ?>?page=<?php echo $page - 1; ?>">&lsaquo; Previous</a>
+          <a class="previous" href="<?php echo $route . $sep; ?>page=<?php echo $page - 1; ?>">&lsaquo; Previous</a>
 <?php endif; ?>
 <?php foreach (Bookmark::pageWindow($page, $pages) as $number): ?>
 <?php if ($number === null): ?>
@@ -29,11 +30,11 @@
 <?php elseif ($number === $page): ?>
           <strong><?php echo $number; ?></strong>
 <?php else: ?>
-          <a href="<?php echo $route; ?>?page=<?php echo $number; ?>"><?php echo $number; ?></a>
+          <a href="<?php echo $route . $sep; ?>page=<?php echo $number; ?>"><?php echo $number; ?></a>
 <?php endif; ?>
 <?php endforeach; ?>
 <?php if ($page < $pages): ?>
-          <a class="next" href="<?php echo $route; ?>?page=<?php echo $page + 1; ?>">Next &rsaquo;</a>
+          <a class="next" href="<?php echo $route . $sep; ?>page=<?php echo $page + 1; ?>">Next &rsaquo;</a>
 <?php endif; ?>
         </div>
 <?php endif; ?>

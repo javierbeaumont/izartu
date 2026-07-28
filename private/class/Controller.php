@@ -81,6 +81,23 @@ class Controller
     }
 
     /**
+     * Tag index page (`/tags`): every visible tag with its count, paginated
+     * and alphabetical; `?q=TERM` narrows it to the matching tags.
+     *
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     */
+    public static function tags(): array
+    {
+        $q = trim($_GET['q'] ?? '');
+
+        return ['tags', [
+            'q' => $q,
+            'page' => self::page(),
+            'route' => 'tags' . ($q !== '' ? '?q=' . rawurlencode($q) : ''),
+        ]];
+    }
+
+    /**
      * The variables every list view shares. Inline form state comes from the
      * query string: `?edit=ID` renders that row as an in-place edit form (the
      * template still gates it with `Auth::canManage`) and `?add` renders an
