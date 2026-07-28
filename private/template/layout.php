@@ -33,7 +33,8 @@
   <body>
     <div id="header">
 <?php if (Auth::check()): ?>
-      <p><a href="dashboard">Dashboard</a> <a href="dashboard?add">Add bookmark</a> <a href="logout">Logout</a></p>
+<?php $own = 'user/' . rawurlencode(Auth::user()['username']); ?>
+      <p><a href="<?php echo $own; ?>">My bookmarks</a> <a href="<?php echo $own; ?>?add">Add bookmark</a> <a href="logout">Logout</a></p>
 <?php else: ?>
       <p><a href="login">Login</a></p>
 <?php endif; ?>

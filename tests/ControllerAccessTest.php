@@ -74,7 +74,7 @@ final class ControllerAccessTest extends TestCase
         $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SESSION['csrf'] = 'token';
-        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'https://s.test', 'return' => 'dashboard'];
+        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'https://s.test', 'return' => 'user/goodname'];
 
         [$template, $vars] = Controller::edit('1');
 
@@ -95,7 +95,7 @@ final class ControllerAccessTest extends TestCase
 
         $this->assertSame('home', $template);
         $this->assertTrue($vars['adding']);
-        $this->assertSame('dashboard', $vars['route'], 'a foreign return falls back to the dashboard');
+        $this->assertSame('user/goodname', $vars['route'], 'a foreign return falls back to the own page');
         $this->assertArrayHasKey('link', $vars['formErrors']);
     }
 
@@ -113,16 +113,25 @@ final class ControllerAccessTest extends TestCase
         $this->assertSame(2, $vars['page']);
     }
 
-    public function testDashboardListsTheLoggedInUsersOwnBookmarks(): void
+    public function testTheOwnUserPageIsMarkedAsMine(): void
     {
         $_SESSION['user'] = ['id' => 7, 'username' => 'javi', 'role' => 'user'];
 
-        [$template, $vars] = Controller::dashboard();
+        [$template, $vars] = Controller::user('javi');
 
         $this->assertSame('home', $template);
-        $this->assertTrue($vars['dashboard']);
+        $this->assertTrue($vars['mine']);
         $this->assertSame('javi', $vars['userName']);
-        $this->assertSame('dashboard', $vars['route']);
+        $this->assertSame('user/javi', $vars['route']);
+    }
+
+    public function testAForeignUserPageIsNotMine(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'username' => 'javi', 'role' => 'user'];
+
+        [, $vars] = Controller::user('other');
+
+        $this->assertFalse($vars['mine']);
     }
 
     public function testLoginRejectsAMalformedEmailWithoutTouchingTheDatabase(): void

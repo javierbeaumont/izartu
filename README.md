@@ -31,8 +31,8 @@ Expect rough edges and breaking changes while the rebuild is under way.
 * Log in to add, edit and delete bookmarks, all inline: a bookmark is edited
   in place in the list (same look, editable), where it can also be deleted,
   and new bookmarks are added the same way on top of the list. Editing is
-  restricted to the bookmark's owner (or an admin). A dashboard lists your
-  own bookmarks (public and private).
+  restricted to the bookmark's owner (or an admin). Your own user page lists
+  all your bookmarks, public and private; `/user/me` always takes you there.
 * Per-bookmark visibility: public (anyone on the instance) or private (only
   its owner: no other account sees it, whatever its role, and neither do its
   tags leak into the cloud).

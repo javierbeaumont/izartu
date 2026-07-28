@@ -27,6 +27,12 @@ class User extends Crud
     public const ROLES = ['owner', 'admin', 'user'];
 
     /**
+     * Usernames no account may take, compared case-insensitively: `me` backs
+     * the `/user/me` alias for one's own page.
+     */
+    public const RESERVED = ['me'];
+
+    /**
      * Validate the fields needed to create a user account.
      *
      * @param string $email Email address (identity + login).
@@ -44,6 +50,8 @@ class User extends Crud
         }
         if (!preg_match('/^[A-Za-z0-9_-]{3,32}$/', $username)) {
             $errors['username'] = 'Username must be 3-32 characters of letters, digits, "_" or "-".';
+        } elseif (in_array(strtolower($username), self::RESERVED, true)) {
+            $errors['username'] = 'That username is reserved.';
         }
         if (mb_strlen($password) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';

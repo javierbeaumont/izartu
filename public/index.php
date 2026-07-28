@@ -26,9 +26,10 @@
  *
  * Routes:
  * - `/`          Home: public bookmark feed + tag cloud.
- * - `/dashboard` The logged-in user's own bookmarks (public + private).
  * - `/tag/NAME`  The feed filtered by one tag.
- * - `/user/NAME` The feed filtered by one user.
+ * - `/user/NAME` The feed filtered by one user (your own page shows your
+ *                private bookmarks too when logged in). `/user/me` is a
+ *                reserved alias for the logged-in user's own page.
  * - `/login`     Login form (GET) + handler (POST).
  * - `/logout`    Destroy the session, redirect home.
  * - `/add`       Create bookmark (POST action). Login required.
@@ -37,8 +38,8 @@
  *
  * Editing is inline: on any list, `?edit=ID` renders that row as an in-place
  * form and `?add` renders an empty one on top (a GET to `/add` or `/edit/ID`
- * redirects to the dashboard with that state). The forms POST to the action
- * routes above and return to the list they were on.
+ * redirects to the user's own page with that state). The forms POST to the
+ * action routes above and return to the list they were on.
  *
  * Later features add their own routes here (`/bookmark/ID`, ...); any
  * unmatched path renders the 404 view.
@@ -66,16 +67,15 @@ $path = trim($path, '/');
 $segments = $path === '' ? [] : explode('/', $path);
 
 [$tpl, $vars] = match ($segments[0] ?? '') {
-    ''          => Controller::home(),
-    'dashboard' => Controller::dashboard(),
-    'tag'       => Controller::tag($segments[1] ?? ''),
-    'user'      => Controller::user($segments[1] ?? ''),
-    'login'     => Controller::login(),
-    'logout'    => Controller::logout(),
-    'add'       => Controller::add(),
-    'edit'      => Controller::edit($segments[1] ?? ''),
-    'delete'    => Controller::delete($segments[1] ?? ''),
-    default     => Controller::notFound(),
+    ''       => Controller::home(),
+    'tag'    => Controller::tag($segments[1] ?? ''),
+    'user'   => Controller::user($segments[1] ?? ''),
+    'login'  => Controller::login(),
+    'logout' => Controller::logout(),
+    'add'    => Controller::add(),
+    'edit'   => Controller::edit($segments[1] ?? ''),
+    'delete' => Controller::delete($segments[1] ?? ''),
+    default  => Controller::notFound(),
 };
 
 extract($vars, EXTR_SKIP);

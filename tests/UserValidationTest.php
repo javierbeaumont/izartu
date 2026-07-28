@@ -67,6 +67,13 @@ final class UserValidationTest extends TestCase
         $this->assertArrayHasKey('username', User::validate('a@b.test', $username, 'secret123', 'user'));
     }
 
+    public function testReservedUsernamesAreRejectedWhateverTheCase(): void
+    {
+        foreach (['me', 'ME', 'Me'] as $reserved) {
+            $this->assertArrayHasKey('username', User::validate('a@b.test', $reserved, 'secret123', 'user'));
+        }
+    }
+
     public function testShortPasswordsAreRejected(): void
     {
         $this->assertArrayHasKey('password', User::validate('a@b.test', 'javi', 'short', 'user'));

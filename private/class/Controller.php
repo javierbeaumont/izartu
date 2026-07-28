@@ -32,20 +32,7 @@ class Controller
      */
     public static function home(): array
     {
-        return self::feed(self::page(), null, null, false, '');
-    }
-
-    /**
-     * Dashboard: the logged-in user's own bookmarks (public and private), with
-     * edit controls. Login required.
-     *
-     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
-     */
-    public static function dashboard(): array
-    {
-        Auth::guard();
-
-        return self::feed(self::page(), null, Auth::user()['username'], true, 'dashboard');
+        return self::feed(self::page(), null, null, '');
     }
 
     /**
@@ -64,14 +51,16 @@ class Controller
             return self::notFound();
         }
 
-        return self::feed(self::page(), $name, null, false, 'tag/' . rawurlencode($name));
+        return self::feed(self::page(), $name, null, 'tag/' . rawurlencode($name));
     }
 
     /**
      * User page: the feed filtered by one username (`/user/USERNAME`), paginated.
      *
-     * An unknown username renders an empty page rather than a 404, so the
-     * response does not reveal whether an account exists.
+     * `/user/me` is a reserved alias (see `User::RESERVED`) that redirects to
+     * the logged-in user's own page. An unknown username renders an empty
+     * page rather than a 404, so the response does not reveal whether an
+     * account exists.
      *
      * @param string $name Username from the URL (second path segment, encoded).
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
@@ -83,7 +72,12 @@ class Controller
             return self::notFound();
         }
 
-        return self::feed(self::page(), null, $name, false, 'user/' . rawurlencode($name));
+        if ($name === 'me') {
+            Auth::guard();
+            self::redirect(BASE . '/' . self::ownPage());
+        }
+
+        return self::feed(self::page(), null, $name, 'user/' . rawurlencode($name));
     }
 
     /**
@@ -100,14 +94,13 @@ class Controller
         int $page,
         ?string $tagName,
         ?string $userName,
-        bool $dashboard,
         string $route,
     ): array {
         return ['home', [
             'page' => $page,
             'tagName' => $tagName,
             'userName' => $userName,
-            'dashboard' => $dashboard,
+            'mine' => $userName !== null && Auth::check() && $userName === Auth::user()['username'],
             'route' => $route,
             'editId' => Auth::check() ? (int) ($_GET['edit'] ?? 0) : 0,
             'adding' => Auth::check() && isset($_GET['add']),
@@ -126,8 +119,8 @@ class Controller
      * Login: show the form (GET) or process it (POST).
      *
      * On a valid POST (CSRF token plus credentials) the user is logged in and
-     * redirected to the home page. Otherwise the form is shown, with an `error`
-     * flag after a failed attempt.
+     * redirected to their own page. Otherwise the form is shown, with an
+     * `error` flag after a failed attempt.
      *
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
@@ -138,7 +131,7 @@ class Controller
             if (Auth::csrfCheck($_POST['csrf'] ?? null)
                 && filter_var($email, FILTER_VALIDATE_EMAIL)
                 && Auth::attempt($email, $_POST['password'] ?? '')) {
-                self::redirect(BASE . '/');
+                self::redirect(BASE . '/' . self::ownPage());
             }
             return ['login', ['error' => true]];
         }
@@ -158,8 +151,8 @@ class Controller
 
     /**
      * Add bookmark (POST action): validate and create it, then return to the
-     * list the form was on. A GET redirects to the dashboard with the inline
-     * add form open (`?add`).
+     * list the form was on. A GET redirects to the user's own page with the
+     * inline add form open (`?add`).
      *
      * Requires a logged-in user. On invalid input the origin list is
      * re-rendered with the inline form, the typed values and the errors.
@@ -171,7 +164,7 @@ class Controller
         Auth::guard();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            self::redirect(BASE . '/dashboard?add');
+            self::redirect(BASE . '/' . self::ownPage() . '?add');
         }
 
         $bookmark = new Bookmark();
@@ -195,8 +188,8 @@ class Controller
 
     /**
      * Edit bookmark (POST action): validate and save it, then return to the
-     * list the form was on. A GET redirects to the dashboard with that row's
-     * inline edit form open (`?edit=ID`).
+     * list the form was on. A GET redirects to the user's own page with that
+     * row's inline edit form open (`?edit=ID`).
      *
      * Requires a logged-in user who may manage the bookmark; a missing id or a
      * foreign bookmark renders the 404 view (existence is not revealed). On
@@ -216,7 +209,7 @@ class Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            self::redirect(BASE . '/dashboard?edit=' . $bookmark->id);
+            self::redirect(BASE . '/' . self::ownPage() . '?edit=' . $bookmark->id);
         }
 
         $tags = trim($_POST['tags'] ?? '');
@@ -268,15 +261,23 @@ class Controller
      * The list the submitted form was on, as a safe relative path: the form's
      * hidden `return` field, accepted only when it matches a known list route
      * plus an optional page (never an absolute URL, so it cannot be turned
-     * into an open redirect). Falls back to the dashboard.
+     * into an open redirect). Falls back to the user's own page.
      */
     private static function returnPath(): string
     {
         $return = $_POST['return'] ?? '';
 
-        return preg_match('#\A(?:dashboard|tag/[^/?\#\s]+|user/[^/?\#\s]+)?(?:\?page=[1-9][0-9]*)?\z#', $return)
+        return preg_match('#\A(?:tag/[^/?\#\s]+|user/[^/?\#\s]+)?(?:\?page=[1-9][0-9]*)?\z#', $return)
             ? $return
-            : 'dashboard';
+            : self::ownPage();
+    }
+
+    /**
+     * The logged-in user's own list page (`user/USERNAME`).
+     */
+    private static function ownPage(): string
+    {
+        return 'user/' . rawurlencode(Auth::user()['username']);
     }
 
     /**
@@ -293,10 +294,9 @@ class Controller
         $segments = explode('/', $path);
 
         return match ($segments[0]) {
-            'tag' => self::feed($page, rawurldecode($segments[1]), null, false, $path),
-            'user' => self::feed($page, null, rawurldecode($segments[1]), false, $path),
-            'dashboard' => self::feed($page, null, Auth::user()['username'], true, 'dashboard'),
-            default => self::feed($page, null, null, false, ''),
+            'tag' => self::feed($page, rawurldecode($segments[1]), null, $path),
+            'user' => self::feed($page, null, rawurldecode($segments[1]), $path),
+            default => self::feed($page, null, null, ''),
         };
     }
 
