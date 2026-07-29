@@ -97,6 +97,22 @@ final class BookmarkTagsTest extends TestCase
         $this->assertSame(['php', 'sql'], $bookmark->tags());
     }
 
+    public function testTagsForBatchesAPageInOneMap(): void
+    {
+        $first = $this->savedBookmark();
+        $first->saveTags('sql, php');
+        $second = $this->savedBookmark();
+        $second->saveTags('web');
+        $bare = $this->savedBookmark();
+
+        $tags = $first->tagsFor([$first->id, $second->id, $bare->id]);
+
+        $this->assertSame(['php', 'sql'], $tags[$first->id], 'alphabetical per bookmark');
+        $this->assertSame(['web'], $tags[$second->id]);
+        $this->assertArrayNotHasKey($bare->id, $tags, 'untagged ids are absent');
+        $this->assertSame([], $first->tagsFor([]));
+    }
+
     public function testDeleteRemovesTheBookmarkAndItsLinks(): void
     {
         $bookmark = $this->savedBookmark();

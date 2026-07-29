@@ -23,7 +23,7 @@
 $formAction = 'edit/' . $bookmark->id;
 if (!isset($formBookmark) || $formBookmark->id !== $bookmark->id) {
     $formBookmark = $bookmark;
-    $formTags = implode(', ', $bookmark->tags());
+    $formTags = implode(', ', $tagsByBookmark[$bookmark->id] ?? []);
     $formErrors = [];
 }
 include PRIVATE_DIR . 'template/bookmarkform.php';
@@ -41,7 +41,7 @@ include PRIVATE_DIR . 'template/bookmarkform.php';
           </div>
           <div class="info">
             <p class="text"><?php echo htmlspecialchars($bookmark->text) ; ?></p>
-<?php $names = $bookmark->tags(); ?>
+<?php $names = $tagsByBookmark[$bookmark->id] ?? []; ?>
 <?php if ($names): ?>
             <p class="tag">Tags: <?php foreach ($names as $i => $name): ?><?php echo $i ? ', ' : ''; ?><a href="tag/<?php echo rawurlencode($name); ?>"><?php echo htmlspecialchars($name); ?></a><?php endforeach; ?></p>
 <?php endif; ?>

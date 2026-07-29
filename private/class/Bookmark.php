@@ -189,6 +189,9 @@ class Bookmark extends Crud
     /**
      * The names of this bookmark's tags.
      *
+     * For a listing, fetch every row's tags in one query with `tagsFor()`
+     * instead of calling this per bookmark.
+     *
      * @return list<string> Tag names, alphabetical.
      */
     public function tags(): array
@@ -213,6 +216,53 @@ class Bookmark extends Crud
         );
 
         return array_column($rows, 'name');
+    }
+
+    /**
+     * The tag names of several bookmarks in a single query (one page's worth),
+     * the batch counterpart of `tags()`.
+     *
+     * @param list<int> $ids Bookmark ids.
+     * @return array<int, list<string>> Tag names (alphabetical) per bookmark
+     *   id; ids without tags are absent.
+     */
+    public function tagsFor(array $ids): array
+    {
+        if (!$ids) {
+            return [];
+        }
+
+        $in = [];
+        $param = [];
+        foreach (array_values($ids) as $i => $id) {
+            $in[] = ':id' . $i;
+            $param[] = [':id' . $i, $id, PDO::PARAM_INT, 255];
+        }
+
+        $rows = $this->read(
+            sprintf(
+                <<<'SQL'
+                SELECT
+                    `bookmark_tag`.`bookmark`, `tag`.`name`
+                FROM `bookmark_tag`
+                JOIN
+                    `tag` ON (`tag`.`id` = `bookmark_tag`.`tag`)
+                WHERE
+                    `bookmark_tag`.`bookmark` IN (%s)
+                ORDER BY
+                    `tag`.`name`
+                SQL,
+                implode(', ', $in),
+            ),
+            $param,
+        );
+
+        $tags = [];
+        foreach ($rows as $row) {
+            $tags[(int) $row['bookmark']][] = $row['name'];
+        }
+
+        return $tags;
     }
 
     /**

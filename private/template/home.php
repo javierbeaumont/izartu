@@ -41,7 +41,9 @@ include_once PRIVATE_DIR . 'template/option.php';
           (<a href=".">all bookmarks</a>)</p>
 <?php endif; ?>
 <?php
-['bookmarks' => $bookmarks, 'pages' => $pages] = (new Bookmark())->orderByDate(Auth::id(), $page, $tagNames, $userName);
+$model = new Bookmark();
+['bookmarks' => $bookmarks, 'pages' => $pages] = $model->orderByDate(Auth::id(), $page, $tagNames, $userName);
+$tagsByBookmark = $model->tagsFor(array_column($bookmarks, 'id'));
 ?>
 <?php if ($adding || $bookmarks): ?>
         <div id="list">
