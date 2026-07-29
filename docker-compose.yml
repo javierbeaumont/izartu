@@ -3,6 +3,8 @@ services:
     build:
       context: .
       target: runtime
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.5}
     ports:
       - "8080:80"
     volumes:
@@ -23,6 +25,8 @@ services:
     build:
       context: .
       target: test
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.5}
     working_dir: /var/www/izartu
     command: ["vendor/bin/phpunit"]
     volumes:

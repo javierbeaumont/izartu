@@ -1,5 +1,7 @@
-# Runtime image: dependency-free.
-FROM php:8.5-apache AS runtime
+# Runtime image: dependency-free. PHP_VERSION lets CI build the same image on
+# every supported PHP (see the README's supported-versions policy).
+ARG PHP_VERSION=8.5
+FROM php:${PHP_VERSION}-apache AS runtime
 
 RUN docker-php-ext-install pdo pdo_mysql
 
