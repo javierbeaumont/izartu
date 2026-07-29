@@ -141,16 +141,16 @@ final class ReadPathTest extends TestCase
     {
         $this->seedPublicAndPrivate();
 
-        $anonymous = $this->probe()->order(null, 1, 'php');
+        $anonymous = $this->probe()->order(null, 1, ['php']);
         $this->assertSame(['Public'], array_column($anonymous['bookmarks'], 'title'));
 
-        $owner = $this->probe()->order(1, 1, 'php');
+        $owner = $this->probe()->order(1, 1, ['php']);
         $this->assertSame(['Public', 'Secret'], array_column($owner['bookmarks'], 'title'));
 
-        $secret = $this->probe()->order(1, 1, 'secret');
+        $secret = $this->probe()->order(1, 1, ['secret']);
         $this->assertSame(['Secret'], array_column($secret['bookmarks'], 'title'));
 
-        $unknown = $this->probe()->order(1, 1, 'nope');
+        $unknown = $this->probe()->order(1, 1, ['nope']);
         $this->assertSame([], $unknown['bookmarks']);
         $this->assertSame(1, $unknown['pages']);
     }
@@ -177,16 +177,16 @@ final class ReadPathTest extends TestCase
             SQL,
         );
 
-        $anonymous = $this->probe()->order(null, 1, null, 'javi');
+        $anonymous = $this->probe()->order(null, 1, [], 'javi');
         $this->assertSame(['Public'], array_column($anonymous['bookmarks'], 'title'));
 
-        $owner = $this->probe()->order(1, 1, null, 'javi');
+        $owner = $this->probe()->order(1, 1, [], 'javi');
         $this->assertSame(['Public', 'Secret'], array_column($owner['bookmarks'], 'title'));
 
-        $bob = $this->probe()->order(null, 1, null, 'bob');
+        $bob = $this->probe()->order(null, 1, [], 'bob');
         $this->assertSame(['BobPublic'], array_column($bob['bookmarks'], 'title'));
 
-        $unknown = $this->probe()->order(null, 1, null, 'ghost');
+        $unknown = $this->probe()->order(null, 1, [], 'ghost');
         $this->assertSame([], $unknown['bookmarks']);
         $this->assertSame(1, $unknown['pages']);
     }
@@ -213,6 +213,80 @@ final class ReadPathTest extends TestCase
         $second = $this->probe()->order(null, 2);
         $this->assertSame(['B2', 'B1'], array_column($second['bookmarks'], 'title'));
         $this->assertSame(2, $second['pages']);
+    }
+
+    public function testFilteringBySeveralTagsIntersects(): void
+    {
+        $this->seedMultiTag();
+
+        $both = $this->probe()->order(null, 1, ['php', 'docs']);
+        $this->assertSame(['Manual'], array_column($both['bookmarks'], 'title'));
+
+        $one = $this->probe()->order(null, 1, ['php']);
+        $this->assertCount(2, $one['bookmarks']);
+    }
+
+    public function testTheCloudFollowsTheTagFilter(): void
+    {
+        $this->seedMultiTag();
+
+        $cloud = array_column($this->probe()->cloud(null, ['php']), 'value', 'name');
+
+        $this->assertArrayNotHasKey('php', $cloud, 'the active filter is left out');
+        $this->assertArrayNotHasKey('cocina', $cloud, 'tags outside the list are left out');
+        $this->assertSame(1, (int) $cloud['docs']);
+        $this->assertSame(1, (int) $cloud['testing']);
+    }
+
+    public function testCloudLinksDrillDownWithCanonicallySortedUrls(): void
+    {
+        $this->seedMultiTag();
+
+        $links = (new ShowTag())->tagCloud(null, ['php']);
+
+        $this->assertStringContainsString('href="tag/docs,php"', $links);
+        $this->assertStringContainsString('href="tag/php,testing"', $links);
+    }
+
+    public function testTheCloudFollowsTheUserFilter(): void
+    {
+        $this->seedMultiTag();
+
+        $cloud = array_column($this->probe()->cloud(null, [], 'javi'), 'value', 'name');
+
+        $this->assertArrayNotHasKey('cocina', $cloud, "another user's tag");
+        $this->assertSame(2, (int) $cloud['php']);
+        $this->assertSame(1, (int) $cloud['docs']);
+    }
+
+    private function seedMultiTag(): void
+    {
+        $this->pdo->exec('TRUNCATE `user`');
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'javi', 'javi@izartu.test', 'x', 'user'),
+                (2, 'bob', 'bob@izartu.test', 'x', 'user')
+            SQL,
+        );
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `bookmark`
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+            VALUES
+                (1, 'Manual', 'https://m.test', '', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
+                (2, 'PHPUnit', 'https://u.test', '', 1, 'public', '2026-01-02 10:00:00', '2026-01-02 10:00:00'),
+                (3, 'Receta', 'https://r.test', '', 2, 'public', '2026-01-03 10:00:00', '2026-01-03 10:00:00')
+            SQL,
+        );
+        $this->pdo->exec(
+            "INSERT INTO `tag` (`id`, `name`) VALUES (1, 'php'), (2, 'docs'), (3, 'testing'), (4, 'cocina')",
+        );
+        $this->pdo->exec(
+            'INSERT INTO `bookmark_tag` (`bookmark`, `tag`) VALUES (1, 1), (1, 2), (2, 1), (2, 3), (3, 4)',
+        );
     }
 
     private function seedPublicAndPrivate(): void
@@ -270,10 +344,10 @@ final class ReadPathTest extends TestCase
             public function order(
                 ?int $viewer = null,
                 int $page = 1,
-                ?string $tag = null,
+                array $tags = [],
                 ?string $username = null,
             ): array {
-                return $this->orderByDate($viewer, $page, $tag, $username);
+                return $this->orderByDate($viewer, $page, $tags, $username);
             }
 
             public function tagsOf(int $id): array
@@ -281,9 +355,9 @@ final class ReadPathTest extends TestCase
                 return $this->getTags($id);
             }
 
-            public function cloud(?int $viewer = null): array
+            public function cloud(?int $viewer = null, array $tags = [], ?string $username = null): array
             {
-                return $this->getCloud($viewer);
+                return $this->getCloud($viewer, $tags, $username);
             }
         };
     }

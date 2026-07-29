@@ -367,6 +367,12 @@ form.tagsearch input[type="search"]:focus {
   color: #666;
 }
 
+p.filter a.remove {
+  margin: 0 .2em 0 .1em;
+  color: #966;
+  text-decoration: none;
+}
+
 #footer {
   clear: both;
   display: flow-root;

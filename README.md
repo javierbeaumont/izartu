@@ -25,10 +25,13 @@ Expect rough edges and breaking changes while the rebuild is under way.
 ## Features
 
 * Public bookmark feed, browsable anonymously: newest first, paginated, and
-  filterable by tag (`/tag/NAME`) or by user (`/user/USERNAME`). A tag cloud
-  shows the most-used tags; `/tags` lists all of them, paginated and
-  searchable. Each bookmark shows who added it and when, linking to that
-  user's bookmarks.
+  filterable by user (`/user/USERNAME`) or by tags: `/tag/NAME`, and tags
+  combine with commas (`/tag/php,docs` lists bookmarks carrying both). The
+  tag cloud always describes the list on screen, and inside a tag filter its
+  links narrow it further; `/tags` lists every tag, paginated and searchable,
+  and reached from a filtered list it stays scoped to it.
+  Each bookmark shows who added it and when, linking to that user's
+  bookmarks.
 * Log in to add, edit and delete bookmarks, all inline: a bookmark is edited
   in place in the list (same look, editable), where it can also be deleted,
   and new bookmarks are added the same way on top of the list. Editing is

@@ -24,6 +24,12 @@
             <div class="title"><a href="tags">Tags</a></div>
             <p class="tag"><?php echo $tag; ?></p>
             <form method="get" action="tags" class="tagsearch">
+<?php if ($tagNames): ?>
+              <input type="hidden" name="tag" value="<?php echo htmlspecialchars(implode(',', $tagNames)); ?>">
+<?php endif; ?>
+<?php if ($userName !== null): ?>
+              <input type="hidden" name="user" value="<?php echo htmlspecialchars($userName); ?>">
+<?php endif; ?>
               <input type="search" name="q" placeholder="Find a tag" maxlength="255">
             </form>
           </div>

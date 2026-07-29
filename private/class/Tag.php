@@ -51,25 +51,24 @@ trait Tag
     }
 
     /**
-     * Return the tag-cloud data: the `CLOUD_SIZE` most-used tags with their
-     * visible-bookmark count, ordered alphabetically.
+     * Return the tag-cloud data for the current list: the `CLOUD_SIZE`
+     * most-used tags among the bookmarks the list shows, with their counts,
+     * ordered alphabetically.
      *
      * A viewer counts public bookmarks plus their own private ones; tags with
-     * no visible bookmark are not returned.
+     * no visible bookmark are not returned. With `$tags`, only bookmarks
+     * carrying ALL of them count, and those tags themselves are left out
+     * (they are the active filter). With `$username`, only that user's
+     * bookmarks count.
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
+     * @param list<string> $tags The tag names the list is filtered by; empty for none.
+     * @param string|null $username The username the list is filtered by, or null.
      * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
      */
-    private function getCloud(?int $viewer = null): array
+    private function getCloud(?int $viewer = null, array $tags = [], ?string $username = null): array
     {
-        $cond = '';
-        $param = false;
-
-        if ($viewer !== null) {
-            $cond .= ' OR `bookmark`.`user` = :viewer';
-            $param = [[':viewer', $viewer, PDO::PARAM_INT, 255]];
-        }
-
+        [$cond, $join, $extra, $param] = $this->listFilter($viewer, $tags, $username);
         $limit = CLOUD_SIZE;
 
         return $this->read(
@@ -82,8 +81,10 @@ trait Tag
                     `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
                 JOIN
                     `bookmark` ON (`bookmark`.`id` = `bookmark_tag`.`bookmark`)
+                $join
                 WHERE
                     (`bookmark`.`visibility` = 'public' $cond)
+                    $extra
                 GROUP BY
                     `tag`.`id`, `tag`.`name`
                 ORDER BY
@@ -93,23 +94,32 @@ trait Tag
             ORDER BY
                 `name` ASC
             SQL,
-            $param,
+            $param ?: false,
         );
     }
 
     /**
      * Return one page of the tags whose name contains the search term, with
      * their visible-bookmark count, ordered alphabetically. Same visibility
-     * rules as the cloud. An empty term matches every tag (the tag index).
+     * and list filters as the cloud (`$tags`/`$username` scope the search to
+     * the current list). An empty term matches every tag (the tag index).
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
      * @param string $term The search term (matched as a substring).
      * @param int $page 1-based page number (`TAGS_PAGE_SIZE` tags per page).
+     * @param list<string> $tags The tag names the list is filtered by; empty for none.
+     * @param string|null $username The username the list is filtered by, or null.
      * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
      */
-    private function searchTags(?int $viewer, string $term, int $page = 1): array
-    {
-        [$cond, $param] = $this->searchFilter($viewer, $term);
+    private function searchTags(
+        ?int $viewer,
+        string $term,
+        int $page = 1,
+        array $tags = [],
+        ?string $username = null,
+    ): array {
+        [$cond, $join, $extra, $param] = $this->listFilter($viewer, $tags, $username);
+        $param[] = [':term', '%' . addcslashes($term, '%_\\') . '%', PDO::PARAM_STR, 255];
         $limit = TAGS_PAGE_SIZE;
         $offset = ($page - 1) * TAGS_PAGE_SIZE;
 
@@ -122,8 +132,10 @@ trait Tag
                 `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
             JOIN
                 `bookmark` ON (`bookmark`.`id` = `bookmark_tag`.`bookmark`)
+            $join
             WHERE
                 (`bookmark`.`visibility` = 'public' $cond)
+                $extra
                 AND `tag`.`name` LIKE :term
             GROUP BY
                 `tag`.`id`, `tag`.`name`
@@ -140,11 +152,14 @@ trait Tag
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
      * @param string $term The search term (matched as a substring).
+     * @param list<string> $tags The tag names the list is filtered by; empty for none.
+     * @param string|null $username The username the list is filtered by, or null.
      * @return int How many visible tags match.
      */
-    private function countTags(?int $viewer, string $term): int
+    private function countTags(?int $viewer, string $term, array $tags = [], ?string $username = null): int
     {
-        [$cond, $param] = $this->searchFilter($viewer, $term);
+        [$cond, $join, $extra, $param] = $this->listFilter($viewer, $tags, $username);
+        $param[] = [':term', '%' . addcslashes($term, '%_\\') . '%', PDO::PARAM_STR, 255];
 
         $rows = $this->read(
             <<<SQL
@@ -155,8 +170,10 @@ trait Tag
                 `bookmark_tag` ON (`bookmark_tag`.`tag` = `tag`.`id`)
             JOIN
                 `bookmark` ON (`bookmark`.`id` = `bookmark_tag`.`bookmark`)
+            $join
             WHERE
                 (`bookmark`.`visibility` = 'public' $cond)
+                $extra
                 AND `tag`.`name` LIKE :term
             SQL,
             $param,
@@ -166,23 +183,58 @@ trait Tag
     }
 
     /**
-     * The shared visibility + search-term WHERE pieces for tag searches.
+     * The SQL pieces every tag listing shares: the visibility condition, the
+     * `user` join and extra WHERE clauses for the list's tag/username filters
+     * (with the filtered tag names themselves excluded), and the parameters.
      *
      * @param int|null $viewer The viewer's user id, or null for anonymous.
-     * @param string $term The search term (LIKE wildcards are escaped).
-     * @return array{0: string, 1: list<array{0: string, 1: mixed, 2: int, 3: int}>}
+     * @param list<string> $tags The tag names the list is filtered by; empty for none.
+     * @param string|null $username The username the list is filtered by, or null.
+     * @return array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: mixed, 2: int, 3: int}>}
      */
-    private function searchFilter(?int $viewer, string $term): array
+    private function listFilter(?int $viewer, array $tags, ?string $username): array
     {
         $cond = '';
-        $param = [[':term', '%' . addcslashes($term, '%_\\') . '%', PDO::PARAM_STR, 255]];
+        $join = '';
+        $extra = '';
+        $param = [];
 
         if ($viewer !== null) {
             $cond .= ' OR `bookmark`.`user` = :viewer';
             $param[] = [':viewer', $viewer, PDO::PARAM_INT, 255];
         }
+        if ($tags) {
+            $in = [];
+            foreach (array_values($tags) as $i => $name) {
+                $in[] = ':tag' . $i;
+                $param[] = [':tag' . $i, $name, PDO::PARAM_STR, 255];
+                $param[] = [':not' . $i, $name, PDO::PARAM_STR, 255];
+            }
+            $extra .= sprintf(
+                <<<'SQL'
 
-        return [$cond, $param];
+                    AND `bookmark`.`id` IN (
+                        SELECT `bookmark`
+                        FROM `bookmark_tag`
+                        JOIN `tag` ON (`tag`.`id` = `bookmark_tag`.`tag`)
+                        WHERE `tag`.`name` IN (%s)
+                        GROUP BY `bookmark`
+                        HAVING COUNT(DISTINCT `tag`.`id`) = %d
+                    )
+                    AND `tag`.`name` NOT IN (%s)
+                SQL,
+                implode(', ', $in),
+                count($tags),
+                implode(', ', array_map(static fn(string $p): string => str_replace(':tag', ':not', $p), $in)),
+            );
+        }
+        if ($username !== null) {
+            $join = ' LEFT JOIN `user` ON (`user`.`id` = `bookmark`.`user`)';
+            $extra .= ' AND `user`.`username` = :username';
+            $param[] = [':username', $username, PDO::PARAM_STR, 255];
+        }
+
+        return [$cond, $join, $extra, $param];
     }
 
 }

@@ -32,26 +32,62 @@ class Controller
      */
     public static function home(): array
     {
-        return self::feed(self::page(), null, null, '');
+        return self::feed(self::page(), [], null, '');
     }
 
     /**
-     * Tag page: the feed filtered by one tag name (`/tag/NAME`), paginated.
+     * Tag page: the feed filtered by tag names (`/tag/NAME` or
+     * `/tag/NAME,NAME,...`, comma-separated: bookmarks carrying ALL of them),
+     * paginated.
      *
      * An unknown tag renders an empty page rather than a 404, so the response
      * does not reveal whether a (possibly private) tag exists.
      *
-     * @param string $name Tag name from the URL (second path segment, encoded).
+     * @param string $segment Tag name(s) from the URL (second path segment, encoded).
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
-    public static function tag(string $name): array
+    public static function tag(string $segment): array
     {
-        $name = rawurldecode($name);
-        if ($name === '') {
+        $names = self::tagNames(rawurldecode($segment));
+        if (!$names) {
             return self::notFound();
         }
 
-        return self::feed(self::page(), $name, null, 'tag/' . rawurlencode($name));
+        // One canonical URL per tag set: redirect any other spelling to it.
+        if (rawurldecode($segment) !== implode(',', $names)) {
+            $query = $_SERVER['QUERY_STRING'] ?? '';
+            self::redirect(BASE . '/' . self::tagRoute($names) . ($query !== '' ? '?' . $query : ''));
+        }
+
+        return self::feed(self::page(), $names, null, self::tagRoute($names));
+    }
+
+    /**
+     * Parse a comma-separated tag list into the canonical tag-name set: a
+     * comma can never be part of a tag (it is the input separator), so the
+     * names are split on it, then trimmed, lower-cased, deduplicated and
+     * sorted.
+     *
+     * @param string $list The comma-separated tag names (already decoded).
+     * @return list<string> The tag names; empty if none survive.
+     */
+    private static function tagNames(string $list): array
+    {
+        $names = array_map(static fn(string $name): string => mb_strtolower(trim($name)), explode(',', $list));
+        $names = array_values(array_unique(array_filter($names, static fn(string $name): bool => $name !== '')));
+        sort($names);
+
+        return $names;
+    }
+
+    /**
+     * The list route for a set of tag names (`tag/NAME,NAME`).
+     *
+     * @param list<string> $names The tag names.
+     */
+    private static function tagRoute(array $names): string
+    {
+        return 'tag/' . implode(',', array_map('rawurlencode', $names));
     }
 
     /**
@@ -77,23 +113,35 @@ class Controller
             self::redirect(BASE . '/' . self::ownPage());
         }
 
-        return self::feed(self::page(), null, $name, 'user/' . rawurlencode($name));
+        return self::feed(self::page(), [], $name, 'user/' . rawurlencode($name));
     }
 
     /**
      * Tag index page (`/tags`): every visible tag with its count, paginated
-     * and alphabetical; `?q=TERM` narrows it to the matching tags.
+     * and alphabetical; `?q=TERM` narrows it to the matching tags. The list
+     * context travels along (`?tag=NAMES` and/or `?user=NAME`), scoping the
+     * index/search to that list, exactly like the cloud.
      *
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
     public static function tags(): array
     {
         $q = trim($_GET['q'] ?? '');
+        $tagNames = self::tagNames($_GET['tag'] ?? '');
+        $userName = trim($_GET['user'] ?? '') ?: null;
+
+        $query = http_build_query(array_filter([
+            'q' => $q,
+            'tag' => implode(',', $tagNames),
+            'user' => $userName,
+        ]));
 
         return ['tags', [
             'q' => $q,
+            'tagNames' => $tagNames,
+            'userName' => $userName,
             'page' => self::page(),
-            'route' => 'tags' . ($q !== '' ? '?q=' . rawurlencode($q) : ''),
+            'route' => 'tags' . ($query !== '' ? '?' . $query : ''),
         ]];
     }
 
@@ -109,13 +157,13 @@ class Controller
      */
     private static function feed(
         int $page,
-        ?string $tagName,
+        array $tagNames,
         ?string $userName,
         string $route,
     ): array {
         return ['home', [
             'page' => $page,
-            'tagName' => $tagName,
+            'tagNames' => $tagNames,
             'userName' => $userName,
             'mine' => $userName !== null && Auth::check() && $userName === Auth::user()['username'],
             'route' => $route,
@@ -311,9 +359,9 @@ class Controller
         $segments = explode('/', $path);
 
         return match ($segments[0]) {
-            'tag' => self::feed($page, rawurldecode($segments[1]), null, $path),
-            'user' => self::feed($page, null, rawurldecode($segments[1]), $path),
-            default => self::feed($page, null, null, ''),
+            'tag' => self::feed($page, self::tagNames(rawurldecode($segments[1])), null, $path),
+            'user' => self::feed($page, [], rawurldecode($segments[1]), $path),
+            default => self::feed($page, [], null, ''),
         };
     }
 

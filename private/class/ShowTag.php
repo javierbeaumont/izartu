@@ -26,36 +26,47 @@ final class ShowTag extends Crud
     use Tag;
 
     /**
-     * Build the tag-cloud text: the most-used tags with their visible-bookmark
-     * count, alphabetically.
+     * Build the tag-cloud text for the current list: its most-used tags with
+     * their counts, alphabetically. With `$tags` (the list's active filter),
+     * each link adds its tag to that filter, drilling further down.
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
      *   anonymous.
+     * @param list<string> $tags The tag names the list is filtered by; empty for none.
+     * @param string|null $username The username the list is filtered by, or null.
      * @return string|false Comma-separated `name (count)` pairs, or false if there
      *   are no tags.
      */
-    final public function tagCloud(?int $viewer = null): string|false
+    final public function tagCloud(?int $viewer = null, array $tags = [], ?string $username = null): string|false
     {
-        return $this->links($this->getCloud($viewer));
+        return $this->links($this->getCloud($viewer, $tags, $username), $tags);
     }
 
     /**
      * Build one page of the tag index or search results: the matching tags
      * with their visible-bookmark count, alphabetically. An empty term
-     * matches every tag.
+     * matches every tag. With `$tags`/`$username` the search is scoped to
+     * that list (like the cloud) and result links drill down into it.
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
      *   anonymous.
      * @param string $term The search term (matched as a substring).
      * @param int $page 1-based page number.
+     * @param list<string> $tags The tag names the list is filtered by; empty for none.
+     * @param string|null $username The username the list is filtered by, or null.
      * @return array{tags: string|false, pages: int} The rendered links (false
      *   if nothing matches) and the total number of pages (at least 1).
      */
-    final public function tagSearch(?int $viewer, string $term, int $page = 1): array
-    {
+    final public function tagSearch(
+        ?int $viewer,
+        string $term,
+        int $page = 1,
+        array $tags = [],
+        ?string $username = null,
+    ): array {
         return [
-            'tags' => $this->links($this->searchTags($viewer, $term, $page)),
-            'pages' => max(1, (int) ceil($this->countTags($viewer, $term) / TAGS_PAGE_SIZE)),
+            'tags' => $this->links($this->searchTags($viewer, $term, $page, $tags, $username), $tags),
+            'pages' => max(1, (int) ceil($this->countTags($viewer, $term, $tags, $username) / TAGS_PAGE_SIZE)),
         ];
     }
 
@@ -63,13 +74,16 @@ final class ShowTag extends Crud
      * Render tag rows as linked `name (count)` pairs.
      *
      * @param list<array<string, mixed>> $table Tag rows (columns: `name`, `value`).
+     * @param list<string> $base Tag names each link keeps (the active filter).
      * @return string|false The links, or false if there are no rows.
      */
-    private function links(array $table): string|false
+    private function links(array $table, array $base = []): string|false
     {
         $tag = false;
         foreach ($table as $value) {
-            $tag .= '<a href="tag/' . rawurlencode($value['name']) . '">'
+            $names = array_merge($base, [$value['name']]);
+            sort($names);
+            $tag .= '<a href="tag/' . implode(',', array_map('rawurlencode', $names)) . '">'
                 . htmlspecialchars($value['name']) . '</a> (' . $value['value'] . '), ';
         }
         return $tag;

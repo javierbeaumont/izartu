@@ -109,7 +109,7 @@ final class ControllerAccessTest extends TestCase
         [, $vars] = Controller::add();
 
         $this->assertSame('tag/php', $vars['route']);
-        $this->assertSame('php', $vars['tagName']);
+        $this->assertSame(['php'], $vars['tagNames']);
         $this->assertSame(2, $vars['page']);
     }
 
@@ -123,6 +123,17 @@ final class ControllerAccessTest extends TestCase
         $this->assertTrue($vars['mine']);
         $this->assertSame('javi', $vars['userName']);
         $this->assertSame('user/javi', $vars['route']);
+    }
+
+    public function testATagRouteAcceptsSeveralCommaSeparatedTags(): void
+    {
+        // The canonical form (sorted, lower-case, deduplicated); any other
+        // spelling redirects to it.
+        [$template, $vars] = Controller::tag('docs,php');
+
+        $this->assertSame('home', $template);
+        $this->assertSame(['docs', 'php'], $vars['tagNames']);
+        $this->assertSame('tag/docs,php', $vars['route']);
     }
 
     public function testAForeignUserPageIsNotMine(): void

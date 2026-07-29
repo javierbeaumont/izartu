@@ -19,13 +19,27 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
       <div class="body tags">
+<?php if ($tagNames): ?>
+        <p class="filter">Tags of bookmarks tagged <strong><?php echo htmlspecialchars(implode(' + ', $tagNames)); ?></strong>
+          (<a href="tags">all tags</a>)</p>
+<?php elseif ($userName !== null): ?>
+        <p class="filter">Tags of <strong><?php echo htmlspecialchars($userName); ?></strong>'s bookmarks
+          (<a href="tags">all tags</a>)</p>
+<?php else: ?>
         <p class="filter">Tags
           (<a href=".">all bookmarks</a>)</p>
+<?php endif; ?>
         <form method="get" action="tags" class="tagsearch">
+<?php if ($tagNames): ?>
+          <input type="hidden" name="tag" value="<?php echo htmlspecialchars(implode(',', $tagNames)); ?>">
+<?php endif; ?>
+<?php if ($userName !== null): ?>
+          <input type="hidden" name="user" value="<?php echo htmlspecialchars($userName); ?>">
+<?php endif; ?>
           <input type="search" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Find a tag" maxlength="255">
           <input type="submit" value="Search">
         </form>
-<?php ['tags' => $results, 'pages' => $pages] = (new ShowTag())->tagSearch(Auth::id(), $q, $page); ?>
+<?php ['tags' => $results, 'pages' => $pages] = (new ShowTag())->tagSearch(Auth::id(), $q, $page, $tagNames, $userName); ?>
 <?php if ($results): ?>
         <p class="tag"><?php echo $results; ?></p>
 <?php elseif ($q !== ''): ?>

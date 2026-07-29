@@ -114,6 +114,39 @@ final class TagSearchTest extends TestCase
         $this->assertSame(sprintf('tag%03d', TAGS_PAGE_SIZE + 1), $second[0]);
     }
 
+    public function testSearchScopedToTagsOnlySeesCooccurringTags(): void
+    {
+        $this->tag('php', [1]);
+        $this->tag('docs', [1]);
+        $this->tag('doctrine', [3]);
+
+        $names = array_column($this->probe()->search(null, 'doc', 1, ['php']), 'name');
+
+        $this->assertSame(['docs'], $names, 'doctrine does not co-occur with php');
+        $this->assertSame([], $this->probe()->search(null, 'ph', 1, ['php']), 'the active filter is excluded');
+        $this->assertSame(1, $this->probe()->count(null, 'doc', ['php']));
+    }
+
+    public function testSearchScopedToAUserOnlySeesTheirTags(): void
+    {
+        $this->pdo->exec('TRUNCATE `user`');
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'javi', 'javi@izartu.test', 'x', 'user'),
+                (2, 'bob', 'bob@izartu.test', 'x', 'user')
+            SQL,
+        );
+        $this->pdo->exec('UPDATE `bookmark` SET `user` = 2 WHERE `id` = 3');
+        $this->tag('php', [1]);
+        $this->tag('vim', [3]);
+
+        $this->assertSame(['php'], array_column($this->probe()->search(null, '', 1, [], 'javi'), 'name'));
+        $this->assertSame(1, $this->probe()->count(null, '', [], 'javi'));
+    }
+
     public function testSearchTreatsLikeWildcardsAsLiterals(): void
     {
         $this->tag('a%b', [1]);
@@ -146,14 +179,19 @@ final class TagSearchTest extends TestCase
                 return $this->getCloud($viewer);
             }
 
-            public function search(?int $viewer, string $term, int $page = 1): array
-            {
-                return $this->searchTags($viewer, $term, $page);
+            public function search(
+                ?int $viewer,
+                string $term,
+                int $page = 1,
+                array $tags = [],
+                ?string $username = null,
+            ): array {
+                return $this->searchTags($viewer, $term, $page, $tags, $username);
             }
 
-            public function count(?int $viewer, string $term): int
+            public function count(?int $viewer, string $term, array $tags = [], ?string $username = null): int
             {
-                return $this->countTags($viewer, $term);
+                return $this->countTags($viewer, $term, $tags, $username);
             }
         };
     }

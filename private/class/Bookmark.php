@@ -240,7 +240,7 @@ class Bookmark extends Crud
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
      *   anonymous. A viewer sees public bookmarks plus their own private ones.
      * @param int $page 1-based page number; each page holds `PAGE_SIZE` bookmarks.
-     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param list<string> $tags Only bookmarks carrying ALL these tag names; empty for all.
      * @param string|null $username Only bookmarks added by this user, or null for all.
      * @param bool $order true for ascending order, false (default) for descending.
      * @return array{bookmarks: list<self>, pages: int} The page's bookmarks
@@ -249,17 +249,17 @@ class Bookmark extends Crud
     final public function orderByDate(
         ?int $viewer = null,
         int $page = 1,
-        ?string $tag = null,
+        array $tags = [],
         ?string $username = null,
         bool $order = false,
     ): array {
-        [$cond, $param] = $this->filter($viewer, $tag, $username);
+        [$cond, $param] = $this->filter($viewer, $tags, $username);
         $cond .= ' ORDER BY `bookmark`.`mod` ' . ($order ? 'ASC' : 'DESC');
         $cond .= ' LIMIT ' . PAGE_SIZE . ' OFFSET ' . (($page - 1) * PAGE_SIZE);
 
         return [
             'bookmarks' => array_map(self::hydrate(...), $this->select($cond, $param)),
-            'pages' => max(1, (int) ceil($this->count($viewer, $tag, $username) / PAGE_SIZE)),
+            'pages' => max(1, (int) ceil($this->count($viewer, $tags, $username) / PAGE_SIZE)),
         ];
     }
 
@@ -267,12 +267,12 @@ class Bookmark extends Crud
      * Build the WHERE clause a listing needs (visibility and tag filters).
      *
      * @param int|null $viewer The viewer's user id, or null for anonymous.
-     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param list<string> $tags Only bookmarks carrying ALL these tag names; empty for all.
      * @param string|null $username Only bookmarks added by this user, or null for all.
      * @return array{0: string, 1: list<array{0: string, 1: mixed, 2: int, 3: int}>|false}
      *   The WHERE clause (never empty) and its bind parameters.
      */
-    private function filter(?int $viewer, ?string $tag, ?string $username = null): array
+    private function filter(?int $viewer, array $tags = [], ?string $username = null): array
     {
         $where = [];
         $param = [];
@@ -283,16 +283,26 @@ class Bookmark extends Crud
             $where[] = "(`bookmark`.`visibility` = 'public' OR `bookmark`.`user` = :viewer)";
             $param[] = [':viewer', $viewer, PDO::PARAM_INT, 255];
         }
-        if ($tag !== null) {
-            $where[] = <<<'SQL'
+        if ($tags) {
+            $in = [];
+            foreach (array_values($tags) as $i => $name) {
+                $in[] = ':tag' . $i;
+                $param[] = [':tag' . $i, $name, PDO::PARAM_STR, 255];
+            }
+            $where[] = sprintf(
+                <<<'SQL'
                 `bookmark`.`id` IN (
                     SELECT `bookmark`
                     FROM `bookmark_tag`
                     JOIN `tag` ON (`tag`.`id` = `bookmark_tag`.`tag`)
-                    WHERE `tag`.`name` = :tag
+                    WHERE `tag`.`name` IN (%s)
+                    GROUP BY `bookmark`
+                    HAVING COUNT(DISTINCT `tag`.`id`) = %d
                 )
-                SQL;
-            $param[] = [':tag', $tag, PDO::PARAM_STR, 255];
+                SQL,
+                implode(', ', $in),
+                count($tags),
+            );
         }
         if ($username !== null) {
             $where[] = '`user`.`username` = :username';
@@ -306,13 +316,13 @@ class Bookmark extends Crud
      * Count the bookmarks the current listing can see.
      *
      * @param int|null $viewer The viewer's user id, or null for anonymous.
-     * @param string|null $tag Only bookmarks carrying this tag name, or null for all.
+     * @param list<string> $tags Only bookmarks carrying ALL these tag names; empty for all.
      * @param string|null $username Only bookmarks added by this user, or null for all.
      * @return int The bookmark count.
      */
-    private function count(?int $viewer, ?string $tag = null, ?string $username = null): int
+    private function count(?int $viewer, array $tags = [], ?string $username = null): int
     {
-        [$cond, $param] = $this->filter($viewer, $tag, $username);
+        [$cond, $param] = $this->filter($viewer, $tags, $username);
 
         $rows = $this->read(
             <<<SQL

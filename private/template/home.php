@@ -19,7 +19,7 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 $show = new ShowTag();
-$tag = $show->tagCloud(Auth::id());
+$tag = $show->tagCloud(Auth::id(), $tagNames, $userName);
 
 include_once PRIVATE_DIR . 'template/option.php';
 ?>
@@ -27,15 +27,21 @@ include_once PRIVATE_DIR . 'template/option.php';
 <?php if ($mine): ?>
         <p class="filter">Your bookmarks
           (<a href=".">all bookmarks</a>)</p>
-<?php elseif ($tagName !== null): ?>
-        <p class="filter">Bookmarks tagged <strong><?php echo htmlspecialchars($tagName); ?></strong>
+<?php elseif ($tagNames): ?>
+        <p class="filter">Bookmarks tagged
+<?php foreach ($tagNames as $i => $name): ?>
+<?php $rest = array_values(array_diff($tagNames, [$name])); ?>
+          <?php echo $i ? '+ ' : ''; ?><strong><?php echo htmlspecialchars($name); ?></strong><a class="remove"
+            href="<?php echo $rest ? 'tag/' . implode(',', array_map('rawurlencode', $rest)) : '.'; ?>"
+            title="Remove this tag">&times;</a>
+<?php endforeach; ?>
           (<a href=".">all bookmarks</a>)</p>
 <?php elseif ($userName !== null): ?>
         <p class="filter">Bookmarks added by <strong><?php echo htmlspecialchars($userName); ?></strong>
           (<a href=".">all bookmarks</a>)</p>
 <?php endif; ?>
 <?php
-['bookmarks' => $bookmarks, 'pages' => $pages] = (new Bookmark())->orderByDate(Auth::id(), $page, $tagName, $userName);
+['bookmarks' => $bookmarks, 'pages' => $pages] = (new Bookmark())->orderByDate(Auth::id(), $page, $tagNames, $userName);
 ?>
 <?php if ($adding || $bookmarks): ?>
         <div id="list">

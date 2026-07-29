@@ -26,7 +26,9 @@
  *
  * Routes:
  * - `/`          Home: public bookmark feed + tag cloud.
- * - `/tag/NAME`  The feed filtered by one tag.
+ * - `/tag/NAMES` The feed filtered by tags, comma-separated (`/tag/php,docs`
+ *                lists bookmarks carrying both). The sidebar cloud shows the
+ *                tags of the listed bookmarks; its links add to the filter.
  * - `/tags`      Tag index: every visible tag with its count, paginated;
  *                `?q=TERM` narrows it to the matching tags.
  * - `/user/NAME` The feed filtered by one user (your own page shows your
