@@ -46,20 +46,32 @@ Expect rough edges and breaking changes while the rebuild is under way.
 * Hardened sessions (HttpOnly, SameSite, Secure on HTTPS), CSRF-protected
   forms, and HTML-escaped output.
 
-## Requirements
+## Installation with Docker
 
-* PHP >= 8.2 with the `pdo_mysql` extension
-* MySQL >= 8.4
-* A web server that routes requests to `public/index.php`. Apache works out
-  of the box through the shipped `.htaccess` (needs `mod_rewrite`).
-
-Or skip all of the above and use the included Docker setup.
-
-## Quick start (Docker)
+Requires only Docker (with the compose plugin).
 
 ```sh
 git clone https://github.com/javierbeaumont/izartu.git
 cd izartu
+```
+
+The database credentials are deliberately not defined in the repository:
+choose your own in a `.env` file next to `docker-compose.yml` (gitignored).
+`DB_USER`/`DB_PASS` are the application's MySQL account; `DB_ROOT_PASS` is
+the root password of the bundled MySQL container (Docker setup only, never
+read by izartu):
+
+```sh
+cat > .env <<'EOF'
+DB_USER=izartu
+DB_PASS=choose-a-password
+DB_ROOT_PASS=choose-another-password
+EOF
+```
+
+Then bring the stack up:
+
+```sh
 docker compose up --build
 ```
 
@@ -72,7 +84,16 @@ docker compose exec app php /var/www/izartu/private/cli/adduser.php
 
 Log in at `/login` and start adding bookmarks.
 
-## Manual installation
+## Installation without Docker
+
+Requirements:
+
+* PHP >= 8.1 with the `pdo_mysql` extension (developed and tested on 8.5)
+* MySQL >= 8.4
+* A web server that routes requests to `public/index.php`. Apache works out
+  of the box through the shipped `.htaccess` (needs `mod_rewrite`).
+
+Steps:
 
 1. Copy the repository to the server. Point the web server's document root
    at `public/`; `private/` must stay outside the web root (as shipped).
@@ -104,22 +125,23 @@ no configuration is needed, the base path is detected automatically.
 
 ## Configuration
 
-Database credentials are read from environment variables (set in
-[`docker-compose.yml`](docker-compose.yml) for the Docker setup):
+Deployment settings are read from environment variables (for the Docker
+setup, the `DB_*` values come from your `.env` file, see Quick start):
 
 * `DB_HOST`: optional, defaults to `localhost`.
 * `DB_NAME`: optional, defaults to `izartu`.
 * `DB_PASS`: required, no default.
 * `DB_USER`: required, no default.
+* `DEBUG`: optional, off by default. Set it to `1` to enable debug mode:
+  error output, a `Server-Timing` response header with request metrics (PHP
+  time, database time and query count, peak memory; shown natively in the
+  browser devtools network panel) and a collapsible per-query timing panel
+  at the bottom of every page, where repeated queries are flagged.
 
-Other settings are constants in [`private/config.php`](private/config.php):
+Instance settings are constants in [`private/config.php`](private/config.php):
 `PAGE_SIZE` (bookmarks per feed page, default 10), `CLOUD_SIZE` (most-used
-tags shown in the tag cloud, default 50), `TAGS_PAGE_SIZE` (tags per page on
-the tag index, default 100) and `DEBUG` (set it to `FALSE` in production). Debug mode enables error output, a `Server-Timing`
-response header with request metrics (PHP time, database time and query
-count, peak memory; shown natively in the browser devtools network panel)
-and a collapsible per-query timing panel at the bottom of every page, where
-repeated queries are flagged.
+tags shown in the tag cloud, default 50) and `TAGS_PAGE_SIZE` (tags per page
+on the tag index, default 100).
 
 ## Managing users
 
@@ -131,13 +153,13 @@ shown next to the user's bookmarks.
 Inputs are validated: a real email address, a username of 3-32 characters
 (letters, digits, `_` or `-`), and a password of at least 8 characters.
 
-With Docker:
+### With Docker
 
 ```sh
 docker compose exec app php /var/www/izartu/private/cli/adduser.php
 ```
 
-Without Docker:
+### Without Docker
 
 ```sh
 php private/cli/adduser.php
@@ -148,10 +170,13 @@ php private/cli/adduser.php
 ### Tests
 
 Tests run with PHPUnit, a **dev-only** dependency (Composer). The suite runs
-against a dedicated `izartu_test` database, created automatically on the
-first `db` start (run `docker compose down -v` once if the volume predates it).
+against a dedicated `izartu_test` database so it never touches real data.
 
-Install the dev dependencies once (writes `vendor/`, gitignored):
+#### With Docker
+
+The `izartu_test` database is created automatically on the first `db` start
+(run `docker compose down -v` once if the volume predates it). Install the
+dev dependencies once (writes `vendor/`, gitignored):
 
 ```sh
 docker compose run --rm test composer install
@@ -163,22 +188,36 @@ Run the suite:
 docker compose run --rm test
 ```
 
-Without Docker (PHP 8.5 + Composer on the host, MySQL reachable):
+#### Without Docker
+
+Needs PHP + Composer on the host, MySQL reachable, and an `izartu_test`
+database loaded with the schema:
 
 ```sh
 composer install
-DB_NAME=izartu_test vendor/bin/phpunit
+DEBUG=1 DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass vendor/bin/phpunit
 ```
+
+(`DEBUG=1` because part of the suite exercises the debug instrumentation.)
 
 ### Code style
 
 Code follows [PER Coding Style](https://www.php-fig.org/per/coding-style/)
 (max line length 120), enforced with PHP-CS-Fixer (also a dev-only
-dependency):
+dependency).
+
+#### With Docker
 
 ```sh
 docker compose run --rm test vendor/bin/php-cs-fixer fix           # apply
 docker compose run --rm test vendor/bin/php-cs-fixer fix --dry-run # check only
+```
+
+#### Without Docker
+
+```sh
+vendor/bin/php-cs-fixer fix           # apply
+vendor/bin/php-cs-fixer fix --dry-run # check only
 ```
 
 ## License

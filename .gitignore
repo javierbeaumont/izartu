@@ -1,3 +1,6 @@
+# Local environment (database credentials for docker compose)
+/.env
+
 # Composer dependencies
 /vendor/
 

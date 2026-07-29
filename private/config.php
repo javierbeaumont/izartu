@@ -58,5 +58,5 @@ define('DB_PORT', 3306);
 ############################ DEVELOPER CONFIGURATION ###########################
 ################################################################################
 
-/** Debug mode: TRUE enables error output, the Server-Timing header and the query panel. Must be FALSE in production. */
-define('DEBUG', true);
+/** Debug mode (from the `DEBUG` environment variable, off by default): enables error output, the Server-Timing header and the query panel. */
+define('DEBUG', (bool) getenv('DEBUG'));
