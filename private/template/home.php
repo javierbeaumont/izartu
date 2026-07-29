@@ -49,14 +49,14 @@ $tagsByBookmark = $model->tagsFor(array_column($bookmarks, 'id'));
         <div id="list">
 <?php if ($adding): ?>
 <?php
-$formAction = 'add';
-if (!isset($formBookmark)) {
-    $formBookmark = new Bookmark();
-    $formTags = '';
-    $formErrors = [];
-}
-include PRIVATE_DIR . 'template/bookmarkform.php';
-?>
+    $formAction = 'add';
+    if (!isset($formBookmark)) {
+        $formBookmark = new Bookmark();
+        $formTags = '';
+        $formErrors = [];
+    }
+    include PRIVATE_DIR . 'template/bookmarkform.php';
+    ?>
 <?php endif; ?>
 <?php foreach ($bookmarks as $bookmark): ?>
 <?php include PRIVATE_DIR . 'template/contentlist.php'; ?>

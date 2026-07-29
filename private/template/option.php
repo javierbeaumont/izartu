@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
-<?php if($tag): ?>
+<?php if ($tag): ?>
         <div class="option">
           <div class="tag">
             <div class="title"><a href="tags">Tags</a></div>

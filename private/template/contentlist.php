@@ -20,14 +20,14 @@
 ?>
 <?php if ($editId === $bookmark->id && Auth::canManage($bookmark->user)): ?>
 <?php
-$formAction = 'edit/' . $bookmark->id;
-if (!isset($formBookmark) || $formBookmark->id !== $bookmark->id) {
-    $formBookmark = $bookmark;
-    $formTags = implode(', ', $tagsByBookmark[$bookmark->id] ?? []);
-    $formErrors = [];
-}
-include PRIVATE_DIR . 'template/bookmarkform.php';
-?>
+    $formAction = 'edit/' . $bookmark->id;
+    if (!isset($formBookmark) || $formBookmark->id !== $bookmark->id) {
+        $formBookmark = $bookmark;
+        $formTags = implode(', ', $tagsByBookmark[$bookmark->id] ?? []);
+        $formErrors = [];
+    }
+    include PRIVATE_DIR . 'template/bookmarkform.php';
+    ?>
 <?php else: ?>
         <div class="bookmark">
           <div class="head">
