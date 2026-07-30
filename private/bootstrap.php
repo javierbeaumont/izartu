@@ -26,11 +26,25 @@
 
 define('PRIVATE_DIR', __DIR__ . '/');
 
-spl_autoload_register(function ($class) {
+spl_autoload_register(function (string $class): void {
     $file = PRIVATE_DIR . 'class/' . $class . '.php';
     if (is_file($file)) {
         require $file;
     }
 });
+
+/**
+ * An environment variable as a string, or a default when unset/empty.
+ *
+ * @param string $name The variable name.
+ * @param string $default Value when the variable is unset or empty.
+ * @return string
+ */
+function env(string $name, string $default = ''): string
+{
+    $value = getenv($name);
+
+    return is_string($value) && $value !== '' ? $value : $default;
+}
 
 require_once __DIR__ . '/config.php';

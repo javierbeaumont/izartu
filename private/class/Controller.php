@@ -56,6 +56,7 @@ class Controller
         // One canonical URL per tag set: redirect any other spelling to it.
         if (rawurldecode($segment) !== implode(',', $names)) {
             $query = $_SERVER['QUERY_STRING'] ?? '';
+            $query = is_string($query) ? $query : '';
             self::redirect(BASE . '/' . self::tagRoute($names) . ($query !== '' ? '?' . $query : ''));
         }
 
@@ -126,9 +127,9 @@ class Controller
      */
     public static function tags(): array
     {
-        $q = trim($_GET['q'] ?? '');
-        $tagNames = self::tagNames($_GET['tag'] ?? '');
-        $userName = trim($_GET['user'] ?? '') ?: null;
+        $q = trim(Input::query('q'));
+        $tagNames = self::tagNames(Input::query('tag'));
+        $userName = trim(Input::query('user')) ?: null;
 
         $query = http_build_query(array_filter([
             'q' => $q,
@@ -153,6 +154,10 @@ class Controller
      * live in the query string; mutations POST to the `/add`, `/edit/ID` and
      * `/delete/ID` action routes.
      *
+     * @param int $page 1-based page number.
+     * @param list<string> $tagNames Tag names the list is filtered by; empty for none.
+     * @param string|null $userName Username the list is filtered by, or null.
+     * @param string $route The list's route (pagination and form links).
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
      */
     private static function feed(
@@ -165,10 +170,10 @@ class Controller
             'page' => $page,
             'tagNames' => $tagNames,
             'userName' => $userName,
-            'mine' => $userName !== null && Auth::check() && $userName === Auth::user()['username'],
+            'mine' => $userName !== null && $userName === (Auth::user()['username'] ?? null),
             'route' => $route,
-            'editId' => Auth::check() ? (int) ($_GET['edit'] ?? 0) : 0,
-            'adding' => Auth::check() && isset($_GET['add']),
+            'editId' => Auth::check() ? (int) Input::query('edit') : 0,
+            'adding' => Auth::check() && Input::has('add'),
         ]];
     }
 
@@ -177,7 +182,7 @@ class Controller
      */
     private static function page(): int
     {
-        return max(1, (int) ($_GET['page'] ?? 1));
+        return max(1, (int) Input::query('page'));
     }
 
     /**
@@ -192,10 +197,10 @@ class Controller
     public static function login(): array
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = trim($_POST['email'] ?? '');
-            if (Auth::csrfCheck($_POST['csrf'] ?? null)
+            $email = trim(Input::post('email'));
+            if (Auth::csrfCheck(Input::post('csrf'))
                 && filter_var($email, FILTER_VALIDATE_EMAIL)
-                && Auth::attempt($email, $_POST['password'] ?? '')) {
+                && Auth::attempt($email, Input::post('password'))) {
                 self::redirect(BASE . '/' . self::ownPage());
             }
             return ['login', ['error' => true]];
@@ -233,11 +238,11 @@ class Controller
         }
 
         $bookmark = new Bookmark();
-        $tags = trim($_POST['tags'] ?? '');
-        $errors = self::apply($bookmark, $_POST);
+        $tags = trim(Input::post('tags'));
+        $errors = self::apply($bookmark);
 
         if (!$errors) {
-            $bookmark->user = Auth::user()['id'];
+            $bookmark->user = (int) Auth::id();
             $bookmark->save();
             $bookmark->saveTags($tags);
             Flash::set('Bookmark added.');
@@ -277,8 +282,8 @@ class Controller
             self::redirect(BASE . '/' . self::ownPage() . '?edit=' . $bookmark->id);
         }
 
-        $tags = trim($_POST['tags'] ?? '');
-        $errors = self::apply($bookmark, $_POST);
+        $tags = trim(Input::post('tags'));
+        $errors = self::apply($bookmark);
 
         if (!$errors) {
             $bookmark->save();
@@ -308,7 +313,7 @@ class Controller
     {
         Auth::guard();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Auth::csrfCheck($_POST['csrf'] ?? null)) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Auth::csrfCheck(Input::post('csrf'))) {
             return self::notFound();
         }
 
@@ -330,7 +335,7 @@ class Controller
      */
     private static function returnPath(): string
     {
-        $return = $_POST['return'] ?? '';
+        $return = Input::post('return');
 
         return preg_match('#\A(?:tag/[^/?\#\s]+|user/[^/?\#\s]+)?(?:\?page=[1-9][0-9]*)?\z#', $return)
             ? $return
@@ -342,7 +347,7 @@ class Controller
      */
     private static function ownPage(): string
     {
-        return 'user/' . rawurlencode(Auth::user()['username']);
+        return 'user/' . rawurlencode(Auth::user()['username'] ?? '');
     }
 
     /**
@@ -441,27 +446,27 @@ class Controller
     }
 
     /**
-     * Fill a bookmark from form input and validate it (CSRF included).
+     * Fill a bookmark from the submitted form (`$_POST`) and validate it
+     * (CSRF included).
      *
      * @param Bookmark $bookmark The bookmark to fill.
-     * @param array<string, mixed> $input The submitted form fields (`$_POST`).
      * @return array<string, string> Error message per invalid field; empty if valid.
      */
-    private static function apply(Bookmark $bookmark, array $input): array
+    private static function apply(Bookmark $bookmark): array
     {
-        $bookmark->title = trim($input['title'] ?? '');
-        $bookmark->hlink = trim($input['link'] ?? '');
-        $bookmark->text = trim($input['description'] ?? '');
-        $bookmark->visibility = isset($input['visibility']) ? Visibility::Public : Visibility::Private;
+        $bookmark->title = trim(Input::post('title'));
+        $bookmark->hlink = trim(Input::post('link'));
+        $bookmark->text = trim(Input::post('description'));
+        $bookmark->visibility = isset($_POST['visibility']) ? Visibility::Public : Visibility::Private;
 
         $errors = self::validate($bookmark);
 
-        $tagError = self::tagError(Bookmark::parseTags($input['tags'] ?? ''));
+        $tagError = self::tagError(Bookmark::parseTags(Input::post('tags')));
         if ($tagError !== null) {
             $errors['tags'] = $tagError;
         }
 
-        if (!Auth::csrfCheck($input['csrf'] ?? null)) {
+        if (!Auth::csrfCheck(Input::post('csrf'))) {
             $errors['csrf'] = 'The session expired; please try again.';
         }
 

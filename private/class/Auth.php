@@ -91,7 +91,15 @@ class Auth
         if (ini_get('session.use_cookies')) {
             $c = session_get_cookie_params();
 
-            setcookie(session_name(), '', time() - 42000, $c['path'], $c['domain'], $c['secure'], $c['httponly']);
+            setcookie(
+                (string) session_name(),
+                '',
+                time() - 42000,
+                $c['path'],
+                $c['domain'],
+                $c['secure'],
+                $c['httponly'],
+            );
         }
 
         session_destroy();
@@ -114,7 +122,11 @@ class Auth
      */
     public static function user(): ?array
     {
-        return $_SESSION['user'] ?? null;
+        // The only writer is attempt(), so the shape is trusted from here on.
+        /** @var array{id: int, username: string, role: string}|null $user */
+        $user = $_SESSION['user'] ?? null;
+
+        return $user;
     }
 
     /**
@@ -138,7 +150,7 @@ class Auth
      */
     public static function id(): ?int
     {
-        return $_SESSION['user']['id'] ?? null;
+        return self::user()['id'] ?? null;
     }
 
     /**
@@ -165,11 +177,14 @@ class Auth
      */
     public static function csrfToken(): string
     {
-        if (empty($_SESSION['csrf'])) {
-            $_SESSION['csrf'] = bin2hex(random_bytes(32));
+        $token = $_SESSION['csrf'] ?? null;
+
+        if (!is_string($token) || $token === '') {
+            $token = bin2hex(random_bytes(32));
+            $_SESSION['csrf'] = $token;
         }
 
-        return $_SESSION['csrf'];
+        return $token;
     }
 
     /**
@@ -180,9 +195,12 @@ class Auth
      */
     public static function csrfCheck(?string $token): bool
     {
-        return !empty($_SESSION['csrf'])
+        $known = $_SESSION['csrf'] ?? null;
+
+        return is_string($known)
+          && $known !== ''
           && is_string($token)
-          && hash_equals($_SESSION['csrf'], $token);
+          && hash_equals($known, $token);
     }
 
 }

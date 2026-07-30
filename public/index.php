@@ -57,12 +57,15 @@ if (DEBUG) {
 }
 
 // Base path: empty at the domain root, "/sub" in a sub-directory install.
-$base = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+$script = $_SERVER['SCRIPT_NAME'] ?? '';
+$base = rtrim(dirname(is_string($script) ? $script : ''), '/');
 define('BASE', $base);
 
 Auth::start();
 
-$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$uri = $_SERVER['REQUEST_URI'] ?? '/';
+$path = parse_url(is_string($uri) ? $uri : '/', PHP_URL_PATH);
+$path = is_string($path) ? $path : '/';
 if ($base !== '' && str_starts_with($path, $base)) {
     $path = substr($path, strlen($base));
 }

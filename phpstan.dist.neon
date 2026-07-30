@@ -1,0 +1,26 @@
+parameters:
+    level: 10
+    paths:
+        - private
+        - public
+    excludePaths:
+        # The front controller brings the view variables into scope with
+        # extract() before including a template, so analysing templates on
+        # their own only yields structural noise.
+        - private/template
+    bootstrapFiles:
+        - private/bootstrap.php
+        - tests/phpstan-bootstrap.php
+    # Deployment/instance configuration: fixed at analysis time but variable
+    # across installs, so their values must not be constant-folded.
+    dynamicConstantNames:
+        - BASE
+        - DB_HOST
+        - DB_PORT
+        - DB_NAME
+        - DB_USER
+        - DB_PASS
+        - DEBUG
+        - PAGE_SIZE
+        - CLOUD_SIZE
+        - TAGS_PAGE_SIZE

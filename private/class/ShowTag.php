@@ -73,7 +73,8 @@ final class ShowTag extends Crud
     /**
      * Render tag rows as linked `name (count)` pairs.
      *
-     * @param list<array<string, mixed>> $table Tag rows (columns: `name`, `value`).
+     * @param list<array{id: int, name: string, value: int}> $table
+     *   Tag rows.
      * @param list<string> $base Tag names each link keeps (the active filter).
      * @return string|false The links, or false if there are no rows.
      */

@@ -67,13 +67,18 @@ class User extends Crud
      * Find a user by email address.
      *
      * @param string $email Normalised (lower-case) email to look up.
-     * @return array<string, mixed>|null The user row (`id`, `username`, `email`,
-     *   `hash`, `role`), or null if no user has that email.
+     * @return array{id: int, username: string, email: string,
+     *   hash: string, role: string}|null The user row, or null if no user has
+     *   that email.
      */
     public function findByEmail(string $email): ?array
     {
         $param = [[':email', $email, PDO::PARAM_STR, 255]];
 
+        /**
+         * @var list<array{id: int, username: string,
+         *   email: string, hash: string, role: string}> $rows
+         */
         $rows = $this->read(
             <<<'SQL'
             SELECT

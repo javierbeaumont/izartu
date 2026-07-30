@@ -31,13 +31,11 @@ class Crud extends Database
      */
     private function process(PDOStatement $query): array
     {
-        if (empty($query)) {
-            trigger_error('Data not found', E_USER_ERROR);
-        } else {
-            $data = $query->fetchAll(PDO::FETCH_ASSOC);
-            $query->closeCursor();
-            return $data;
-        }
+        /** @var list<array<string, mixed>> $data */
+        $data = $query->fetchAll(PDO::FETCH_ASSOC);
+        $query->closeCursor();
+
+        return $data;
     }
 
     /**

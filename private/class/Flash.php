@@ -44,6 +44,6 @@ class Flash
         $message = $_SESSION['flash'] ?? null;
         unset($_SESSION['flash']);
 
-        return $message;
+        return is_string($message) ? $message : null;
     }
 }

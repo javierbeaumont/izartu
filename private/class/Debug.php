@@ -30,7 +30,7 @@ class Debug
 
     public static function query(string $sql, float $ms): void
     {
-        self::$queries[] = ['sql' => preg_replace('/\s+/', ' ', trim($sql)), 'ms' => $ms];
+        self::$queries[] = ['sql' => preg_replace('/\s+/', ' ', trim($sql)) ?? $sql, 'ms' => $ms];
     }
 
     /**
@@ -59,10 +59,12 @@ class Debug
      */
     public static function metrics(): array
     {
+        $start = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
+
         return [
             'db' => array_sum(array_column(self::$queries, 'ms')),
             'queries' => count(self::$queries),
-            'app' => (microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) * 1000,
+            'app' => (microtime(true) - (is_float($start) ? $start : microtime(true))) * 1000,
             'mem' => memory_get_peak_usage() / 1048576,
         ];
     }

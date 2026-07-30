@@ -25,8 +25,8 @@
  */
 class Database
 {
-    /** @var PDO|null Shared PDO connection, created once on first construction. */
-    protected static ?PDO $db = null;
+    /** @var PDO Shared PDO connection, created once on first construction. */
+    protected static PDO $db;
 
     /**
      * Open the shared database connection (once).
@@ -38,9 +38,16 @@ class Database
      */
     final public function __construct()
     {
-        if (!static::$db) {
+        if (!isset(static::$db)) {
             try {
-                static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS);
+                // The whole connection contract, explicit: exceptions on
+                // error, native prepared statements (real plan/parameter
+                // separation, integer columns come back as int) and utf8mb4
+                // on the wire (in the DSN, never left to the server default).
+                static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]);
                 if (DEBUG) {
                     static::$db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [DebugStatement::class]);
                 }
@@ -60,18 +67,14 @@ class Database
         $dsn = 'mysql:';
 
         if (strncmp(DB_HOST, '/', 1)) {
-            $dsn .= 'host=' . (DB_HOST ?: 'localhost');
-            if (DB_PORT && is_int(DB_PORT) && DB_PORT != 3306) {
+            $dsn .= 'host=' . DB_HOST;
+            if (DB_PORT !== 3306) {
                 $dsn .= ';port=' . DB_PORT;
             }
         } else {
             $dsn .= 'unix_socket=' . DB_HOST;
         }
 
-        if (DB_NAME) {
-            $dsn .= ';dbname=' . DB_NAME;
-        }
-
-        return $dsn;
+        return $dsn . ';dbname=' . DB_NAME . ';charset=utf8mb4';
     }
 }

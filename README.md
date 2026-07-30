@@ -128,23 +128,26 @@ no configuration is needed, the base path is detected automatically.
 
 ## Configuration
 
-Deployment settings are read from environment variables (for the Docker
-setup, the `DB_*` values come from your `.env` file, see Quick start):
+Every setting is read from an environment variable, so a deployment never
+needs to edit tracked files (with Docker, put them in your `.env`; without
+it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
+[`private/config.php`](private/config.php):
 
 * `DB_HOST`: optional, defaults to `localhost`.
 * `DB_NAME`: optional, defaults to `izartu`.
 * `DB_PASS`: required, no default.
+* `DB_PORT`: optional, defaults to `3306`.
 * `DB_USER`: required, no default.
+* `PAGE_SIZE`: bookmarks per feed page; optional, defaults to `10`.
+* `CLOUD_SIZE`: most-used tags shown in the tag cloud; optional, defaults
+  to `50`.
+* `TAGS_PAGE_SIZE`: tags per page on the tag index; optional, defaults
+  to `100`.
 * `DEBUG`: optional, off by default. Set it to `1` to enable debug mode:
   error output, a `Server-Timing` response header with request metrics (PHP
   time, database time and query count, peak memory; shown natively in the
   browser devtools network panel) and a collapsible per-query timing panel
   at the bottom of every page, where repeated queries are flagged.
-
-Instance settings are constants in [`private/config.php`](private/config.php):
-`PAGE_SIZE` (bookmarks per feed page, default 10), `CLOUD_SIZE` (most-used
-tags shown in the tag cloud, default 50) and `TAGS_PAGE_SIZE` (tags per page
-on the tag index, default 100).
 
 ## Managing users
 
@@ -202,6 +205,23 @@ DEBUG=1 DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass vendor/bin/phpunit
 ```
 
 (`DEBUG=1` because part of the suite exercises the debug instrumentation.)
+
+### Static analysis
+
+PHPStan (also a dev-only dependency) runs at level 10 (the maximum) over the runtime code;
+see [`phpstan.dist.neon`](phpstan.dist.neon).
+
+#### With Docker
+
+```sh
+docker compose run --rm test vendor/bin/phpstan analyse --memory-limit=512M
+```
+
+#### Without Docker
+
+```sh
+vendor/bin/phpstan analyse --memory-limit=512M
+```
 
 ### Code style
 

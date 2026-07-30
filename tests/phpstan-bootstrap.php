@@ -18,28 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-/**
- * PDOStatement that reports each execution's wall time to Debug. Installed
- * through `PDO::ATTR_STATEMENT_CLASS` when DEBUG is on (see Database), so
- * every query is timed without touching any call site.
- */
-class DebugStatement extends PDOStatement
-{
-    protected function __construct() {}
+// Analysis-only shim: constants the front controller defines at request time
+// (declared dynamic in phpstan.dist.neon, so the value here never matters).
 
-    /**
-     * Execute the statement, timing it (see `PDOStatement::execute`).
-     *
-     * @param array<int|string, mixed>|null $params Bind values, or null when
-     *   the values were bound beforehand.
-     * @return bool Whether the execution succeeded.
-     */
-    public function execute(?array $params = null): bool
-    {
-        $start = microtime(true);
-        $result = parent::execute($params);
-        Debug::query($this->queryString, (microtime(true) - $start) * 1000);
-
-        return $result;
-    }
-}
+define('BASE', '');

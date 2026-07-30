@@ -27,12 +27,14 @@ trait Tag
      * Return the tags attached to a single bookmark.
      *
      * @param int $id Bookmark id.
-     * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`).
+     * @return list<array{id: int, name: string}> One row per tag.
      */
     private function getTags(int $id): array
     {
         $param[0] = [':bookmark', $id, PDO::PARAM_INT, 255];
-        return $this->read(
+
+        /** @var list<array{id: int, name: string}> $rows */
+        $rows = $this->read(
             <<<'SQL'
             SELECT
                 `id`, `name`
@@ -48,6 +50,8 @@ trait Tag
             SQL,
             $param,
         );
+
+        return $rows;
     }
 
     /**
@@ -64,14 +68,15 @@ trait Tag
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
      * @param list<string> $tags The tag names the list is filtered by; empty for none.
      * @param string|null $username The username the list is filtered by, or null.
-     * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
+     * @return list<array{id: int, name: string, value: int}> One row per tag.
      */
     private function getCloud(?int $viewer = null, array $tags = [], ?string $username = null): array
     {
         [$cond, $join, $extra, $param] = $this->listFilter($viewer, $tags, $username);
         $limit = CLOUD_SIZE;
 
-        return $this->read(
+        /** @var list<array{id: int, name: string, value: int}> $rows */
+        $rows = $this->read(
             <<<SQL
             SELECT * FROM (
                 SELECT
@@ -96,6 +101,8 @@ trait Tag
             SQL,
             $param ?: false,
         );
+
+        return $rows;
     }
 
     /**
@@ -109,7 +116,7 @@ trait Tag
      * @param int $page 1-based page number (`TAGS_PAGE_SIZE` tags per page).
      * @param list<string> $tags The tag names the list is filtered by; empty for none.
      * @param string|null $username The username the list is filtered by, or null.
-     * @return list<array<string, mixed>> One row per tag (columns: `id`, `name`, `value`).
+     * @return list<array{id: int, name: string, value: int}> One row per tag.
      */
     private function searchTags(
         ?int $viewer,
@@ -123,7 +130,8 @@ trait Tag
         $limit = TAGS_PAGE_SIZE;
         $offset = ($page - 1) * TAGS_PAGE_SIZE;
 
-        return $this->read(
+        /** @var list<array{id: int, name: string, value: int}> $rows */
+        $rows = $this->read(
             <<<SQL
             SELECT
                 `tag`.`id`, `tag`.`name`, COUNT(`bookmark_tag`.`tag`) AS `value`
@@ -145,6 +153,8 @@ trait Tag
             SQL,
             $param,
         );
+
+        return $rows;
     }
 
     /**
@@ -161,6 +171,7 @@ trait Tag
         [$cond, $join, $extra, $param] = $this->listFilter($viewer, $tags, $username);
         $param[] = [':term', '%' . addcslashes($term, '%_\\') . '%', PDO::PARAM_STR, 255];
 
+        /** @var list<array{total: int}> $rows */
         $rows = $this->read(
             <<<SQL
             SELECT
@@ -179,7 +190,7 @@ trait Tag
             $param,
         );
 
-        return (int) $rows[0]['total'];
+        return $rows[0]['total'];
     }
 
     /**
@@ -205,7 +216,7 @@ trait Tag
         }
         if ($tags) {
             $in = [];
-            foreach (array_values($tags) as $i => $name) {
+            foreach ($tags as $i => $name) {
                 $in[] = ':tag' . $i;
                 $param[] = [':tag' . $i, $name, PDO::PARAM_STR, 255];
                 $param[] = [':not' . $i, $name, PDO::PARAM_STR, 255];

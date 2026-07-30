@@ -140,7 +140,7 @@ class Bookmark extends Crud
     public static function parseTags(string $tags): array
     {
         $names = array_map(
-            static fn(string $name): string => mb_strtolower(trim(preg_replace('/\s+/', ' ', $name))),
+            static fn(string $name): string => mb_strtolower(trim(preg_replace('/\s+/', ' ', $name) ?? $name)),
             explode(',', $tags),
         );
 
@@ -196,6 +196,7 @@ class Bookmark extends Crud
      */
     public function tags(): array
     {
+        /** @var list<array{name: string}> $rows */
         $rows = $this->read(
             <<<'SQL'
             SELECT
@@ -234,11 +235,12 @@ class Bookmark extends Crud
 
         $in = [];
         $param = [];
-        foreach (array_values($ids) as $i => $id) {
+        foreach ($ids as $i => $id) {
             $in[] = ':id' . $i;
             $param[] = [':id' . $i, $id, PDO::PARAM_INT, 255];
         }
 
+        /** @var list<array{bookmark: int, name: string}> $rows */
         $rows = $this->read(
             sprintf(
                 <<<'SQL'
@@ -259,7 +261,7 @@ class Bookmark extends Crud
 
         $tags = [];
         foreach ($rows as $row) {
-            $tags[(int) $row['bookmark']][] = $row['name'];
+            $tags[$row['bookmark']][] = $row['name'];
         }
 
         return $tags;
@@ -335,7 +337,7 @@ class Bookmark extends Crud
         }
         if ($tags) {
             $in = [];
-            foreach (array_values($tags) as $i => $name) {
+            foreach ($tags as $i => $name) {
                 $in[] = ':tag' . $i;
                 $param[] = [':tag' . $i, $name, PDO::PARAM_STR, 255];
             }
@@ -374,6 +376,7 @@ class Bookmark extends Crud
     {
         [$cond, $param] = $this->filter($viewer, $tags, $username);
 
+        /** @var list<array{total: int}> $rows */
         $rows = $this->read(
             <<<SQL
             SELECT
@@ -386,7 +389,7 @@ class Bookmark extends Crud
             $param,
         );
 
-        return (int) $rows[0]['total'];
+        return $rows[0]['total'];
     }
 
     /**
@@ -395,11 +398,18 @@ class Bookmark extends Crud
      * @param string|false $cond Extra SQL appended to the base SELECT, or false.
      * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
      *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
-     * @return list<array<string, mixed>> One raw row per bookmark.
+     * @return list<array{id: int, title: string, hlink: string,
+     *   text: string, user: int, visibility: string, add: string,
+     *   mod: string, username: string|null}> One raw row per bookmark.
      */
     private function select(string|false $cond, array|false $param): array
     {
-        return $this->read(
+        /**
+         * @var list<array{id: int, title: string, hlink: string,
+         *   text: string, user: int, visibility: string,
+         *   add: string, mod: string, username: string|null}> $rows
+         */
+        $rows = $this->read(
             <<<SQL
             SELECT
                 `bookmark`.`id`, `bookmark`.`title`, `bookmark`.`hlink`, `bookmark`.`text`,
@@ -412,22 +422,26 @@ class Bookmark extends Crud
             SQL,
             $param,
         );
+
+        return $rows;
     }
 
     /**
      * Build a Bookmark from a database row.
      *
-     * @param array<string, mixed> $row A bookmark row with the selected columns.
+     * @param array{id: int, title: string, hlink: string,
+     *   text: string, user: int, visibility: string, add: string,
+     *   mod: string, username: string|null} $row A bookmark row (see `select`).
      * @return self The hydrated bookmark.
      */
     private static function hydrate(array $row): self
     {
         $bookmark = new self();
-        $bookmark->id = (int) $row['id'];
+        $bookmark->id = $row['id'];
         $bookmark->title = $row['title'];
         $bookmark->hlink = $row['hlink'];
         $bookmark->text = $row['text'];
-        $bookmark->user = (int) $row['user'];
+        $bookmark->user = $row['user'];
         $bookmark->username = (string) ($row['username'] ?? '');
         $bookmark->visibility = Visibility::from($row['visibility']);
         $bookmark->add = $row['add'];

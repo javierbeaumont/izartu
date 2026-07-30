@@ -19,44 +19,34 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Site configuration: the operator-editable settings (database connection,
- * feed size, runtime flags). Fixed wiring lives in `bootstrap.php`.
+ * Site configuration: the catalogue of settings and their defaults. Every one
+ * can be overridden through an environment variable of the same name, so a
+ * deployment never needs to edit this (tracked) file. Fixed wiring lives in
+ * `bootstrap.php`.
  */
 
-################################################################################
-############################# BASIC CONFIGURATION ##############################
-################################################################################
-
 /** Database host ('localhost' by default). */
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-/** Database user (from the `DB_USER` environment variable). */
-define('DB_USER', getenv('DB_USER'));
-/** Database password (from the `DB_PASS` environment variable). */
-define('DB_PASS', getenv('DB_PASS'));
+define('DB_HOST', env('DB_HOST', 'localhost'));
+/** Database user (required, no default). */
+define('DB_USER', env('DB_USER'));
+/** Database password (required, no default). */
+define('DB_PASS', env('DB_PASS'));
 /** Database name ('izartu' by default). */
-define('DB_NAME', getenv('DB_NAME') ?: 'izartu');
+define('DB_NAME', env('DB_NAME', 'izartu'));
+/** Database port (3306 by default). */
+define('DB_PORT', (int) env('DB_PORT', '3306'));
 
 /** Bookmarks per page on the feed. */
-define('PAGE_SIZE', 10);
+define('PAGE_SIZE', max(1, (int) env('PAGE_SIZE', '10')));
 
 /** Most-used tags shown in the tag cloud. */
-define('CLOUD_SIZE', 50);
+define('CLOUD_SIZE', max(1, (int) env('CLOUD_SIZE', '50')));
 
 /** Tags per page on the tag index (`/tags`). */
-define('TAGS_PAGE_SIZE', 100);
+define('TAGS_PAGE_SIZE', max(1, (int) env('TAGS_PAGE_SIZE', '100')));
 
-################################################################################
-############################ ADVANCED CONFIGURATION ############################
-################################################################################
-
-/** Database type. Only `MySQL` is supported. */
-define('DB_TYPE', 'MySQL');
-/** Database port. Only 3306 is supported. */
-define('DB_PORT', 3306);
-
-################################################################################
-############################ DEVELOPER CONFIGURATION ###########################
-################################################################################
-
-/** Debug mode (from the `DEBUG` environment variable, off by default): enables error output, the Server-Timing header and the query panel. */
-define('DEBUG', (bool) getenv('DEBUG'));
+/**
+ * Debug mode (off by default; `1`/`true`/`on`/`yes` enable it): error output,
+ * the Server-Timing header and the query panel.
+ */
+define('DEBUG', filter_var(env('DEBUG'), FILTER_VALIDATE_BOOL));

@@ -5,6 +5,7 @@
     "license": "AGPL-3.0-or-later",
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3",
+        "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^13"
     },
     "autoload-dev": {
