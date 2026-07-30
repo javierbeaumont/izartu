@@ -18,9 +18,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# Inline bookmark form, rendered in place of a list row (edit) or on top of
-# the list (add). Expects: $formAction, $formBookmark, $formTags, $formErrors,
-# plus the list context ($route, $page) for the return field and Cancel link.
+// Inline bookmark form, rendered in place of a list row (edit) or on top of
+// the list (add). Expects: $formAction, $formBookmark, $formTags, $formErrors,
+// plus the list context ($route, $page) for the return field and Cancel link.
 $listUrl = $route . ($page > 1 ? '?page=' . $page : '');
 ?>
         <form method="post" action="<?php echo htmlspecialchars($formAction); ?>" class="bookmark bookmarkform">
@@ -30,14 +30,19 @@ $listUrl = $route . ($page > 1 ? '?page=' . $page : '');
           <p class="error"><?php echo htmlspecialchars($error); ?></p>
 <?php endforeach; ?>
           <div class="head">
-            <input class="title" type="text" name="title" value="<?php echo htmlspecialchars($formBookmark->title); ?>" placeholder="Title" maxlength="255" required>
-            <input class="link" type="url" name="link" value="<?php echo htmlspecialchars($formBookmark->hlink); ?>" placeholder="https://" maxlength="2048" required>
+            <input class="title" type="text" name="title" placeholder="Title" maxlength="255"
+              value="<?php echo htmlspecialchars($formBookmark->title); ?>" required>
+            <input class="link" type="url" name="link" placeholder="https://" maxlength="2048"
+              value="<?php echo htmlspecialchars($formBookmark->hlink); ?>" required>
           </div>
           <div class="info">
-            <textarea name="description" rows="3" maxlength="1024" placeholder="Description"><?php echo htmlspecialchars($formBookmark->text); ?></textarea>
-            <input class="tags" type="text" name="tags" value="<?php echo htmlspecialchars($formTags); ?>" placeholder="Tags (comma-separated)" maxlength="255">
+            <textarea name="description" rows="3" maxlength="1024"
+              placeholder="Description"><?php echo htmlspecialchars($formBookmark->text); ?></textarea>
+            <input class="tags" type="text" name="tags" placeholder="Tags (comma-separated)" maxlength="255"
+              value="<?php echo htmlspecialchars($formTags); ?>">
             <p class="check">
-              <input type="checkbox" id="visibility" name="visibility" value="public"<?php echo $formBookmark->visibility === Visibility::Public ? ' checked' : ''; ?>>
+              <input type="checkbox" id="visibility" name="visibility" value="public"
+                <?php echo $formBookmark->visibility === Visibility::Public ? 'checked' : ''; ?>>
               <label for="visibility">Public (visible to anyone on this instance)</label>
             </p>
             <div class="manage">

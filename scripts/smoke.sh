@@ -44,7 +44,7 @@ csrf() {
 
 echo "1/6 home is up"
 
-for i in $(seq 1 30); do
+for _ in $(seq 1 30); do
     code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/" || true)"
     [ "$code" = "200" ] && break
     sleep 2
@@ -70,7 +70,8 @@ TOKEN="$(csrf "$BASE_URL/user/$SMOKE_USERNAME?add")"
 [ -n "$TOKEN" ] || fail "no CSRF token on the inline add form"
 
 curl -sf -b "$JAR" -c "$JAR" -o /dev/null \
-    -d "csrf=$TOKEN&title=Smoke test&link=https://smoke.example&description=ok&tags=smoke&visibility=public&return=user/$SMOKE_USERNAME" \
+    -d "csrf=$TOKEN&title=Smoke test&link=https://smoke.example&description=ok" \
+    -d "tags=smoke&visibility=public&return=user/$SMOKE_USERNAME" \
     "$BASE_URL/add"
 
 echo "4/6 the anonymous feed shows it"

@@ -1,0 +1,111 @@
+exclude: '^vendor/'
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=100]
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: forbid-submodules
+      - id: check-yaml
+      - id: check-json
+      - id: check-xml
+      - id: check-illegal-windows-names
+      # A BOM before `<?php` is output, which breaks headers and sessions.
+      - id: fix-byte-order-marker
+      - id: detect-private-key
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+  # Runs in its own container, so it needs no local toolchain beyond Docker.
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.15.0
+    hooks:
+      - id: hadolint-docker
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+  # Single source for the AGPL header, inserted after `<?php` (never before it:
+  # anything before the opening tag is output and would break headers).
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.6
+    hooks:
+      - id: insert-license
+        files: '\.php$'
+        args:
+          - --license-filepath=scripts/license-header.txt
+          - --comment-style=#
+          - '--insert-license-after-regex=^<\?php$'
+          - --detect-license-in-X-top-lines=25
+          - --no-extra-eol
+  # Enforces .editorconfig: line length (php-cs-fixer has no such rule), charset,
+  # line endings, final newline and spaces-not-tabs.
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker
+    rev: v3.8.0
+    hooks:
+      - id: editorconfig-checker
+        exclude: '\.(ico|png)$'
+  - repo: local
+    hooks:
+      - id: composer-validate
+        name: composer.json is valid and in sync with the lock
+        entry: make validate
+        language: system
+        files: '^composer\.(json|lock)$'
+        pass_filenames: false
+      # php-cs-fixer normalises /* */ one-liners to // but must leave # alone
+      # (the licence headers use it), so stray # comments need their own check.
+      - id: hash-comments
+        name: 'hash comments after the licence header (use //)'
+        entry: >-
+          awk 'FNR==1 {body=0} /along with izartu/ {body=1; next}
+          body && /^[[:space:]]*#[^[]/ {print FILENAME":"FNR; bad=1}
+          END {exit bad}'
+        language: system
+        files: '\.php$'
+      - id: php-cs-fixer
+        name: php-cs-fixer
+        entry: make style
+        language: system
+        files: '\.php$'
+        pass_filenames: false
+      - id: phpstan
+        name: phpstan
+        entry: make analyse
+        language: system
+        files: '\.php$'
+        pass_filenames: false
+  # The full test suite needs the database, so it runs at pre-push time to
+  # keep per-commit hooks fast (same trade-off as minimoni's clang-tidy).
+  - repo: local
+    hooks:
+      - id: phpunit
+        name: phpunit
+        entry: make test
+        language: system
+        files: '\.php$'
+        pass_filenames: false
+        stages: [pre-push]

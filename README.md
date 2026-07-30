@@ -173,6 +173,22 @@ php private/cli/adduser.php
 
 ## Development
 
+Every task below has a `make` target (`make help` lists them); the hooks and CI
+call the same targets, so there is a single definition of each command.
+
+### Pre-commit hooks
+
+The repo ships a [pre-commit](https://pre-commit.com) configuration
+([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) so nothing lands
+unchecked: formatting, static analysis, the AGPL headers and the usual hygiene
+and secret-scanning checks run on every commit, and the test suite on every
+push. The PHP hooks use the Docker toolchain, so they need your `.env`.
+Install them once:
+
+```sh
+make hooks
+```
+
 ### Tests
 
 Tests run with PHPUnit, a **dev-only** dependency (Composer). The suite runs
@@ -185,13 +201,13 @@ The `izartu_test` database is created automatically on the first `db` start
 dev dependencies once (writes `vendor/`, gitignored):
 
 ```sh
-docker compose run --rm test composer install
+make deps
 ```
 
 Run the suite:
 
 ```sh
-docker compose run --rm test
+make test
 ```
 
 #### Without Docker
@@ -214,7 +230,7 @@ see [`phpstan.dist.neon`](phpstan.dist.neon).
 #### With Docker
 
 ```sh
-docker compose run --rm test vendor/bin/phpstan analyse --memory-limit=512M
+make analyse
 ```
 
 #### Without Docker
@@ -232,8 +248,8 @@ dependency).
 #### With Docker
 
 ```sh
-docker compose run --rm test vendor/bin/php-cs-fixer fix           # apply
-docker compose run --rm test vendor/bin/php-cs-fixer fix --dry-run # check only
+make fmt    # apply
+make style  # check only
 ```
 
 #### Without Docker

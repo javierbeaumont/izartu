@@ -12,6 +12,9 @@ RUN a2enmod rewrite
 # Test image: runtime + Composer, for the dev/test toolchain only. Never shipped.
 FROM runtime AS test
 
+# Pinned apt versions break as soon as Debian's archive moves on, and this image
+# is dev-only, so the churn is not worth it.
+# hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git unzip \
  && rm -rf /var/lib/apt/lists/*

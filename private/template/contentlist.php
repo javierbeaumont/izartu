@@ -29,12 +29,17 @@
     include PRIVATE_DIR . 'template/bookmarkform.php';
     ?>
 <?php else: ?>
+<?php $hlink = htmlspecialchars($bookmark->hlink); ?>
         <div class="bookmark">
           <div class="head">
-            <h2><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->title) ; ?></a><?php if ($bookmark->visibility === Visibility::Private): ?> <span class="private">private</span><?php endif; ?></h2>
-            <p class="link-page"><a href="<?php echo htmlspecialchars($bookmark->hlink) ; ?>"><?php echo htmlspecialchars($bookmark->hlink) ; ?></a></p>
+            <h2><a href="<?php echo $hlink; ?>"><?php echo htmlspecialchars($bookmark->title); ?></a><?php
+                if ($bookmark->visibility === Visibility::Private): ?> <span class="private">private</span><?php
+                endif; ?></h2>
+            <p class="link-page"><a href="<?php echo $hlink; ?>"><?php echo $hlink; ?></a></p>
             <p class="link-info">
-              <span class="linker">Added by <a href="user/<?php echo rawurlencode($bookmark->username); ?>"><?php echo htmlspecialchars($bookmark->username) ; ?></a></span>
+              <span class="linker">Added by <a
+                  href="user/<?php echo rawurlencode($bookmark->username); ?>"><?php
+                  echo htmlspecialchars($bookmark->username); ?></a></span>
               <span class="added">on <?php echo $bookmark->add ; ?>.</span>
               <span class="modified">Last modified: <?php echo $bookmark->mod ; ?></span>
             </p>
@@ -43,11 +48,18 @@
             <p class="text"><?php echo htmlspecialchars($bookmark->text) ; ?></p>
 <?php $names = $tagsByBookmark[$bookmark->id] ?? []; ?>
 <?php if ($names): ?>
-            <p class="tag">Tags: <?php foreach ($names as $i => $name): ?><?php echo $i ? ', ' : ''; ?><a href="tag/<?php echo rawurlencode($name); ?>"><?php echo htmlspecialchars($name); ?></a><?php endforeach; ?></p>
+<?php
+    $links = [];
+    foreach ($names as $name) {
+        $links[] = '<a href="tag/' . rawurlencode($name) . '">' . htmlspecialchars($name) . '</a>';
+    }
+    ?>
+            <p class="tag">Tags: <?php echo implode(', ', $links); ?></p>
 <?php endif; ?>
 <?php if (Auth::canManage($bookmark->user)): ?>
+<?php $editUrl = $route . '?' . ($page > 1 ? 'page=' . $page . '&amp;' : '') . 'edit=' . $bookmark->id; ?>
             <div class="manage">
-              <a href="<?php echo $route; ?>?<?php echo $page > 1 ? 'page=' . $page . '&amp;' : ''; ?>edit=<?php echo $bookmark->id; ?>">Edit</a>
+              <a href="<?php echo $editUrl; ?>">Edit</a>
             </div>
 <?php endif; ?>
           </div>
