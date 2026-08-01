@@ -1,0 +1,37 @@
+name: Security analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: 17 4 * * 1 # Weekly: Mondays at 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    env:
+      DB_PASS: izartu-ci
+      DB_ROOT_PASS: izartu-ci-root
+      DB_USER: izartu
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the dev image
+        run: make build
+
+      - name: Install the dev dependencies
+        run: make deps
+
+      - name: Report known vulnerabilities
+        run: make audit

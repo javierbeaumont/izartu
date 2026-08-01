@@ -5,57 +5,57 @@ services:
       target: runtime
       args:
         PHP_VERSION: ${PHP_VERSION:-8.5}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: izartu
+      DB_PASS: ${DB_PASS:-}
+      DB_USER: ${DB_USER:-}
     ports:
       - "8080:80"
     volumes:
       - .:/var/www/izartu
+
+  db:
     environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER:-}
-      DB_PASS: ${DB_PASS:-}
-      DB_NAME: izartu
-    depends_on:
-      db:
-        condition: service_healthy
+      MYSQL_DATABASE: izartu
+      MYSQL_PASSWORD: ${DB_PASS:-}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-}
+      MYSQL_USER: ${DB_USER:-}
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, localhost]
+      timeout: 20s
+      retries: 10
+    image: mysql:${MYSQL_VERSION:-9.7}
+    volumes:
+      - ./izartu.sql:/docker-entrypoint-initdb.d/izartu.sql
+      - ./docker/create-test-db.sh:/docker-entrypoint-initdb.d/zz-create-test-db.sh
+      - db_data:/var/lib/mysql
 
   test:
     # Dev-only tooling; the profile keeps `docker compose up` from booting it
     # (it is still reachable with `docker compose run --rm test`).
-    profiles: [test]
     build:
       context: .
       target: test
       args:
         PHP_VERSION: ${PHP_VERSION:-8.5}
-    working_dir: /var/www/izartu
-    command: ["vendor/bin/phpunit"]
-    volumes:
-      - .:/var/www/izartu
-    environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER:-}
-      DB_PASS: ${DB_PASS:-}
-      DB_NAME: izartu_test
-      DEBUG: 1
+    command: [vendor/bin/phpunit]
     depends_on:
       db:
         condition: service_healthy
-
-  db:
-    image: mysql:8.4
     environment:
-      MYSQL_DATABASE: izartu
-      MYSQL_USER: ${DB_USER:-}
-      MYSQL_PASSWORD: ${DB_PASS:-}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-}
+      DB_HOST: db
+      DB_NAME: izartu_test
+      DB_PASS: ${DB_PASS:-}
+      DB_USER: ${DB_USER:-}
+      DEBUG: 1
+    profiles: [test]
     volumes:
-      - ./izartu.sql:/docker-entrypoint-initdb.d/izartu.sql
-      - ./docker/create-test-db.sh:/docker-entrypoint-initdb.d/zz-create-test-db.sh
-      - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      - .:/var/www/izartu
+    working_dir: /var/www/izartu
 
 volumes:
   db_data:

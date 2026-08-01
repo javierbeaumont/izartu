@@ -17,15 +17,14 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# Every development task, in one place: the hooks, CI and the README all call
-# these targets instead of repeating the commands. Everything runs in the
-# dev-only `test` container, so Docker is the only requirement.
+# Every development task, defined once: the hooks, the CI and the README call
+# these targets. They all run in the dev-only `test` container.
 
 COMPOSE := docker compose
 # php-cs-fixer refuses PHP versions it does not know about yet; the image is 8.5.
 TOOL := $(COMPOSE) run --rm -e PHP_CS_FIXER_IGNORE_ENV=1 test
 
-.PHONY: help up down deps test style fmt analyse validate check user smoke hooks
+.PHONY: help up down build deps deps-update test style fmt analyse validate audit check user smoke hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 12
@@ -36,8 +35,14 @@ up: ## start the stack in the background
 down: ## stop the stack (the database volume survives)
 	$(COMPOSE) down
 
-deps: ## install the dev dependencies (writes vendor/)
+build: ## build the dev image for PHP_VERSION (default 8.5)
+	$(COMPOSE) build test
+
+deps: ## install the dev dependencies from the lock file
 	$(TOOL) composer install
+
+deps-update: ## resolve the dev dependencies for the running PHP, ignoring the lock
+	$(TOOL) composer update
 
 test: ## run the test suite
 	$(TOOL)
@@ -53,6 +58,9 @@ analyse: ## run the static analysis
 
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
+
+audit: ## report known vulnerabilities in the dependencies
+	$(TOOL) composer audit
 
 check: style analyse test ## everything the CI runs
 

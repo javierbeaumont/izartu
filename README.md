@@ -138,9 +138,9 @@ it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 * `DB_PASS`: required, no default.
 * `DB_PORT`: optional, defaults to `3306`.
 * `DB_USER`: required, no default.
-* `PAGE_SIZE`: bookmarks per feed page; optional, defaults to `10`.
 * `CLOUD_SIZE`: most-used tags shown in the tag cloud; optional, defaults
   to `50`.
+* `PAGE_SIZE`: bookmarks per feed page; optional, defaults to `10`.
 * `TAGS_PAGE_SIZE`: tags per page on the tag index; optional, defaults
   to `100`.
 * `DEBUG`: optional, off by default. Set it to `1` to enable debug mode:

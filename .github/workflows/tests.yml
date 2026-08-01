@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    # Dependencies are resolved per PHP rather than installed from the lock, so
+    # older versions get the PHPUnit major they support.
+    name: PHP ${{ matrix.php }} / MySQL ${{ matrix.mysql }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.4', '9.7']
+        php: ['8.2', '8.3', '8.4', '8.5']
+    env:
+      DB_PASS: izartu-ci
+      DB_ROOT_PASS: izartu-ci-root
+      DB_USER: izartu
+      MYSQL_VERSION: ${{ matrix.mysql }}
+      PHP_VERSION: ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the dev image
+        run: make build
+
+      - name: Resolve the dev dependencies
+        run: make deps-update
+
+      - name: Run the suite
+        run: make test
