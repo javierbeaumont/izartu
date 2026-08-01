@@ -1,4 +1,4 @@
-exclude: '^vendor/'
+exclude: ^vendor/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -39,73 +39,60 @@ repos:
     rev: v1.7.12
     hooks:
       - id: actionlint
-  # Runs in its own container, so it needs no local toolchain beyond Docker.
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.15.0
+    rev: v2.15.1
     hooks:
       - id: hadolint-docker
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
       - id: gitleaks
-  # Single source for the AGPL header, inserted after `<?php` (never before it:
-  # anything before the opening tag is output and would break headers).
+  # Single source for the AGPL header. It goes after `<?php`: anything before
+  # the opening tag is output.
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.6
     hooks:
       - id: insert-license
-        files: '\.php$'
+        files: \.php$
         args:
           - --license-filepath=scripts/license-header.txt
-          - --comment-style=#
-          - '--insert-license-after-regex=^<\?php$'
+          - --comment-style=//
+          - --insert-license-after-regex=^<\?php$
           - --detect-license-in-X-top-lines=25
           - --no-extra-eol
-  # Enforces .editorconfig: line length (php-cs-fixer has no such rule), charset,
-  # line endings, final newline and spaces-not-tabs.
+  # Enforces .editorconfig, including the line length php-cs-fixer cannot check.
   - repo: https://github.com/editorconfig-checker/editorconfig-checker
-    rev: v3.8.0
+    rev: v3.9.0
     hooks:
       - id: editorconfig-checker
-        exclude: '\.(ico|png)$'
+        exclude: \.(ico|png)$
   - repo: local
     hooks:
       - id: composer-validate
         name: composer.json is valid and in sync with the lock
         entry: make validate
         language: system
-        files: '^composer\.(json|lock)$'
+        files: ^composer\.(json|lock)$
         pass_filenames: false
-      # php-cs-fixer normalises /* */ one-liners to // but must leave # alone
-      # (the licence headers use it), so stray # comments need their own check.
-      - id: hash-comments
-        name: 'hash comments after the licence header (use //)'
-        entry: >-
-          awk 'FNR==1 {body=0} /along with izartu/ {body=1; next}
-          body && /^[[:space:]]*#[^[]/ {print FILENAME":"FNR; bad=1}
-          END {exit bad}'
-        language: system
-        files: '\.php$'
       - id: php-cs-fixer
         name: php-cs-fixer
         entry: make style
         language: system
-        files: '\.php$'
+        files: \.php$
         pass_filenames: false
       - id: phpstan
         name: phpstan
         entry: make analyse
         language: system
-        files: '\.php$'
+        files: \.php$
         pass_filenames: false
-  # The full test suite needs the database, so it runs at pre-push time to
-  # keep per-commit hooks fast (same trade-off as minimoni's clang-tidy).
+  # The suite needs the database, so it waits until push and commits stay fast.
   - repo: local
     hooks:
       - id: phpunit
         name: phpunit
         entry: make test
         language: system
-        files: '\.php$'
+        files: \.php$
         pass_filenames: false
         stages: [pre-push]
