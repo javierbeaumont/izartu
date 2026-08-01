@@ -71,7 +71,9 @@ final class UserValidationTest extends TestCase
     public function testReservedUsernamesAreRejectedWhateverTheCase(): void
     {
         foreach (['me', 'ME', 'Me'] as $reserved) {
-            $this->assertArrayHasKey('username', User::validate('a@b.test', $reserved, 'secret123', 'user'));
+            $errors = User::validate('a@b.test', $reserved, 'secret123', 'user');
+
+            $this->assertSame('That username is reserved.', $errors['username']);
         }
     }
 

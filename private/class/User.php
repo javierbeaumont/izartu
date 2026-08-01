@@ -49,10 +49,12 @@ class User extends Crud
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 255) {
             $errors['email'] = 'A valid email address (max 255 characters) is required.';
         }
-        if (!preg_match('/^[A-Za-z0-9_-]{3,32}$/', $username)) {
-            $errors['username'] = 'Username must be 3-32 characters of letters, digits, "_" or "-".';
-        } elseif (in_array(strtolower($username), self::RESERVED, true)) {
+        // Reserved first: `me` is too short for the format rule, which would
+        // otherwise mask the real reason.
+        if (in_array(strtolower($username), self::RESERVED, true)) {
             $errors['username'] = 'That username is reserved.';
+        } elseif (!preg_match('/^[A-Za-z0-9_-]{3,32}$/', $username)) {
+            $errors['username'] = 'Username must be 3-32 characters of letters, digits, "_" or "-".';
         }
         if (mb_strlen($password) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';
