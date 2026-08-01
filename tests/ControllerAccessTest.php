@@ -57,8 +57,111 @@ final class ControllerAccessTest extends TestCase
 
     protected function tearDown(): void
     {
+        $_GET = [];
         $_SESSION = [];
         $_POST = [];
+    }
+
+    public function testTheHomeFeedIsTheUnfilteredList(): void
+    {
+        [$template, $vars] = Controller::home();
+
+        $this->assertSame('home', $template);
+        $this->assertSame([], $vars['tagNames']);
+        $this->assertNull($vars['userName']);
+        $this->assertSame('', $vars['route']);
+        $this->assertSame(1, $vars['page']);
+    }
+
+    public function testTheTagIndexNormalisesItsScopeAndCarriesItInTheRoute(): void
+    {
+        $_GET = ['q' => ' ph ', 'tag' => 'PHP, docs, php', 'user' => ' javi ', 'page' => '3'];
+
+        [$template, $vars] = Controller::tags();
+
+        $this->assertSame('tags', $template);
+        $this->assertSame('ph', $vars['q']);
+        $this->assertSame(['docs', 'php'], $vars['tagNames']);
+        $this->assertSame('javi', $vars['userName']);
+        $this->assertSame(3, $vars['page']);
+        $this->assertSame('tags?q=ph&tag=docs%2Cphp&user=javi', $vars['route']);
+    }
+
+    public function testTheTagIndexWithoutScopeHasABareRoute(): void
+    {
+        [, $vars] = Controller::tags();
+
+        $this->assertSame('tags', $vars['route']);
+    }
+
+    public function testATagListThatNormalisesToNothingIsNotFound(): void
+    {
+        [$template] = Controller::tag(', ,');
+
+        $this->assertSame('notfound', $template);
+    }
+
+    public function testAnEmptyUsernameIsNotFound(): void
+    {
+        [$template] = Controller::user('');
+
+        $this->assertSame('notfound', $template);
+    }
+
+    public function testTheLoginFormIsShownOnAGet(): void
+    {
+        [$template, $vars] = Controller::login();
+
+        $this->assertSame('login', $template);
+        $this->assertSame([], $vars);
+    }
+
+    public function testDeleteRefusesAnythingButAPostWithAValidToken(): void
+    {
+        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
+        $_SESSION['csrf'] = 'token';
+
+        [$onGet] = Controller::delete('1');
+        $this->assertSame('notfound', $onGet, 'a GET cannot delete');
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['csrf' => 'wrong'];
+        [$onBadToken] = Controller::delete('1');
+        $this->assertSame('notfound', $onBadToken);
+
+        $this->assertNotNull(Bookmark::find(1), 'the bookmark is still there');
+    }
+
+    public function testDeletingSomeoneElsesBookmarkIsNotFound(): void
+    {
+        $_SESSION['user'] = ['id' => 2, 'username' => 'other', 'role' => 'admin'];
+        $_SESSION['csrf'] = 'token';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['csrf' => 'token'];
+
+        [$foreign] = Controller::delete('1');
+        $this->assertSame('notfound', $foreign, 'a private bookmark of another user');
+
+        [$missing] = Controller::delete('999');
+        $this->assertSame('notfound', $missing);
+    }
+
+    public function testTooManyTagsAndAStaleTokenAreReportedTogether(): void
+    {
+        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
+        $_SESSION['csrf'] = 'token';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'csrf' => 'stale',
+            'title' => 'x',
+            'link' => 'https://s.test',
+            'tags' => implode(',', array_map(static fn(int $n): string => 'tag' . $n, range(1, 26))),
+        ];
+
+        [, $vars] = Controller::add();
+
+        $this->assertSame('Too many tags (max 25).', $vars['formErrors']['tags']);
+        $this->assertArrayHasKey('csrf', $vars['formErrors']);
     }
 
     public function testAdminsCannotEditAForeignPrivateBookmark(): void

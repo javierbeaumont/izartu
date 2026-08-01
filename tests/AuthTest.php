@@ -45,7 +45,33 @@ final class AuthTest extends TestCase
 
     protected function tearDown(): void
     {
+        // The lifecycle tests below destroy the session; the rest of the suite
+        // needs one open (see tests/bootstrap.php).
+        Auth::start();
         $_SESSION = [];
+    }
+
+    public function testStartOpensASessionAndASecondCallLeavesItAlone(): void
+    {
+        Auth::logout();
+
+        Auth::start();
+        $id = session_id();
+
+        $this->assertSame(PHP_SESSION_ACTIVE, session_status());
+        Auth::start();
+        $this->assertSame($id, session_id());
+    }
+
+    public function testLogoutEmptiesAndDestroysTheSession(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+
+        Auth::logout();
+
+        $this->assertSame([], $_SESSION);
+        $this->assertFalse(Auth::check());
+        $this->assertSame(PHP_SESSION_NONE, session_status());
     }
 
     public function testIdIsNullForAnonymousAndSetWhenLoggedIn(): void
