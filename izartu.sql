@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `bookmark` (
   `text` varchar(1024) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `user` smallint(5) unsigned NOT NULL,
   `visibility` enum('public','private') COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'private',
-  `add` datetime NOT NULL,
+  `add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `username` varchar(32) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `email` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `hash` varchar(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `role` enum('owner','admin','user') COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'user',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),

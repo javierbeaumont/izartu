@@ -76,6 +76,40 @@ final class BookmarkModelTest extends TestCase
         $this->assertSame(Visibility::Public, $found->visibility);
     }
 
+    public function testTheDatabaseStampsBothDatesFromOneClock(): void
+    {
+        $bookmark = new Bookmark();
+        $bookmark->title = 'Stamped';
+        $bookmark->hlink = 'https://stamped.test';
+        $bookmark->text = 's';
+        $bookmark->user = 1;
+        $bookmark->save();
+
+        $found = Bookmark::find($bookmark->id);
+        $this->assertNotNull($found->add);
+        $this->assertSame($found->add, $found->mod, 'a new bookmark is added and modified at the same instant');
+
+        // Asked of the engine, so the check holds whatever timezone it runs in.
+        $query = $this->pdo->prepare(
+            <<<'SQL'
+            SELECT
+                ABS(TIMESTAMPDIFF(SECOND, `add`, NOW()))
+            FROM `bookmark`
+            WHERE
+                `id` = :id
+            SQL,
+        );
+        $query->execute([':id' => $found->id]);
+        $this->assertLessThan(120, (int) $query->fetchColumn(), 'the bookmark is stamped now');
+
+        $found->title = 'Restamped';
+        $found->save();
+
+        $again = Bookmark::find($found->id);
+        $this->assertSame($found->add, $again->add, 'add never moves');
+        $this->assertGreaterThanOrEqual($again->add, $again->mod);
+    }
+
     public function testSaveUpdatesAnExistingBookmark(): void
     {
         $this->seedBookmark();

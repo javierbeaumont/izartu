@@ -51,6 +51,9 @@ class Bookmark extends Crud
     /**
      * Insert this bookmark when it is new, or update it when it has an id.
      *
+     * `add` and `mod` are left to the database, so both come from one clock;
+     * this object does not learn their values until it is read back.
+     *
      * @return void
      */
     public function save(): void
@@ -68,18 +71,16 @@ class Bookmark extends Crud
 
             $query->bindValue(':id', $this->id, PDO::PARAM_INT);
         } else {
-            $this->add = date('Y-m-d H:i:s');
             $query = static::$db->prepare(
                 <<<'SQL'
                 INSERT INTO `bookmark`
-                    (`title`, `hlink`, `text`, `user`, `visibility`, `add`)
+                    (`title`, `hlink`, `text`, `user`, `visibility`)
                 VALUES
-                    (:title, :hlink, :text, :user, :visibility, :add)
+                    (:title, :hlink, :text, :user, :visibility)
                 SQL,
             );
 
             $query->bindValue(':user', $this->user, PDO::PARAM_INT);
-            $query->bindValue(':add', $this->add);
         }
 
         $query->bindValue(':title', $this->title);

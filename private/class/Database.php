@@ -20,9 +20,7 @@
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Configuration checking and the shared PDO instance.
- *
- * @todo PostgreSQL and SQLite support.
+ * The shared PDO connection.
  */
 class Database
 {
@@ -30,25 +28,24 @@ class Database
     protected static PDO $db;
 
     /**
-     * Open the shared database connection (once).
+     * Open the shared database connection, once.
      *
-     * On the first instantiation it builds the PDO instance from the configured
-     * `DB_*` constants; later instantiations reuse it. Triggers `E_USER_ERROR`
-     * if the connection fails. With DEBUG on, statements are created as
-     * DebugStatement so every query execution is timed.
+     * The first instantiation builds it from the `DB_*` constants and the rest
+     * reuse it; a failure triggers `E_USER_ERROR`. With DEBUG on, statements
+     * are created as DebugStatement so every query execution is timed.
+     *
+     * Prepared statements are native, so integer columns come back as `int`;
+     * the charset is utf8mb4 and the timezone is the server's.
      */
     final public function __construct()
     {
         if (!isset(static::$db)) {
             try {
-                // The whole connection contract, explicit: exceptions on
-                // error, native prepared statements (real plan/parameter
-                // separation, integer columns come back as int) and utf8mb4
-                // on the wire (in the DSN, never left to the server default).
                 static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]);
+
                 if (DEBUG) {
                     static::$db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [DebugStatement::class]);
                 }
