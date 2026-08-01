@@ -22,8 +22,9 @@
 /**
  * Front controller: every request enters here (see `public/.htaccess`, which
  * rewrites non-file requests to this script) and is dispatched by URL path to a
- * view template, which is rendered inside `layout.php`. The base path is derived
- * at runtime (`BASE`) so the app works at a domain root or in a sub-directory.
+ * view template, which is rendered inside `layout.php`. Paths are relative to
+ * `BASE` (see `config.php`), so the app works at a domain root or in a
+ * sub-directory.
  *
  * Routes:
  * - `/`          Home: public bookmark feed + tag cloud.
@@ -57,18 +58,13 @@ if (DEBUG) {
     error_reporting(E_ALL);
 }
 
-// Base path: empty at the domain root, "/sub" in a sub-directory install.
-$script = $_SERVER['SCRIPT_NAME'] ?? '';
-$base = rtrim(dirname(is_string($script) ? $script : ''), '/');
-define('BASE', $base);
-
 Auth::start();
 
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url(is_string($uri) ? $uri : '/', PHP_URL_PATH);
 $path = is_string($path) ? $path : '/';
-if ($base !== '' && str_starts_with($path, $base)) {
-    $path = substr($path, strlen($base));
+if (BASE !== '' && str_starts_with($path, BASE)) {
+    $path = substr($path, strlen(BASE));
 }
 
 $path = trim($path, '/');

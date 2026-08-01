@@ -10,7 +10,6 @@ parameters:
         - private/template
     bootstrapFiles:
         - private/bootstrap.php
-        - tests/phpstan-bootstrap.php
     # Deployment/instance configuration: fixed at analysis time but variable
     # across installs, so their values must not be constant-folded.
     dynamicConstantNames:

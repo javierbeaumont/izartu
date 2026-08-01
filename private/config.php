@@ -26,6 +26,13 @@
  * `bootstrap.php`.
  */
 
+/**
+ * Base URL path of the install ('' at a domain root, '/sub' in a sub-directory).
+ * Detected from the request by default; set it when a reverse proxy serves the
+ * app under a path the request does not carry.
+ */
+define('BASE', env('BASE', basePath()));
+
 /** Database host ('localhost' by default). */
 define('DB_HOST', env('DB_HOST', 'localhost'));
 /** Database name ('izartu' by default). */

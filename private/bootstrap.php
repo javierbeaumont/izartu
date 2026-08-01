@@ -48,4 +48,18 @@ function env(string $name, string $default = ''): string
     return is_string($value) && $value !== '' ? $value : $default;
 }
 
+/**
+ * The base URL path the request came in on: '' at a domain root, '/sub' in a
+ * sub-directory install. Off the web there is no request, so the CLI and the
+ * test suite get ''.
+ *
+ * @return string
+ */
+function basePath(): string
+{
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+
+    return PHP_SAPI === 'cli' || !is_string($script) ? '' : rtrim(dirname($script), '/');
+}
+
 require_once __DIR__ . '/config.php';

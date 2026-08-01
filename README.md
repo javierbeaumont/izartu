@@ -124,7 +124,9 @@ Steps:
 5. Log in at `/login`.
 
 izartu also runs from a sub-directory (e.g. `https://example.org/bookmarks/`);
-no configuration is needed, the base path is detected automatically.
+no configuration is needed, the base path is detected from the request. Set
+`BASE` only if a reverse proxy serves the app under a path the request does not
+carry.
 
 ## Configuration
 
@@ -133,6 +135,8 @@ needs to edit tracked files (with Docker, put them in your `.env`; without
 it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 [`private/config.php`](private/config.php):
 
+* `BASE`: base URL path of the install; optional, detected from the request
+  (empty at a domain root, `/bookmarks` under one).
 * `DB_HOST`: optional, defaults to `localhost`.
 * `DB_NAME`: optional, defaults to `izartu`.
 * `DB_PASS`: required, no default.
