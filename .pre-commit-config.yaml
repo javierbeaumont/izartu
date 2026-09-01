@@ -62,7 +62,7 @@ repos:
           - --no-extra-eol
   # Enforces .editorconfig, including the line length php-cs-fixer cannot check.
   - repo: https://github.com/editorconfig-checker/editorconfig-checker
-    rev: v3.9.0
+    rev: v3.11.1
     hooks:
       - id: editorconfig-checker
         exclude: \.(ico|png)$
