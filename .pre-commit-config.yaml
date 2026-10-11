@@ -17,6 +17,12 @@ repos:
       - id: destroyed-symlinks
       - id: forbid-submodules
       - id: check-yaml
+        exclude: ^tests/E2E/docker-compose\.yml$
+      # Compose's "!reset" tag is valid YAML that the safe loader rejects.
+      - id: check-yaml
+        name: check yaml (syntax only, Compose tags)
+        args: [--unsafe]
+        files: ^tests/E2E/docker-compose\.yml$
       - id: check-json
       - id: check-xml
       - id: check-illegal-windows-names
@@ -86,13 +92,21 @@ repos:
         language: system
         files: \.php$
         pass_filenames: false
-  # The suite needs the database, so it waits until push and commits stay fast.
+  # The tests need the database or a whole stack, so they wait until push and commits stay fast.
   - repo: local
     hooks:
       - id: phpunit
         name: phpunit
-        entry: make test
+        entry: make test-unit test-integration
         language: system
         files: \.php$
+        pass_filenames: false
+        stages: [pre-push]
+      # Non-PHP changes can break the app too.
+      - id: e2e
+        name: e2e
+        entry: make test-e2e
+        language: system
+        exclude: \.md$
         pass_filenames: false
         stages: [pre-push]

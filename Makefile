@@ -25,11 +25,11 @@ COMPOSE := docker compose
 # database, so no tool starts it.
 TOOL := $(COMPOSE) run --rm --no-deps -e PHP_CS_FIXER_IGNORE_ENV=1 test
 
-.PHONY: help up down build deps deps-update test test-unit test-integration style fmt analyse validate audit check \
-	user smoke hooks
+.PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse validate audit \
+	check user hooks
 
 help: ## list the targets
-	@grep -hE '^[a-z][a-z-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
+	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
 
 up: ## start the stack in the background
 	$(COMPOSE) up -d app db
@@ -46,7 +46,7 @@ deps: ## install the dev dependencies from the lock file
 deps-update: ## resolve the dev dependencies for the running PHP, ignoring the lock
 	$(TOOL) composer update
 
-test: test-unit test-integration ## run the unit and integration tests
+test: test-unit test-integration test-e2e ## run the three test tiers
 
 # DB_HOST points nowhere, so a unit test that reaches for MySQL fails here too, not only in CI, where this tier runs
 # with no database.
@@ -55,6 +55,9 @@ test-unit: ## run the unit tests (no database)
 
 test-integration: ## run the integration tests (MySQL, filesystem)
 	$(COMPOSE) run --rm test vendor/bin/phpunit --testsuite integration
+
+test-e2e: ## run the end-to-end test on a throwaway stack
+	tests/E2E/run.sh
 
 style: ## check the code style
 	$(TOOL) vendor/bin/php-cs-fixer fix --dry-run
@@ -75,9 +78,6 @@ check: style analyse test ## everything the CI runs
 
 user: ## create a user (interactive)
 	$(COMPOSE) exec app php /var/www/izartu/private/cli/adduser.php
-
-smoke: ## end-to-end smoke test (needs BASE_URL and the SMOKE_* variables)
-	scripts/smoke.sh
 
 hooks: ## install the pre-commit hooks
 	pre-commit install --hook-type pre-commit --hook-type pre-push

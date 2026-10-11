@@ -21,7 +21,7 @@
 # End-to-end smoke test against a running instance, with curl only: home,
 # login, inline add, feed, tag page and tag search. Needs an existing user.
 #
-#     BASE_URL=http://localhost:8080 SMOKE_EMAIL=... SMOKE_PASSWORD=... SMOKE_USERNAME=... scripts/smoke.sh
+#     BASE_URL=http://localhost:8080 SMOKE_EMAIL=... SMOKE_PASSWORD=... SMOKE_USERNAME=... tests/E2E/smoke.sh
 
 set -e
 

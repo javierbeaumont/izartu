@@ -1,0 +1,4 @@
+# No published port, so the throwaway e2e stack never clashes with a running dev stack.
+services:
+  app:
+    ports: !reset []

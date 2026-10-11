@@ -183,11 +183,9 @@ call the same targets, so there is a single definition of each command.
 ### Pre-commit hooks
 
 The repo ships a [pre-commit](https://pre-commit.com) configuration
-([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) so nothing lands
-unchecked: formatting, static analysis, the AGPL headers and the usual hygiene
-and secret-scanning checks run on every commit, and the test suite on every
-push. The PHP hooks use the Docker toolchain, so they need your `.env`.
-Install them once:
+([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) so nothing lands unchecked: formatting, static analysis, the AGPL
+headers and the usual hygiene and secret-scanning checks run on every commit, and the three test tiers on every push.
+The PHP hooks use the Docker toolchain, so they need your `.env`. Install them once:
 
 ```sh
 make hooks
@@ -195,11 +193,14 @@ make hooks
 
 ### Tests
 
-Tests run with PHPUnit, a **dev-only** dependency (Composer), in two tiers:
+Tests come in three tiers. Unit and integration run with PHPUnit, a **dev-only** dependency (Composer); e2e is a shell
+script with curl.
 
 * **Unit** (`tests/Unit/`): the code in isolation, with no database.
 * **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against a
   dedicated `izartu_test` database so they never touch real data.
+* **E2E** (`tests/E2E/`): `smoke.sh` drives the running app over HTTP (log in, add a bookmark, feed, tag page, tag
+  search).
 
 #### With Docker
 
@@ -211,13 +212,18 @@ dev dependencies once (writes `vendor/`, gitignored):
 make deps
 ```
 
-Run both tiers, or one:
+Run the three tiers, or one:
 
 ```sh
-make test              # both
+make test              # all three
 make test-unit         # unit only; starts no database
 make test-integration  # integration only
+make test-e2e          # e2e only, on a throwaway stack
 ```
+
+`make test-e2e` brings up a stack of its own (separate Compose project, database and credentials, no published port),
+creates a user, runs `smoke.sh` against it and removes it all, whatever the outcome. It needs neither your `.env` nor
+`make deps`.
 
 #### Without Docker
 
