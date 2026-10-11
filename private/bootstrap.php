@@ -26,6 +26,7 @@
  */
 
 define('PRIVATE_DIR', __DIR__ . '/');
+define('PUBLIC_DIR', dirname(__DIR__) . '/public/');
 
 spl_autoload_register(function (string $class): void {
     $file = PRIVATE_DIR . 'class/' . $class . '.php';
@@ -60,6 +61,23 @@ function basePath(): string
     $script = $_SERVER['SCRIPT_NAME'] ?? '';
 
     return PHP_SAPI === 'cli' || !is_string($script) ? '' : rtrim(dirname($script), '/');
+}
+
+/**
+ * A web-root-relative asset path carrying a cache-busting query string.
+ *
+ * The file's modification time gives every deployed version its own URL, so a browser never keeps an old copy against
+ * new markup. The path stays relative for `<base href>` (sub-directory installs), and a missing file gets the plain
+ * path.
+ *
+ * @param string $path Path under the web root, for example 'style/main.css'.
+ * @return string The path, with '?v=<mtime>' appended when the file is readable.
+ */
+function asset(string $path): string
+{
+    $mtime = is_file(PUBLIC_DIR . $path) ? filemtime(PUBLIC_DIR . $path) : false;
+
+    return $mtime === false ? $path : $path . '?v=' . $mtime;
 }
 
 require_once __DIR__ . '/config.php';
