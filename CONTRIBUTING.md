@@ -42,7 +42,8 @@ make check   # style, static analysis and the test suite (what CI runs)
 
 The hooks run the whole toolchain before a commit lands, and the suite before a push, so `make check` rarely has
 surprises left. The individual targets are `make style` / `make fmt` (PHP-CS-Fixer, [PER Coding
-Style](https://www.php-fig.org/per/coding-style/)), `make analyse` (PHPStan at level 10) and `make test` (PHPUnit).
+Style](https://www.php-fig.org/per/coding-style/)), `make analyse` (PHPStan at level 10) and `make test` (PHPUnit;
+`make test-unit` and `make test-integration` run one tier).
 
 Code style beyond the fixer: `//` for comments, `/** */` docblocks on classes, methods, properties and constants (they
 are published as API documentation), and comments only where the *why* is not obvious.

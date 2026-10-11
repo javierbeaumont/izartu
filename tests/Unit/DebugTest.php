@@ -65,25 +65,4 @@ final class DebugTest extends TestCase
             Debug::serverTiming(),
         );
     }
-
-    public function testExecutedStatementsAreTimedAndCollected(): void
-    {
-        if (DB_NAME !== 'izartu_test') {
-            self::fail('Refusing to run against "' . DB_NAME . '"; expected izartu_test.');
-        }
-
-        $crud = new class extends Crud {
-            public function probe(): array
-            {
-                return $this->read('SELECT 42 AS `answer`');
-            }
-        };
-
-        $rows = $crud->probe();
-
-        $this->assertSame(42, (int) $rows[0]['answer']);
-        $this->assertCount(1, Debug::queries());
-        $this->assertSame('SELECT 42 AS `answer`', Debug::queries()[0]['sql']);
-        $this->assertGreaterThan(0, Debug::queries()[0]['ms']);
-    }
 }

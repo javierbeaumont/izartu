@@ -21,13 +21,15 @@
 # these targets. They all run in the dev-only `test` container.
 
 COMPOSE := docker compose
-# php-cs-fixer refuses PHP versions it does not know about yet; the image is 8.5.
-TOOL := $(COMPOSE) run --rm -e PHP_CS_FIXER_IGNORE_ENV=1 test
+# php-cs-fixer refuses PHP versions it does not know about yet; the image is 8.5. Only the integration tests need the
+# database, so no tool starts it.
+TOOL := $(COMPOSE) run --rm --no-deps -e PHP_CS_FIXER_IGNORE_ENV=1 test
 
-.PHONY: help up down build deps deps-update test style fmt analyse validate audit check user smoke hooks
+.PHONY: help up down build deps deps-update test test-unit test-integration style fmt analyse validate audit check \
+	user smoke hooks
 
 help: ## list the targets
-	@grep -hE '^[a-z][a-z-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 12
+	@grep -hE '^[a-z][a-z-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
 
 up: ## start the stack in the background
 	$(COMPOSE) up -d app db
@@ -44,8 +46,15 @@ deps: ## install the dev dependencies from the lock file
 deps-update: ## resolve the dev dependencies for the running PHP, ignoring the lock
 	$(TOOL) composer update
 
-test: ## run the test suite
-	$(TOOL)
+test: test-unit test-integration ## run the unit and integration tests
+
+# DB_HOST points nowhere, so a unit test that reaches for MySQL fails here too, not only in CI, where this tier runs
+# with no database.
+test-unit: ## run the unit tests (no database)
+	$(COMPOSE) run --rm --no-deps -e DB_HOST=no-database.invalid test vendor/bin/phpunit --testsuite unit
+
+test-integration: ## run the integration tests (MySQL, filesystem)
+	$(COMPOSE) run --rm test vendor/bin/phpunit --testsuite integration
 
 style: ## check the code style
 	$(TOOL) vendor/bin/php-cs-fixer fix --dry-run

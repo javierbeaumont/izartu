@@ -88,10 +88,9 @@ Log in at `/login` and start adding bookmarks.
 
 Requirements:
 
-* PHP with the `pdo_mysql` extension. izartu supports every PHP version with
-  [security support](https://www.php.net/supported-versions.php) (currently
-  8.2 to 8.5; the floor rises as versions reach end of life), and CI runs the
-  full test suite on each of them.
+* PHP with the `pdo_mysql` extension. izartu supports every PHP version with [security
+  support](https://www.php.net/supported-versions.php) (currently 8.2 to 8.5; the floor rises as versions reach end of
+  life), and CI runs the unit and integration tests on each of them.
 * MySQL >= 8.4
 * A web server that routes requests to `public/index.php`. Apache works out
   of the box through the shipped `.htaccess` (needs `mod_rewrite`).
@@ -196,8 +195,11 @@ make hooks
 
 ### Tests
 
-Tests run with PHPUnit, a **dev-only** dependency (Composer). The suite runs
-against a dedicated `izartu_test` database so it never touches real data.
+Tests run with PHPUnit, a **dev-only** dependency (Composer), in two tiers:
+
+* **Unit** (`tests/Unit/`): the code in isolation, with no database.
+* **Integration** (the rest of `tests/`): the real components wired together (MySQL, the filesystem), against a
+  dedicated `izartu_test` database so they never touch real data.
 
 #### With Docker
 
@@ -209,10 +211,12 @@ dev dependencies once (writes `vendor/`, gitignored):
 make deps
 ```
 
-Run the suite:
+Run both tiers, or one:
 
 ```sh
-make test
+make test              # both
+make test-unit         # unit only; starts no database
+make test-integration  # integration only
 ```
 
 #### Without Docker
@@ -225,7 +229,8 @@ composer install
 DEBUG=1 DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass vendor/bin/phpunit
 ```
 
-(`DEBUG=1` because part of the suite exercises the debug instrumentation.)
+(`DEBUG=1` because part of the suite exercises the debug instrumentation.) `vendor/bin/phpunit --testsuite unit` runs
+the unit tier alone, with no database at all.
 
 ### Static analysis
 
