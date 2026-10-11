@@ -198,7 +198,7 @@ make hooks
 Tests run with PHPUnit, a **dev-only** dependency (Composer), in two tiers:
 
 * **Unit** (`tests/Unit/`): the code in isolation, with no database.
-* **Integration** (the rest of `tests/`): the real components wired together (MySQL, the filesystem), against a
+* **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against a
   dedicated `izartu_test` database so they never touch real data.
 
 #### With Docker

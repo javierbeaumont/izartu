@@ -13,8 +13,7 @@
             <directory>tests/Unit</directory>
         </testsuite>
         <testsuite name="integration">
-            <directory>tests</directory>
-            <exclude>tests/Unit</exclude>
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
 </phpunit>
