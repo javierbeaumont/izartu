@@ -1,0 +1,116 @@
+<?php
+
+//  izartu: web bookmark manager based on tags
+//
+//  Copyright (C) 2011-2026 Javier Beaumont <javierbeaumont@users.noreply.github.com>
+//
+//  This file is part of izartu.
+//
+//  izartu is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU Affero General Public License as
+//  published by the Free Software Foundation, either version 3 of the
+//  License, or (at your option) any later version.
+//
+//  izartu is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU Affero General Public License for more details.
+//
+//  You should have received a copy of the GNU Affero General Public License
+//  along with izartu. If not, see <https://www.gnu.org/licenses/>.
+
+use PHPUnit\Framework\TestCase;
+
+final class AuthTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        $_SESSION = [];
+    }
+
+    protected function tearDown(): void
+    {
+        // The lifecycle tests below destroy the session; the rest of the suite
+        // needs one open (see tests/bootstrap.php).
+        Auth::start();
+        $_SESSION = [];
+    }
+
+    public function testStartOpensASessionAndASecondCallLeavesItAlone(): void
+    {
+        Auth::logout();
+
+        Auth::start();
+        $id = session_id();
+
+        $this->assertSame(PHP_SESSION_ACTIVE, session_status());
+        Auth::start();
+        $this->assertSame($id, session_id());
+    }
+
+    public function testLogoutEmptiesAndDestroysTheSession(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+
+        Auth::logout();
+
+        $this->assertSame([], $_SESSION);
+        $this->assertFalse(Auth::check());
+        $this->assertSame(PHP_SESSION_NONE, session_status());
+    }
+
+    public function testIdIsNullForAnonymousAndSetWhenLoggedIn(): void
+    {
+        $this->assertNull(Auth::id());
+
+        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+        $this->assertSame(7, Auth::id());
+    }
+
+    public function testAnonymousCannotManage(): void
+    {
+        $this->assertFalse(Auth::canManage(1));
+    }
+
+    public function testTheOwnerOfTheBookmarkCanManageIt(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+
+        $this->assertTrue(Auth::canManage(7));
+    }
+
+    public function testARegularUserCannotManageForeignBookmarks(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+
+        $this->assertFalse(Auth::canManage(8));
+    }
+
+    public function testAdminAndOwnerRolesCanManageAnyBookmark(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'role' => 'admin'];
+        $this->assertTrue(Auth::canManage(8));
+
+        $_SESSION['user'] = ['id' => 7, 'role' => 'owner'];
+        $this->assertTrue(Auth::canManage(8));
+    }
+
+    public function testCsrfTokenIsCreatedOnceAndValidates(): void
+    {
+        $token = Auth::csrfToken();
+
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $token);
+        $this->assertSame($token, Auth::csrfToken());
+        $this->assertTrue(Auth::csrfCheck($token));
+    }
+
+    public function testCsrfCheckRejectsWrongOrMissingTokens(): void
+    {
+        $this->assertFalse(Auth::csrfCheck('anything'), 'no token in the session yet');
+
+        Auth::csrfToken();
+
+        $this->assertFalse(Auth::csrfCheck(str_repeat('0', 64)));
+        $this->assertFalse(Auth::csrfCheck(null));
+    }
+}

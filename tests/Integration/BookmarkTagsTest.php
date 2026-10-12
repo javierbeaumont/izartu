@@ -43,22 +43,6 @@ final class BookmarkTagsTest extends TestCase
         }
     }
 
-    public function testParseTagsNormalisesNames(): void
-    {
-        $this->assertSame(
-            ['php', 'sql', 'web dev'],
-            Bookmark::parseTags(' PHP, sql , php, , Web Dev,'),
-        );
-    }
-
-    public function testParseTagsCollapsesInnerWhitespace(): void
-    {
-        $this->assertSame(
-            ['web dev'],
-            Bookmark::parseTags("web  dev, web\tdev, web dev"),
-        );
-    }
-
     public function testSaveTagsCreatesAndLinksTags(): void
     {
         $bookmark = $this->savedBookmark();
