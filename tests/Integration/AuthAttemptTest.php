@@ -57,22 +57,6 @@ final class AuthAttemptTest extends TestCase
         $this->assertSame(['id' => 1, 'username' => 'owner', 'role' => 'owner'], Auth::user());
     }
 
-    public function testAttemptRejectsAWrongPassword(): void
-    {
-        $this->seedUser();
-
-        $this->assertFalse(Auth::attempt('owner@izartu.test', 'wrong'));
-        $this->assertFalse(Auth::check());
-    }
-
-    public function testAttemptRejectsAnUnknownEmail(): void
-    {
-        $this->seedUser();
-
-        $this->assertFalse(Auth::attempt('ghost@izartu.test', 'secret123'));
-        $this->assertFalse(Auth::check());
-    }
-
     private function seedUser(): void
     {
         $query = $this->pdo->prepare(

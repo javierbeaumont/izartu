@@ -113,4 +113,55 @@ final class AuthTest extends TestCase
         $this->assertFalse(Auth::csrfCheck(str_repeat('0', 64)));
         $this->assertFalse(Auth::csrfCheck(null));
     }
+
+    public function testVerifyAcceptsTheRightPassword(): void
+    {
+        $this->assertTrue(self::probe()::probeVerify(self::user(), 'secret123'));
+    }
+
+    public function testVerifyRejectsAWrongPassword(): void
+    {
+        $this->assertFalse(self::probe()::probeVerify(self::user(), 'wrong'));
+    }
+
+    public function testVerifyRejectsAnUnknownUser(): void
+    {
+        $this->assertFalse(self::probe()::probeVerify(null, 'secret123'));
+    }
+
+    public function testLoginRegeneratesTheSessionAndStoresTheUser(): void
+    {
+        $before = session_id();
+
+        self::probe()::probeLogin(self::user());
+
+        $this->assertNotSame($before, session_id());
+        $this->assertSame(['id' => 1, 'username' => 'owner', 'role' => 'owner'], Auth::user());
+    }
+
+    private static function user(): array
+    {
+        return [
+            'id' => 1,
+            'username' => 'owner',
+            'email' => 'owner@izartu.test',
+            'hash' => password_hash('secret123', PASSWORD_BCRYPT, ['cost' => 4]),
+            'role' => 'owner',
+        ];
+    }
+
+    private static function probe(): Auth
+    {
+        return new class extends Auth {
+            public static function probeVerify(?array $user, string $password): bool
+            {
+                return self::verify($user, $password);
+            }
+
+            public static function probeLogin(array $user): void
+            {
+                self::login($user);
+            }
+        };
+    }
 }

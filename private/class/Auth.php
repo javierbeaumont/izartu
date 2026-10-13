@@ -51,9 +51,6 @@ class Auth
     /**
      * Verify an email/password pair and, on success, log the user in.
      *
-     * On success the session id is regenerated (to prevent fixation) and the
-     * user's id and role are stored in the session.
-     *
      * @param string $email Email typed at login (normalised to lower-case here).
      * @param string $password Plain password typed at login.
      * @return bool True if the credentials are valid and the user is now logged in.
@@ -62,13 +59,41 @@ class Auth
     {
         $user = (new User())->findByEmail(strtolower(trim($email)));
 
-        // Verify even when the email is unknown, against a dummy hash, so response
-        // time does not reveal whether an account exists.
-        $hash = $user['hash'] ?? '$2y$12$' . str_repeat('.', 53);
-        if (!password_verify($password, $hash) || $user === null) {
+        if (!self::verify($user, $password)) {
             return false;
         }
 
+        self::login($user);
+
+        return true;
+    }
+
+    /**
+     * Whether a password matches a user's hash.
+     *
+     * An unknown user is checked against a dummy hash, so the response time does not reveal whether an account exists.
+     *
+     * @param array{id: int, username: string, email: string, hash: string, role: string}|null $user The user row, or
+     *   null if no user has the email typed.
+     * @param string $password Plain password typed at login.
+     * @return bool True only for an existing user whose hash the password matches.
+     * @phpstan-assert-if-true !null $user
+     */
+    protected static function verify(?array $user, string $password): bool
+    {
+        $hash = $user['hash'] ?? '$2y$12$' . str_repeat('.', 53);
+
+        return password_verify($password, $hash) && $user !== null;
+    }
+
+    /**
+     * Log a user in: regenerate the session id (to prevent fixation) and store the user's id, username and role.
+     *
+     * @param array{id: int, username: string, email: string, hash: string, role: string} $user The user row.
+     * @return void
+     */
+    protected static function login(array $user): void
+    {
         session_regenerate_id(true);
 
         $_SESSION['user'] = [
@@ -76,8 +101,6 @@ class Auth
             'username' => $user['username'],
             'role' => $user['role'],
         ];
-
-        return true;
     }
 
     /**
