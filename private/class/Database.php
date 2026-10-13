@@ -20,39 +20,43 @@
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * The shared PDO connection.
+ * The shared PDO connection, opened on the first query.
  */
 class Database
 {
-    /** @var PDO Shared PDO connection, created once on first construction. */
-    protected static PDO $db;
+    /** @var PDO|null The shared connection; null until the first query. */
+    private static ?PDO $db = null;
 
     /**
-     * Open the shared database connection, once.
+     * The shared database connection, opened on first use.
      *
-     * The first instantiation builds it from the `DB_*` constants and the rest
-     * reuse it; a failure triggers `E_USER_ERROR`. With DEBUG on, statements
-     * are created as DebugStatement so every query execution is timed.
+     * Building, validating or formatting a model therefore needs no database. The connection comes from the `DB_*`
+     * constants; a failure triggers `E_USER_ERROR`. With DEBUG on, statements are created as DebugStatement so every
+     * query execution is timed.
      *
-     * Prepared statements are native, so integer columns come back as `int`;
-     * the charset is utf8mb4 and the timezone is the server's.
+     * Prepared statements are native, so integer columns come back as `int`; the charset is utf8mb4 and the timezone
+     * is the server's.
+     *
+     * @return PDO The shared connection.
      */
-    final public function __construct()
+    final protected static function db(): PDO
     {
-        if (!isset(static::$db)) {
+        if (self::$db === null) {
             try {
-                static::$db = new PDO($this->pdoMySQL(), DB_USER, DB_PASS, [
+                self::$db = new PDO(self::pdoMySQL(), DB_USER, DB_PASS, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]);
 
                 if (DEBUG) {
-                    static::$db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [DebugStatement::class]);
+                    self::$db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [DebugStatement::class]);
                 }
             } catch (PDOException $e) {
                 trigger_error($e->getMessage(), E_USER_ERROR);
             }
         }
+
+        return self::$db;
     }
 
     /**
@@ -60,7 +64,7 @@ class Database
      *
      * @return string PDO DSN (TCP host/port or Unix socket, plus database name).
      */
-    private function pdoMySQL(): string
+    private static function pdoMySQL(): string
     {
         $dsn = 'mysql:';
 

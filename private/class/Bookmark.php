@@ -59,7 +59,7 @@ class Bookmark extends Crud
     public function save(): void
     {
         if ($this->id) {
-            $query = static::$db->prepare(
+            $query = self::db()->prepare(
                 <<<'SQL'
                 UPDATE `bookmark`
                 SET
@@ -71,7 +71,7 @@ class Bookmark extends Crud
 
             $query->bindValue(':id', $this->id, PDO::PARAM_INT);
         } else {
-            $query = static::$db->prepare(
+            $query = self::db()->prepare(
                 <<<'SQL'
                 INSERT INTO `bookmark`
                     (`title`, `hlink`, `text`, `user`, `visibility`)
@@ -90,7 +90,7 @@ class Bookmark extends Crud
         $query->execute();
 
         if (!$this->id) {
-            $this->id = (int) static::$db->lastInsertId();
+            $this->id = (int) self::db()->lastInsertId();
         }
     }
 
@@ -118,7 +118,7 @@ class Bookmark extends Crud
     {
         $this->deleteTags();
 
-        $query = static::$db->prepare(
+        $query = self::db()->prepare(
             <<<'SQL'
             DELETE FROM `bookmark`
             WHERE
@@ -162,7 +162,7 @@ class Bookmark extends Crud
     {
         $this->deleteTags();
 
-        $tag = static::$db->prepare(
+        $tag = self::db()->prepare(
             <<<'SQL'
             INSERT INTO `tag`
                 (`name`)
@@ -173,7 +173,7 @@ class Bookmark extends Crud
             SQL,
         );
 
-        $link = static::$db->prepare(
+        $link = self::db()->prepare(
             <<<'SQL'
             INSERT INTO `bookmark_tag`
                 (`bookmark`, `tag`)
@@ -184,7 +184,7 @@ class Bookmark extends Crud
 
         foreach (self::parseTags($tags) as $name) {
             $tag->execute([':name' => $name]);
-            $link->execute([':bookmark' => $this->id, ':tag' => (int) static::$db->lastInsertId()]);
+            $link->execute([':bookmark' => $this->id, ':tag' => (int) self::db()->lastInsertId()]);
         }
     }
 
@@ -276,7 +276,7 @@ class Bookmark extends Crud
      */
     public function deleteTags(): void
     {
-        $query = static::$db->prepare(
+        $query = self::db()->prepare(
             <<<'SQL'
             DELETE FROM `bookmark_tag`
             WHERE

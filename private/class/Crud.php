@@ -49,7 +49,7 @@ class Crud extends Database
      */
     final protected function read(string $sql, array|false $param = false): array
     {
-        $query = static::$db->prepare($sql);
+        $query = self::db()->prepare($sql);
         if (is_array($param)) {
             foreach ($param as $value) {
                 $query->bindParam($value[0], $value[1], $value[2], $value[3]);

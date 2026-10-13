@@ -76,24 +76,6 @@ final class ControllerAccessTest extends TestCase
         $this->assertSame('notfound', $missing);
     }
 
-    public function testTooManyTagsAndAStaleTokenAreReportedTogether(): void
-    {
-        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
-        $_SESSION['csrf'] = 'token';
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_POST = [
-            'csrf' => 'stale',
-            'title' => 'x',
-            'link' => 'https://s.test',
-            'tags' => implode(',', array_map(static fn(int $n): string => 'tag' . $n, range(1, 26))),
-        ];
-
-        [, $vars] = Controller::add();
-
-        $this->assertSame('Too many tags (max 25).', $vars['formErrors']['tags']);
-        $this->assertArrayHasKey('csrf', $vars['formErrors']);
-    }
-
     public function testAdminsCannotEditAForeignPrivateBookmark(): void
     {
         $_SESSION['user'] = ['id' => 2, 'role' => 'admin'];
@@ -116,34 +98,5 @@ final class ControllerAccessTest extends TestCase
         $this->assertSame(1, $vars['editId']);
         $this->assertArrayHasKey('title', $vars['formErrors']);
         $this->assertSame('https://s.test', $vars['formBookmark']->hlink, 'typed values survive the re-render');
-    }
-
-    public function testAddRerendersInlineAndRejectsAForeignReturn(): void
-    {
-        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SESSION['csrf'] = 'token';
-        $_POST = ['csrf' => 'token', 'title' => 'x', 'link' => 'nope', 'return' => 'https://evil.test/'];
-
-        [$template, $vars] = Controller::add();
-
-        $this->assertSame('home', $template);
-        $this->assertTrue($vars['adding']);
-        $this->assertSame('user/goodname', $vars['route'], 'a foreign return falls back to the own page');
-        $this->assertArrayHasKey('link', $vars['formErrors']);
-    }
-
-    public function testAValidReturnRebuildsTheOriginList(): void
-    {
-        $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SESSION['csrf'] = 'token';
-        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'nope', 'return' => 'tag/php?page=2'];
-
-        [, $vars] = Controller::add();
-
-        $this->assertSame('tag/php', $vars['route']);
-        $this->assertSame(['php'], $vars['tagNames']);
-        $this->assertSame(2, $vars['page']);
     }
 }

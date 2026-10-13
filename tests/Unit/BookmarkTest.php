@@ -38,4 +38,26 @@ final class BookmarkTest extends TestCase
             Bookmark::parseTags("web  dev, web\tdev, web dev"),
         );
     }
+
+    public function testPublicBookmarksAreVisibleToEveryone(): void
+    {
+        $bookmark = new Bookmark();
+        $bookmark->user = 1;
+        $bookmark->visibility = Visibility::Public;
+
+        $this->assertTrue($bookmark->visibleTo(null));
+        $this->assertTrue($bookmark->visibleTo(1));
+        $this->assertTrue($bookmark->visibleTo(2));
+    }
+
+    public function testPrivateBookmarksAreVisibleOnlyToTheirOwner(): void
+    {
+        $bookmark = new Bookmark();
+        $bookmark->user = 1;
+        $bookmark->visibility = Visibility::Private;
+
+        $this->assertTrue($bookmark->visibleTo(1));
+        $this->assertFalse($bookmark->visibleTo(null));
+        $this->assertFalse($bookmark->visibleTo(2));
+    }
 }
