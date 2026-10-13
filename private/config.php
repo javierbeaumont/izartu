@@ -33,6 +33,9 @@
  */
 define('BASE', env('BASE', basePath()));
 
+/** The running version, shown in the footer and linked to its source; read from the tree when unset. */
+define('VERSION', env('VERSION', Version::running()));
+
 /** Database host ('localhost' by default). */
 define('DB_HOST', env('DB_HOST', 'localhost'));
 /** Database name ('izartu' by default). */
