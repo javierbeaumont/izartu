@@ -19,6 +19,10 @@ indent_style = tab
 [{composer.lock,*.svg}]
 max_line_length = off
 
+# Minified, so it ends where its last tag closes.
+[*.svg]
+insert_final_newline = unset
+
 # Kept verbatim from the Contributor Covenant, wrapping included.
 [CODE_OF_CONDUCT.md]
 max_line_length = off
