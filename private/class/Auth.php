@@ -180,18 +180,19 @@ class Auth
     /**
      * Whether the logged-in user may manage (edit/delete) a bookmark.
      *
-     * True for the bookmark's owner and for `owner`/`admin` roles; false for
-     * anonymous requests.
+     * They must see it and either own it or hold the `owner`/`admin` role, so nobody but its owner manages a private
+     * bookmark; false for anonymous requests.
      *
-     * @param int $owner User id of the bookmark's owner.
+     * @param Bookmark $bookmark The bookmark to manage.
      * @return bool
      */
-    public static function canManage(int $owner): bool
+    public static function canManage(Bookmark $bookmark): bool
     {
         $user = self::user();
 
         return $user !== null
-          && ($user['id'] === $owner || in_array($user['role'], ['owner', 'admin'], true));
+          && $bookmark->visibleTo($user['id'])
+          && ($user['id'] === $bookmark->user || in_array($user['role'], ['owner', 'admin'], true));
     }
 
     /**

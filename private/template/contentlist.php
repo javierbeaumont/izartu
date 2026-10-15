@@ -18,7 +18,7 @@
 //  You should have received a copy of the GNU Affero General Public License
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
-<?php if ($editId === $bookmark->id && Auth::canManage($bookmark->user)): ?>
+<?php if ($editId === $bookmark->id && Auth::canManage($bookmark)): ?>
 <?php
     $formAction = 'edit/' . $bookmark->id;
     if (!isset($formBookmark) || $formBookmark->id !== $bookmark->id) {
@@ -68,7 +68,7 @@
                   href="tag/<?php echo rawurlencode($name); ?>"><?php echo htmlspecialchars($name); ?></a>
 <?php endforeach; ?>
               </span>
-<?php if (Auth::canManage($bookmark->user)): ?>
+<?php if (Auth::canManage($bookmark)): ?>
 <?php $editUrl = $route . '?' . ($page > 1 ? 'page=' . $page . '&amp;' : '') . 'edit=' . $bookmark->id; ?>
               <a class="edit" href="<?php echo $editUrl; ?>">Edit</a>
 <?php endif; ?>

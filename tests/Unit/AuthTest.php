@@ -69,30 +69,42 @@ final class AuthTest extends TestCase
 
     public function testAnonymousCannotManage(): void
     {
-        $this->assertFalse(Auth::canManage(1));
+        $this->assertFalse(Auth::canManage(self::bookmark(Visibility::Public)));
+        $this->assertFalse(Auth::canManage(self::bookmark(Visibility::Private)));
     }
 
     public function testTheOwnerOfTheBookmarkCanManageIt(): void
     {
-        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+        $_SESSION['user'] = ['id' => 1, 'role' => 'user'];
 
-        $this->assertTrue(Auth::canManage(7));
+        $this->assertTrue(Auth::canManage(self::bookmark(Visibility::Public)));
+        $this->assertTrue(Auth::canManage(self::bookmark(Visibility::Private)));
     }
 
     public function testARegularUserCannotManageForeignBookmarks(): void
     {
-        $_SESSION['user'] = ['id' => 7, 'role' => 'user'];
+        $_SESSION['user'] = ['id' => 2, 'role' => 'user'];
 
-        $this->assertFalse(Auth::canManage(8));
+        $this->assertFalse(Auth::canManage(self::bookmark(Visibility::Public)));
+        $this->assertFalse(Auth::canManage(self::bookmark(Visibility::Private)));
     }
 
-    public function testAdminAndOwnerRolesCanManageAnyBookmark(): void
+    public function testAdminAndOwnerRolesCanManageForeignPublicBookmarks(): void
     {
-        $_SESSION['user'] = ['id' => 7, 'role' => 'admin'];
-        $this->assertTrue(Auth::canManage(8));
+        foreach (['admin', 'owner'] as $role) {
+            $_SESSION['user'] = ['id' => 2, 'role' => $role];
 
-        $_SESSION['user'] = ['id' => 7, 'role' => 'owner'];
-        $this->assertTrue(Auth::canManage(8));
+            $this->assertTrue(Auth::canManage(self::bookmark(Visibility::Public)), $role);
+        }
+    }
+
+    public function testNoRoleManagesSomeoneElsesPrivateBookmark(): void
+    {
+        foreach (['admin', 'owner'] as $role) {
+            $_SESSION['user'] = ['id' => 2, 'role' => $role];
+
+            $this->assertFalse(Auth::canManage(self::bookmark(Visibility::Private)), $role);
+        }
     }
 
     public function testCsrfTokenIsCreatedOnceAndValidates(): void
@@ -148,6 +160,15 @@ final class AuthTest extends TestCase
             'hash' => password_hash('secret123', PASSWORD_BCRYPT, ['cost' => 4]),
             'role' => 'owner',
         ];
+    }
+
+    private static function bookmark(Visibility $visibility): Bookmark
+    {
+        $bookmark = new Bookmark();
+        $bookmark->user = 1;
+        $bookmark->visibility = $visibility;
+
+        return $bookmark;
     }
 
     private static function probe(): Auth
