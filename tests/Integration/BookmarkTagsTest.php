@@ -64,6 +64,20 @@ final class BookmarkTagsTest extends TestCase
         $this->assertSame(['php'], $this->linkedTagNames($bookmark->id));
     }
 
+    /**
+     * The tag name is unique under the `ai_ci` collation, so the first spelling saved names the tag for both.
+     */
+    public function testAWordAndItsAccentedSpellingAreOneTag(): void
+    {
+        $this->savedBookmark()->saveTags('cafe');
+        $bookmark = $this->savedBookmark();
+
+        $bookmark->saveTags('café');
+
+        $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM `tag`')->fetchColumn());
+        $this->assertSame(['cafe'], $this->linkedTagNames($bookmark->id));
+    }
+
     public function testSaveTagsReplacesPreviousLinks(): void
     {
         $bookmark = $this->savedBookmark();

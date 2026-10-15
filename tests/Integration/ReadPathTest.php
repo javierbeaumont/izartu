@@ -156,6 +156,17 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, $unknown['pages']);
     }
 
+    public function testATagFilterIgnoresAccents(): void
+    {
+        $this->seedPublicAndPrivate();
+        $this->pdo->exec("INSERT INTO `tag` (`id`, `name`) VALUES (3, 'café')");
+        $this->pdo->exec('INSERT INTO `bookmark_tag` (`bookmark`, `tag`) VALUES (1, 3)');
+
+        $list = $this->probe()->order(null, 1, ['cafe']);
+
+        $this->assertSame(['Public'], array_column($list['bookmarks'], 'title'));
+    }
+
     public function testListFiltersByUsername(): void
     {
         $this->pdo->exec('TRUNCATE `user`');

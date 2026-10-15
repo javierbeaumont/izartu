@@ -148,6 +148,18 @@ final class TagSearchTest extends TestCase
         $this->assertSame(1, $this->probe()->count(null, '', [], 'javi'));
     }
 
+    public function testSearchIgnoresCaseAndAccents(): void
+    {
+        $this->tag('café', [1]);
+        $this->tag('cafetería', [1]);
+        $this->tag('tea', [1]);
+
+        $search = fn(string $term): array => array_column($this->probe()->search(null, $term), 'name');
+
+        $this->assertSame(['café', 'cafetería'], $search('CAFE'));
+        $this->assertSame(['cafetería'], $search('teria'));
+    }
+
     public function testSearchTreatsLikeWildcardsAsLiterals(): void
     {
         $this->tag('a%b', [1]);
