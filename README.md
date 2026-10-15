@@ -92,8 +92,9 @@ Requirements:
   support](https://www.php.net/supported-versions.php) (currently 8.2 to 8.5; the floor rises as versions reach end of
   life), and CI runs the unit and integration tests on each of them.
 * MySQL >= 8.4
-* A web server that routes requests to `public/index.php`. Apache works out
-  of the box through the shipped `.htaccess` (needs `mod_rewrite`).
+* A web server that routes requests to `public/index.php`. Apache works through the shipped `.htaccess` (needs
+  `mod_rewrite`) plus `AllowEncodedSlashes NoDecode` in the vhost, which `.htaccess` cannot set: without it, a tag
+  with a `/` in its name links to a 404.
 
 Steps:
 
@@ -107,6 +108,7 @@ Steps:
    <VirtualHost *:80>
      ServerName bookmarks.example.org
      DocumentRoot /var/www/izartu/public
+     AllowEncodedSlashes NoDecode
 
      <Directory /var/www/izartu/public>
        AllowOverride All

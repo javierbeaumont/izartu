@@ -42,7 +42,7 @@ csrf() {
     curl -sf -b "$JAR" -c "$JAR" "$1" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -n1
 }
 
-echo "1/6 home is up"
+echo "1/7 home is up"
 
 for _ in $(seq 1 30); do
     code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/" || true)"
@@ -52,7 +52,7 @@ done
 
 [ "$code" = "200" ] || fail "home returned $code"
 
-echo "2/6 log in"
+echo "2/7 log in"
 
 TOKEN="$(csrf "$BASE_URL/login")"
 [ -n "$TOKEN" ] || fail "no CSRF token on /login"
@@ -64,25 +64,31 @@ case "$LOCATION" in
     *) fail "login did not land on /user/$SMOKE_USERNAME (got '$LOCATION')" ;;
 esac
 
-echo "3/6 add a bookmark inline"
+echo "3/7 add a bookmark inline"
 
 TOKEN="$(csrf "$BASE_URL/user/$SMOKE_USERNAME?add")"
 [ -n "$TOKEN" ] || fail "no CSRF token on the inline add form"
 
 curl -sf -b "$JAR" -c "$JAR" -o /dev/null \
     -d "csrf=$TOKEN&title=Smoke test&link=https://smoke.example&description=ok" \
-    -d "tags=smoke&visibility=public&return=user/$SMOKE_USERNAME" \
+    -d "tags=smoke, ci/cd&visibility=public&return=user/$SMOKE_USERNAME" \
     "$BASE_URL/add"
 
-echo "4/6 the anonymous feed shows it"
+echo "4/7 the anonymous feed shows it"
 
 curl -sf "$BASE_URL/" | grep -q 'Smoke test' || fail "bookmark missing from the feed"
 
-echo "5/6 the tag page shows it"
+echo "5/7 the tag page shows it"
 
 curl -sf "$BASE_URL/tag/smoke" | grep -q 'Smoke test' || fail "bookmark missing from /tag/smoke"
 
-echo "6/6 the tag search finds the tag"
+echo "6/7 a tag with a slash links to its page"
+
+# Regression: Apache refuses %2F in a path unless AllowEncodedSlashes allows it, so such a tag linked to a 404.
+curl -sf "$BASE_URL/" | grep -q 'href="tag/ci%2Fcd"' || fail "no link to the ci/cd tag in the feed"
+curl -sf "$BASE_URL/tag/ci%2Fcd" | grep -q 'Smoke test' || fail "bookmark missing from /tag/ci%2Fcd"
+
+echo "7/7 the tag search finds the tag"
 
 # The anchor's text also holds the count, so match its href.
 curl -sf "$BASE_URL/tags?q=smo" | grep -q 'href="tag/smoke"' || fail "tag missing from /tags search"
