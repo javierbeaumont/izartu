@@ -25,5 +25,6 @@ $finder = PhpCsFixer\Finder::create()
 return (new PhpCsFixer\Config())
     ->setRules([
         '@PER-CS' => true,
+        'single_line_comment_style' => true,
     ])
     ->setFinder($finder);

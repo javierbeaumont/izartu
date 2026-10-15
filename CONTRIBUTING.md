@@ -45,8 +45,8 @@ has surprises left. The individual targets are `make style` / `make fmt` (PHP-CS
 Style](https://www.php-fig.org/per/coding-style/)), `make analyse` (PHPStan at level 10) and `make test` (the three test
 tiers; `make test-unit`, `make test-integration` and `make test-e2e` run one each).
 
-Code style beyond the fixer: `//` for comments, `/** */` docblocks on classes, methods, properties and constants (they
-are published as API documentation), and comments only where the *why* is not obvious.
+Code style beyond the fixer: `/** */` docblocks on classes, methods, properties and constants (they are published as
+API documentation), and comments only where the *why* is not obvious.
 
 ## Continuous integration
 
