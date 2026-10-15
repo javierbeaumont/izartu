@@ -32,8 +32,10 @@ class Bookmark extends Crud
     /** Owner's display name, read via JOIN; never written back. */
     public string $username = '';
     public Visibility $visibility = Visibility::Private;
-    public ?string $add = null;
-    public ?string $mod = null;
+    /** Creation time, as epoch seconds. */
+    public ?int $add = null;
+    /** Last-modification time, as epoch seconds. */
+    public ?int $mod = null;
 
     /**
      * Find a bookmark by id.
@@ -401,21 +403,23 @@ class Bookmark extends Crud
      * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
      *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
      * @return list<array{id: int, title: string, hlink: string,
-     *   text: string, user: int, visibility: string, add: string,
-     *   mod: string, username: string|null}> One raw row per bookmark.
+     *   text: string, user: int, visibility: string, add: int,
+     *   mod: int, username: string|null}> One raw row per bookmark.
      */
     private function select(string|false $cond, array|false $param): array
     {
         /**
          * @var list<array{id: int, title: string, hlink: string,
          *   text: string, user: int, visibility: string,
-         *   add: string, mod: string, username: string|null}> $rows
+         *   add: int, mod: int, username: string|null}> $rows
          */
         $rows = $this->read(
             <<<SQL
             SELECT
                 `bookmark`.`id`, `bookmark`.`title`, `bookmark`.`hlink`, `bookmark`.`text`,
-                `bookmark`.`user`, `bookmark`.`visibility`, `bookmark`.`add`, `bookmark`.`mod`,
+                `bookmark`.`user`, `bookmark`.`visibility`,
+                UNIX_TIMESTAMP(`bookmark`.`add`) AS `add`,
+                UNIX_TIMESTAMP(`bookmark`.`mod`) AS `mod`,
                 `user`.`username`
             FROM `bookmark`
             LEFT JOIN
@@ -432,8 +436,8 @@ class Bookmark extends Crud
      * Build a Bookmark from a database row.
      *
      * @param array{id: int, title: string, hlink: string,
-     *   text: string, user: int, visibility: string, add: string,
-     *   mod: string, username: string|null} $row A bookmark row (see `select`).
+     *   text: string, user: int, visibility: string, add: int,
+     *   mod: int, username: string|null} $row A bookmark row (see `select`).
      * @return self The hydrated bookmark.
      */
     private static function hydrate(array $row): self

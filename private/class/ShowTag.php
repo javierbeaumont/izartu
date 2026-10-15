@@ -20,34 +20,34 @@
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Render the tag cloud.
+ * Supply the tag cloud and the tag index to the view, as data for the template to render.
  */
 final class ShowTag extends Crud
 {
     use Tag;
 
     /**
-     * Build the tag-cloud text for the current list: its most-used tags with
-     * their counts, alphabetically. With `$tags` (the list's active filter),
-     * each link adds its tag to that filter, drilling further down.
+     * The tag cloud for the current list: its most-used tags with their counts,
+     * alphabetically. With `$tags` (the list's active filter), each URL adds its tag to
+     * that filter.
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
      *   anonymous.
      * @param list<string> $tags The tag names the list is filtered by; empty for none.
      * @param string|null $username The username the list is filtered by, or null.
-     * @return string|false Comma-separated `name (count)` pairs, or false if there
-     *   are no tags.
+     * @return list<array{name: string, count: int, url: string}> One entry per
+     *   tag.
      */
-    final public function tagCloud(?int $viewer = null, array $tags = [], ?string $username = null): string|false
+    final public function tagCloud(?int $viewer = null, array $tags = [], ?string $username = null): array
     {
-        return $this->links($this->getCloud($viewer, $tags, $username), $tags);
+        return $this->rows($this->getCloud($viewer, $tags, $username), $tags);
     }
 
     /**
      * Build one page of the tag index or search results: the matching tags
      * with their visible-bookmark count, alphabetically. An empty term
      * matches every tag. With `$tags`/`$username` the search is scoped to
-     * that list (like the cloud) and result links drill down into it.
+     * that list, and each URL adds its tag to the filter.
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for
      *   anonymous.
@@ -55,8 +55,8 @@ final class ShowTag extends Crud
      * @param int $page 1-based page number.
      * @param list<string> $tags The tag names the list is filtered by; empty for none.
      * @param string|null $username The username the list is filtered by, or null.
-     * @return array{tags: string|false, pages: int} The rendered links (false
-     *   if nothing matches) and the total number of pages (at least 1).
+     * @return array{tags: list<array{name: string, count: int, url: string}>, pages: int}
+     *   The matching tags and the number of pages (at least 1).
      */
     final public function tagSearch(
         ?int $viewer,
@@ -66,29 +66,34 @@ final class ShowTag extends Crud
         ?string $username = null,
     ): array {
         return [
-            'tags' => $this->links($this->searchTags($viewer, $term, $page, $tags, $username), $tags),
+            'tags' => $this->rows($this->searchTags($viewer, $term, $page, $tags, $username), $tags),
             'pages' => max(1, (int) ceil($this->countTags($viewer, $term, $tags, $username) / TAGS_PAGE_SIZE)),
         ];
     }
 
     /**
-     * Render tag rows as linked `name (count)` pairs.
+     * Tag rows as name, count and URL.
      *
-     * @param list<array{id: int, name: string, value: int}> $table
-     *   Tag rows.
-     * @param list<string> $base Tag names each link keeps (the active filter).
-     * @return string|false The links, or false if there are no rows.
+     * The names in a URL are sorted, so one combination of tags has one address.
+     *
+     * @param list<array{id: int, name: string, value: int}> $table Tag rows.
+     * @param list<string> $base Tag names each URL keeps (the active filter).
+     * @return list<array{name: string, count: int, url: string}> One entry per row.
      */
-    private function links(array $table, array $base = []): string|false
+    private function rows(array $table, array $base = []): array
     {
-        $tag = false;
+        $tags = [];
         foreach ($table as $value) {
             $names = array_merge($base, [$value['name']]);
             sort($names);
-            $tag .= '<a href="tag/' . implode(',', array_map('rawurlencode', $names)) . '">'
-                . htmlspecialchars($value['name']) . '</a> (' . $value['value'] . '), ';
+            $tags[] = [
+                'name' => $value['name'],
+                'count' => (int) $value['value'],
+                'url' => 'tag/' . implode(',', array_map('rawurlencode', $names)),
+            ];
         }
-        return $tag;
+
+        return $tags;
     }
 
 }

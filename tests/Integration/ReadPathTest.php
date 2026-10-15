@@ -243,10 +243,10 @@ final class ReadPathTest extends TestCase
     {
         $this->seedMultiTag();
 
-        $links = (new ShowTag())->tagCloud(null, ['php']);
+        $urls = array_column((new ShowTag())->tagCloud(null, ['php']), 'url');
 
-        $this->assertStringContainsString('href="tag/docs,php"', $links);
-        $this->assertStringContainsString('href="tag/php,testing"', $links);
+        $this->assertContains('tag/docs,php', $urls);
+        $this->assertContains('tag/php,testing', $urls);
     }
 
     public function testTheCloudFollowsTheUserFilter(): void

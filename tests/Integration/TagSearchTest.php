@@ -158,7 +158,7 @@ final class TagSearchTest extends TestCase
         $this->assertSame(['a%b'], $names);
     }
 
-    public function testTheRenderedSearchDrillsDownAndReportsItsPageCount(): void
+    public function testTheSearchDrillsDownAndReportsItsPageCount(): void
     {
         $this->tag('php', [1, 3]);
         $this->tag('phpunit', [1]);
@@ -166,14 +166,17 @@ final class TagSearchTest extends TestCase
 
         $found = (new ShowTag())->tagSearch(null, 'php', 1, ['sql']);
 
-        $this->assertStringContainsString('href="tag/php,sql"', $found['tags']);
-        $this->assertStringContainsString('href="tag/phpunit,sql"', $found['tags']);
-        $this->assertStringContainsString('(1)', $found['tags'], 'counted inside the sql list, not overall');
+        $this->assertSame(['tag/php,sql', 'tag/phpunit,sql'], array_column($found['tags'], 'url'));
+        $this->assertSame(
+            [1, 1],
+            array_column($found['tags'], 'count'),
+            'counted inside the sql list, not overall',
+        );
         $this->assertSame(1, $found['pages']);
 
         $none = (new ShowTag())->tagSearch(null, 'nothing');
 
-        $this->assertFalse($none['tags']);
+        $this->assertSame([], $none['tags']);
         $this->assertSame(1, $none['pages'], 'an empty result is still one page');
     }
 

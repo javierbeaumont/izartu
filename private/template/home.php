@@ -21,32 +21,36 @@
 $show = new ShowTag();
 $tag = $show->tagCloud(Auth::id(), $tagNames, $userName);
 
-include_once PRIVATE_DIR . 'template/option.php';
-?>
-      <div class="body">
-<?php if ($mine): ?>
-        <p class="filter">Your bookmarks
-          (<a href=".">all bookmarks</a>)</p>
-<?php elseif ($tagNames): ?>
-        <p class="filter">Bookmarks tagged
-<?php foreach ($tagNames as $i => $name): ?>
-<?php $rest = array_values(array_diff($tagNames, [$name])); ?>
-          <?php echo $i ? '+ ' : ''; ?><strong><?php echo htmlspecialchars($name); ?></strong><a class="remove"
-            href="<?php echo $rest ? 'tag/' . implode(',', array_map('rawurlencode', $rest)) : '.'; ?>"
-            title="Remove this tag">&times;</a>
-<?php endforeach; ?>
-          (<a href=".">all bookmarks</a>)</p>
-<?php elseif ($userName !== null): ?>
-        <p class="filter">Bookmarks added by <strong><?php echo htmlspecialchars($userName); ?></strong>
-          (<a href=".">all bookmarks</a>)</p>
-<?php endif; ?>
-<?php
 $model = new Bookmark();
 ['bookmarks' => $bookmarks, 'pages' => $pages] = $model->orderByDate(Auth::id(), $page, $tagNames, $userName);
 $tagsByBookmark = $model->tagsFor(array_column($bookmarks, 'id'));
 ?>
-<?php if ($adding || $bookmarks): ?>
-        <div id="list">
+      <div class="feed-layout">
+        <section class="feed">
+<?php if ($mine): ?>
+          <div class="filter-head">
+            <span class="section-title">Your bookmarks</span>
+            <a class="all" href=".">all bookmarks</a>
+          </div>
+<?php elseif ($tagNames): ?>
+          <div class="filter-head">
+            <span class="section-title">Tagged</span>
+<?php foreach ($tagNames as $name): ?>
+<?php $rest = array_values(array_diff($tagNames, [$name])); ?>
+            <span class="chip filter-chip"><?php echo htmlspecialchars($name); ?><a class="x"
+              href="<?php echo $rest ? 'tag/' . implode(',', array_map('rawurlencode', $rest)) : '.'; ?>"
+              title="Remove this tag" aria-label="Remove this tag">&times;</a></span>
+<?php endforeach; ?>
+            <a class="all" href=".">all bookmarks</a>
+          </div>
+<?php elseif ($userName !== null): ?>
+          <div class="filter-head">
+            <span class="section-title">Added by <?php echo htmlspecialchars($userName); ?></span>
+            <a class="all" href=".">all bookmarks</a>
+          </div>
+<?php else: ?>
+          <h2 class="section-title">Latest bookmarks</h2>
+<?php endif; ?>
 <?php if ($adding): ?>
 <?php
     $formAction = 'add';
@@ -61,7 +65,12 @@ $tagsByBookmark = $model->tagsFor(array_column($bookmarks, 'id'));
 <?php foreach ($bookmarks as $bookmark): ?>
 <?php include PRIVATE_DIR . 'template/contentlist.php'; ?>
 <?php endforeach; ?>
-        </div>
+<?php if (!$adding && !$bookmarks): ?>
+          <p class="empty">No bookmarks here yet.<?php if (Auth::check()): ?>
+            <a href="<?php echo 'user/' . rawurlencode(Auth::user()['username']); ?>?add">Add the first one</a>.<?php
+          endif; ?></p>
 <?php endif; ?>
 <?php include PRIVATE_DIR . 'template/pagination.php'; ?>
+        </section>
+<?php include_once PRIVATE_DIR . 'template/option.php'; ?>
       </div>

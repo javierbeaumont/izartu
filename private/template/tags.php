@@ -18,19 +18,21 @@
 //  You should have received a copy of the GNU Affero General Public License
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
-      <div class="body tags">
+      <div class="tag-index-page">
+        <div class="filter-head">
 <?php if ($tagNames): ?>
-        <p class="filter">Tags of bookmarks tagged
-          <strong><?php echo htmlspecialchars(implode(' + ', $tagNames)); ?></strong>
-          (<a href="tags">all tags</a>)</p>
+          <span class="section-title">Tags of bookmarks tagged
+            <?php echo htmlspecialchars(implode(' + ', $tagNames)); ?></span>
+          <a class="all" href="tags">all tags</a>
 <?php elseif ($userName !== null): ?>
-        <p class="filter">Tags of <strong><?php echo htmlspecialchars($userName); ?></strong>'s bookmarks
-          (<a href="tags">all tags</a>)</p>
+          <span class="section-title">Tags of <?php echo htmlspecialchars($userName); ?>'s bookmarks</span>
+          <a class="all" href="tags">all tags</a>
 <?php else: ?>
-        <p class="filter">Tags
-          (<a href=".">all bookmarks</a>)</p>
+          <span class="section-title">Tags</span>
+          <a class="all" href=".">all bookmarks</a>
 <?php endif; ?>
-        <form method="get" action="tags" class="tagsearch">
+        </div>
+        <form method="get" action="tags" class="tag-search-page">
 <?php if ($tagNames): ?>
           <input type="hidden" name="tag" value="<?php echo htmlspecialchars(implode(',', $tagNames)); ?>">
 <?php endif; ?>
@@ -38,17 +40,24 @@
           <input type="hidden" name="user" value="<?php echo htmlspecialchars($userName); ?>">
 <?php endif; ?>
           <input type="search" name="q" value="<?php echo htmlspecialchars($q); ?>"
-            placeholder="Find a tag" maxlength="255">
-          <input type="submit" value="Search">
+            placeholder="Find a tag" maxlength="255" aria-label="Find a tag">
+          <button class="button" type="submit">Search</button>
         </form>
 <?php
 ['tags' => $results, 'pages' => $pages] = (new ShowTag())
     ->tagSearch(Auth::id(), $q, $page, $tagNames, $userName);
 ?>
 <?php if ($results): ?>
-        <p class="tag"><?php echo $results; ?></p>
+        <div class="tag-index">
+<?php foreach ($results as $item): ?>
+          <a class="chip" href="<?php echo htmlspecialchars($item['url']); ?>"><?php
+            echo htmlspecialchars($item['name']); ?> <span class="count"><?php echo $item['count']; ?></span></a>
+<?php endforeach; ?>
+        </div>
 <?php elseif ($q !== ''): ?>
-        <p class="notag">No tags match <strong><?php echo htmlspecialchars($q); ?></strong>.</p>
+        <p class="empty">No tags match <strong><?php echo htmlspecialchars($q); ?></strong>.</p>
+<?php else: ?>
+        <p class="empty">No tags yet.</p>
 <?php endif; ?>
 <?php include PRIVATE_DIR . 'template/pagination.php'; ?>
       </div>

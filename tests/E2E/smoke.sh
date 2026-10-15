@@ -84,6 +84,7 @@ curl -sf "$BASE_URL/tag/smoke" | grep -q 'Smoke test' || fail "bookmark missing 
 
 echo "6/6 the tag search finds the tag"
 
-curl -sf "$BASE_URL/tags?q=smo" | grep -q '>smoke</a>' || fail "tag missing from /tags search"
+# The anchor's text also holds the count, so match its href.
+curl -sf "$BASE_URL/tags?q=smo" | grep -q 'href="tag/smoke"' || fail "tag missing from /tags search"
 
 echo "SMOKE OK"

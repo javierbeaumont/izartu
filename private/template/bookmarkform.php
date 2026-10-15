@@ -23,35 +23,33 @@
 // plus the list context ($route, $page) for the return field and Cancel link.
 $listUrl = $route . ($page > 1 ? '?page=' . $page : '');
 ?>
-        <form method="post" action="<?php echo htmlspecialchars($formAction); ?>" class="bookmark bookmarkform">
-          <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(Auth::csrfToken()); ?>">
-          <input type="hidden" name="return" value="<?php echo htmlspecialchars($listUrl); ?>">
+          <form method="post" action="<?php echo htmlspecialchars($formAction); ?>" class="bookmark bookmarkform">
+            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(Auth::csrfToken()); ?>">
+            <input type="hidden" name="return" value="<?php echo htmlspecialchars($listUrl); ?>">
 <?php foreach ($formErrors as $error): ?>
-          <p class="error"><?php echo htmlspecialchars($error); ?></p>
+            <p class="error"><?php echo htmlspecialchars($error); ?></p>
 <?php endforeach; ?>
-          <div class="head">
-            <input class="title" type="text" name="title" placeholder="Title" maxlength="255"
-              value="<?php echo htmlspecialchars($formBookmark->title); ?>" required>
-            <input class="link" type="url" name="link" placeholder="https://" maxlength="2048"
-              value="<?php echo htmlspecialchars($formBookmark->hlink); ?>" required>
-          </div>
-          <div class="info">
-            <textarea name="description" rows="3" maxlength="1024"
-              placeholder="Description"><?php echo htmlspecialchars($formBookmark->text); ?></textarea>
-            <input class="tags" type="text" name="tags" placeholder="Tags (comma-separated)" maxlength="255"
-              value="<?php echo htmlspecialchars($formTags); ?>">
-            <p class="check">
-              <input type="checkbox" id="visibility" name="visibility" value="public"
-                <?php echo $formBookmark->visibility === Visibility::Public ? 'checked' : ''; ?>>
-              <label for="visibility">Public (visible to anyone on this instance)</label>
-            </p>
-            <div class="manage">
-              <input type="submit" name="save" value="Save">
-              <input type="reset" value="Reset">
-<?php if ($formBookmark->id): ?>
-              <button type="submit" formaction="delete/<?php echo $formBookmark->id; ?>">Delete</button>
-<?php endif; ?>
-              <a href="<?php echo $listUrl === '' ? '.' : htmlspecialchars($listUrl); ?>">Cancel</a>
+            <div class="bm-head">
+              <input class="f-title" type="text" name="title" placeholder="Title" maxlength="255"
+                aria-label="Title" value="<?php echo htmlspecialchars($formBookmark->title); ?>" required>
             </div>
-          </div>
-        </form>
+            <input class="f-url" type="url" name="link" placeholder="https://" maxlength="2048"
+              aria-label="URL" value="<?php echo htmlspecialchars($formBookmark->hlink); ?>" required>
+            <textarea class="f-desc" name="description" rows="2" maxlength="1024" aria-label="Description"
+              placeholder="Description (optional)"><?php echo htmlspecialchars($formBookmark->text); ?></textarea>
+            <div class="form-foot">
+              <input class="f-tags" type="text" name="tags" placeholder="tags, comma, separated" maxlength="255"
+                aria-label="Tags" value="<?php echo htmlspecialchars($formTags); ?>">
+              <span class="form-actions">
+                <label class="form-visibility" title="Visible to anyone on this instance">
+                  <input type="checkbox" name="visibility" value="public"
+                    <?php echo $formBookmark->visibility === Visibility::Public ? 'checked' : ''; ?>> Public</label>
+                <button class="btn-save" type="submit" name="save">Save</button>
+                <a class="btn-link" href="<?php echo $listUrl === '' ? '.' : htmlspecialchars($listUrl); ?>">Cancel</a>
+<?php if ($formBookmark->id): ?>
+                <button class="btn-link btn-danger" type="submit"
+                  formaction="delete/<?php echo $formBookmark->id; ?>">Delete</button>
+<?php endif; ?>
+              </span>
+            </div>
+          </form>

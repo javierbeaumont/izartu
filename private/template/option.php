@@ -19,19 +19,25 @@
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 ?>
 <?php if ($tag): ?>
-        <div class="option">
-          <div class="tag">
-            <div class="title"><a href="tags">Tags</a></div>
-            <p class="tag"><?php echo $tag; ?></p>
-            <form method="get" action="tags" class="tagsearch">
+        <aside class="sidebar">
+          <h2 class="section-title"><a href="tags">Tags</a></h2>
 <?php if ($tagNames): ?>
-              <input type="hidden" name="tag" value="<?php echo htmlspecialchars(implode(',', $tagNames)); ?>">
+          <p class="hint">Add another tag to narrow down</p>
 <?php endif; ?>
-<?php if ($userName !== null): ?>
-              <input type="hidden" name="user" value="<?php echo htmlspecialchars($userName); ?>">
-<?php endif; ?>
-              <input type="search" name="q" placeholder="Find a tag" maxlength="255">
-            </form>
+          <form class="tag-search" method="get" action="tags">
+            <input type="search" name="q" placeholder="Find a tag" maxlength="255" aria-label="Find a tag">
+          </form>
+<?php
+// Log scale, so one very popular tag does not flatten every other to the smallest step.
+$max = max(array_column($tag, 'count'));
+    ?>
+          <div class="cloud">
+<?php foreach ($tag as $item): ?>
+<?php $step = $max > 1 ? 1 + (int) round(4 * log($item['count']) / log($max)) : 1; ?>
+            <a class="s<?php echo $step; ?>" href="<?php echo htmlspecialchars($item['url']); ?>"
+              title="<?php echo $item['count']; ?> bookmark<?php echo $item['count'] === 1 ? '' : 's'; ?>"><?php
+                  echo htmlspecialchars($item['name']); ?></a>
+<?php endforeach; ?>
           </div>
-        </div>
+        </aside>
 <?php endif; ?>
