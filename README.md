@@ -283,3 +283,6 @@ vendor/bin/php-cs-fixer fix --dry-run # check only
 *izartu* uses the GNU AGPLv3 license.
 
 Please read the [LICENSE](LICENSE) file for more information.
+
+The wordmark is set in [Inter](https://rsms.me/inter/), by The Inter Project Authors, under the SIL Open Font License
+1.1: see [public/font/OFL.txt](public/font/OFL.txt).

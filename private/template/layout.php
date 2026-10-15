@@ -24,35 +24,44 @@
     <meta charset="utf-8">
     <base href="<?php echo htmlspecialchars(BASE); ?>/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
     <title>izartu</title>
     <link rel="apple-touch-icon" href="image/apple-touch-icon.png">
     <link rel="icon" href="image/favicon.png" type="image/png" sizes="48x48">
     <link rel="icon" href="image/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style/main.css">
+    <link rel="preload" href="font/inter.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?php echo asset('style/main.css'); ?>">
   </head>
   <body>
-    <div id="header">
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href=".">izartu</a>
+        <nav>
 <?php if (Auth::check()): ?>
 <?php $own = 'user/' . rawurlencode(Auth::user()['username']); ?>
-      <p><a href="<?php echo $own; ?>">My bookmarks</a>
-        <a href="<?php echo $own; ?>?add">Add bookmark</a>
-        <a href="logout">Logout</a></p>
+          <a href="<?php echo $own; ?>">My bookmarks</a>
+          <a href="logout">Logout</a>
+          <a class="button" href="<?php echo $own; ?>?add">Add bookmark</a>
 <?php else: ?>
-      <p><a href="login">Login</a></p>
+          <a href="login">Login</a>
 <?php endif; ?>
-      <h1><a href=".">izartu</a></h1>
-    </div>
-    <div id="content">
+        </nav>
+      </div>
+    </header>
+    <main class="wrap">
 <?php $flash = Flash::pull(); ?>
 <?php if ($flash !== null): ?>
       <p class="flash"><?php echo htmlspecialchars($flash); ?></p>
 <?php endif; ?>
 <?php include $view; ?>
-    </div>
-    <div id="footer">
-      <p class="power">Powered by <a href="https://izartu.org">izartu</a></p>
-      <p class="source">Get the source code <a href="https://github.com/javierbeaumont/izartu">on GitHub</a></p>
-    </div>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>Tagged with <a href="https://izartu.org">izartu</a>
+          <a href="https://github.com/javierbeaumont/izartu/<?php
+            echo Version::sourcePath(VERSION); ?>"><?php echo htmlspecialchars(VERSION); ?></a></p>
+      </div>
+    </footer>
 <?php if (DEBUG) {
     include PRIVATE_DIR . 'template/debug.php';
 } ?>
