@@ -374,6 +374,57 @@ textarea:focus-visible {
   color: var(--accent-text);
 }
 
+.login-page {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-5) 0 var(--space-7);
+}
+
+.login {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.login .section-title {
+  text-align: center;
+}
+
+.login-error {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.field-group {
+  margin-bottom: var(--space-4);
+}
+
+.field-group label {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.field-group input {
+  width: 100%;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  text-align: center;
+  cursor: pointer;
+}
+
 /* The narrowest width two columns fit in: the measure + the sidebar's minimum + the gap + the gutters */
 @media (max-width: 62rem) {
   /* Narrowing .wrap keeps the single column centred */
