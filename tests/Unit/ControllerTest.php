@@ -185,17 +185,71 @@ final class ControllerTest extends TestCase
         $this->assertArrayHasKey('link', $vars['formErrors']);
     }
 
-    public function testAValidReturnRebuildsTheOriginList(): void
+    /**
+     * @return list<array{string, string, list<string>, int}> A return value, and the route, tags and page it rebuilds.
+     */
+    public static function returnsInsideTheApp(): array
+    {
+        return [
+            ['', '', [], 1],
+            ['?page=2', '', [], 2],
+            ['tag/php', 'tag/php', ['php'], 1],
+            ['tag/docs,php?page=2', 'tag/docs,php', ['docs', 'php'], 2],
+            ['user/javi', 'user/javi', [], 1],
+            ['user/javi?page=3', 'user/javi', [], 3],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('returnsInsideTheApp')]
+    public function testAReturnInsideTheAppRebuildsThatList(string $return, string $route, array $tags, int $page): void
+    {
+        [, $vars] = self::rerenderAdd($return);
+
+        $this->assertSame([$route, $tags, $page], [$vars['route'], $vars['tagNames'], $vars['page']]);
+    }
+
+    /**
+     * @return list<array{string}> Return values that must not be followed.
+     */
+    public static function returnsOutsideTheApp(): array
+    {
+        return [
+            ['https://evil.test/'],
+            ['//evil.test'],
+            ['\\\\evil.test'],
+            ['javascript:alert(1)'],
+            ['/tag/php'],
+            ['tag/php/extra'],
+            ['tag/'],
+            ['other/x'],
+            ['tag/a b'],
+            ["tag/php\n"],
+            ['tag/php#top'],
+            ['tag/php?x=1'],
+            ['tag/php?page=2&x=1'],
+            ['tag/php?page=0'],
+            ['tag/php?page=02'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('returnsOutsideTheApp')]
+    public function testAnyOtherReturnFallsBackToTheOwnPage(string $return): void
+    {
+        [, $vars] = self::rerenderAdd($return);
+
+        $this->assertSame(['user/goodname', 1], [$vars['route'], $vars['page']]);
+    }
+
+    /**
+     * Post an invalid bookmark, so `add()` re-renders the list its `return` names instead of redirecting.
+     */
+    private static function rerenderAdd(string $return): array
     {
         $_SESSION['user'] = ['id' => 1, 'username' => 'goodname', 'role' => 'user'];
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SESSION['csrf'] = 'token';
-        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'nope', 'return' => 'tag/php?page=2'];
+        $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'nope', 'return' => $return];
 
-        [, $vars] = Controller::add();
-
-        $this->assertSame('tag/php', $vars['route']);
-        $this->assertSame(['php'], $vars['tagNames']);
-        $this->assertSame(2, $vars['page']);
+        return Controller::add();
     }
 }

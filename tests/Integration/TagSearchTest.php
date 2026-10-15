@@ -151,11 +151,16 @@ final class TagSearchTest extends TestCase
     public function testSearchTreatsLikeWildcardsAsLiterals(): void
     {
         $this->tag('a%b', [1]);
+        $this->tag('a_b', [1]);
+        $this->tag('a\\b', [1]);
+        $this->tag('axb', [1]);
         $this->tag('plain', [1]);
 
-        $names = array_column($this->probe()->search(null, '%'), 'name');
+        $search = fn(string $term): array => array_column($this->probe()->search(null, $term), 'name');
 
-        $this->assertSame(['a%b'], $names);
+        $this->assertSame(['a%b'], $search('%'), 'not any run of characters');
+        $this->assertSame(['a_b'], $search('_'), 'not any single character');
+        $this->assertSame(['a\\b'], $search('\\'), 'not the escape character');
     }
 
     public function testTheSearchDrillsDownAndReportsItsPageCount(): void

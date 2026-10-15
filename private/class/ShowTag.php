@@ -40,7 +40,7 @@ final class ShowTag extends Crud
      */
     final public function tagCloud(?int $viewer = null, array $tags = [], ?string $username = null): array
     {
-        return $this->rows($this->getCloud($viewer, $tags, $username), $tags);
+        return self::rows($this->getCloud($viewer, $tags, $username), $tags);
     }
 
     /**
@@ -66,7 +66,7 @@ final class ShowTag extends Crud
         ?string $username = null,
     ): array {
         return [
-            'tags' => $this->rows($this->searchTags($viewer, $term, $page, $tags, $username), $tags),
+            'tags' => self::rows($this->searchTags($viewer, $term, $page, $tags, $username), $tags),
             'pages' => max(1, (int) ceil($this->countTags($viewer, $term, $tags, $username) / TAGS_PAGE_SIZE)),
         ];
     }
@@ -80,7 +80,7 @@ final class ShowTag extends Crud
      * @param list<string> $base Tag names each URL keeps (the active filter).
      * @return list<array{name: string, count: int, url: string}> One entry per row.
      */
-    private function rows(array $table, array $base = []): array
+    public static function rows(array $table, array $base = []): array
     {
         $tags = [];
         foreach ($table as $value) {
