@@ -61,6 +61,20 @@ final class ControllerTest extends TestCase
         $this->assertSame('tags?q=ph&tag=docs%2Cphp&user=javi', $vars['route']);
     }
 
+    /**
+     * Regression: a tag list from the URL kept inner whitespace that saving a tag collapses, so `web  dev` named no tag
+     * and `/tag/web%20%20dev` showed an empty list instead of redirecting to `/tag/web%20dev`.
+     */
+    public function testATagListCollapsesInnerWhitespaceAsSavingATagDoes(): void
+    {
+        $_GET = ['tag' => "web  dev, Web\tDev"];
+
+        [, $vars] = Controller::tags();
+
+        $this->assertSame(['web dev'], $vars['tagNames']);
+        $this->assertSame('tags?tag=web+dev', $vars['route']);
+    }
+
     public function testTheTagIndexWithoutScopeHasABareRoute(): void
     {
         [, $vars] = Controller::tags();

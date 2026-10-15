@@ -65,9 +65,7 @@ class Controller
     }
 
     /**
-     * Parse a comma-separated tag list into the canonical tag-name set: a
-     * comma can never be part of a tag (it is the input separator), so the
-     * names are split on it, then trimmed, lower-cased, deduplicated and
+     * Parse a comma-separated tag list into the canonical tag-name set: the names as Bookmark::parseTags() saves them,
      * sorted.
      *
      * @param string $list The comma-separated tag names (already decoded).
@@ -75,8 +73,7 @@ class Controller
      */
     private static function tagNames(string $list): array
     {
-        $names = array_map(static fn(string $name): string => mb_strtolower(trim($name)), explode(',', $list));
-        $names = array_values(array_unique(array_filter($names, static fn(string $name): bool => $name !== '')));
+        $names = Bookmark::parseTags($list);
         sort($names);
 
         return $names;
