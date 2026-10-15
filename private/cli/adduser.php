@@ -59,7 +59,7 @@ if ($errors) {
 
 try {
     $pdo = new PDO(
-        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+        Database::dsn(DB_HOST, DB_PORT, DB_NAME),
         DB_USER,
         DB_PASS,
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],

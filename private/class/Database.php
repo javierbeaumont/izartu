@@ -43,7 +43,7 @@ class Database
     {
         if (self::$db === null) {
             try {
-                self::$db = new PDO(self::pdoMySQL(), DB_USER, DB_PASS, [
+                self::$db = new PDO(self::dsn(DB_HOST, DB_PORT, DB_NAME), DB_USER, DB_PASS, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]);
@@ -60,23 +60,26 @@ class Database
     }
 
     /**
-     * Build the MySQL DSN string from the configured `DB_*` constants.
+     * Build a MySQL DSN, for the app's connection and for the CLI scripts that open their own.
      *
-     * @return string PDO DSN (TCP host/port or Unix socket, plus database name).
+     * @param string $host Host name or IP address, or the path of a Unix socket (it starts with `/`).
+     * @param int $port TCP port, left out of the DSN when it is MySQL's default (3306) and ignored for a socket.
+     * @param string $name Database name.
+     * @return string The PDO DSN, with the utf8mb4 charset.
      */
-    private static function pdoMySQL(): string
+    public static function dsn(string $host, int $port, string $name): string
     {
         $dsn = 'mysql:';
 
-        if (strncmp(DB_HOST, '/', 1)) {
-            $dsn .= 'host=' . DB_HOST;
-            if (DB_PORT !== 3306) {
-                $dsn .= ';port=' . DB_PORT;
+        if (strncmp($host, '/', 1)) {
+            $dsn .= 'host=' . $host;
+            if ($port !== 3306) {
+                $dsn .= ';port=' . $port;
             }
         } else {
-            $dsn .= 'unix_socket=' . DB_HOST;
+            $dsn .= 'unix_socket=' . $host;
         }
 
-        return $dsn . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+        return $dsn . ';dbname=' . $name . ';charset=utf8mb4';
     }
 }
