@@ -34,6 +34,9 @@ final class ControllerTest extends TestCase
         $_GET = [];
         $_SESSION = [];
         $_POST = [];
+        unset($_SERVER['QUERY_STRING']);
+        // Logging out destroys the session; the rest of the suite needs one open.
+        Auth::start();
     }
 
     public function testTheHomeFeedIsTheUnfilteredList(): void
@@ -94,6 +97,55 @@ final class ControllerTest extends TestCase
         [$template] = Controller::user('');
 
         $this->assertSame('notfound', $template);
+    }
+
+    public function testANonCanonicalTagListRedirectsToItsCanonicalUrl(): void
+    {
+        $this->assertSame('/tag/docs,php', self::redirectOf(fn() => Controller::tag('php,docs')), 'sorted');
+        $this->assertSame('/tag/php', self::redirectOf(fn() => Controller::tag('PHP')), 'lower-cased');
+        $this->assertSame('/tag/php', self::redirectOf(fn() => Controller::tag('php,%20php')), 'deduplicated');
+        $this->assertSame(
+            '/tag/web%20dev',
+            self::redirectOf(fn() => Controller::tag('web%20%20dev')),
+            'inner whitespace collapsed',
+        );
+    }
+
+    public function testTheCanonicalRedirectKeepsTheQueryString(): void
+    {
+        $_SERVER['QUERY_STRING'] = 'page=2';
+
+        $this->assertSame('/tag/docs,php?page=2', self::redirectOf(fn() => Controller::tag('php,docs')));
+    }
+
+    public function testMeRedirectsToTheOwnPage(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'username' => 'javi', 'role' => 'user'];
+
+        $this->assertSame('/user/javi', self::redirectOf(fn() => Controller::user('me')));
+    }
+
+    public function testMeAndTheActionsSendAnAnonymousVisitorToLogin(): void
+    {
+        $this->assertSame('/login', self::redirectOf(fn() => Controller::user('me')), 'me');
+        $this->assertSame('/login', self::redirectOf(fn() => Controller::add()), 'add');
+        $this->assertSame('/login', self::redirectOf(fn() => Controller::edit('1')), 'edit');
+        $this->assertSame('/login', self::redirectOf(fn() => Controller::delete('1')), 'delete');
+    }
+
+    public function testLogoutEndsTheSessionAndGoesHome(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'username' => 'javi', 'role' => 'user'];
+
+        $this->assertSame('/', self::redirectOf(fn() => Controller::logout()));
+        $this->assertFalse(Auth::check());
+    }
+
+    public function testAGetOnAddOpensTheInlineFormOnTheOwnPage(): void
+    {
+        $_SESSION['user'] = ['id' => 7, 'username' => 'javi', 'role' => 'user'];
+
+        $this->assertSame('/user/javi?add', self::redirectOf(fn() => Controller::add()));
     }
 
     public function testTheLoginFormIsShownOnAGet(): void
@@ -265,5 +317,19 @@ final class ControllerTest extends TestCase
         $_POST = ['csrf' => 'token', 'title' => '', 'link' => 'nope', 'return' => $return];
 
         return Controller::add();
+    }
+
+    /**
+     * Where an action redirects to; the test fails if it does not redirect.
+     */
+    private static function redirectOf(callable $action): string
+    {
+        try {
+            $action();
+        } catch (Redirect $redirect) {
+            return $redirect->location;
+        }
+
+        self::fail('No redirect');
     }
 }

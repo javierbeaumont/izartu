@@ -483,15 +483,15 @@ class Controller
     }
 
     /**
-     * Send a redirect to the given path and stop the request.
+     * End the request with a redirect to the given path, which the front controller sends as a `Location` header.
      *
      * @param string $path Absolute URL path to redirect to.
      * @return never
+     * @throws Redirect Always.
      */
     public static function redirect(string $path): never
     {
-        header('Location: ' . $path);
-        exit;
+        throw new Redirect($path);
     }
 
 }

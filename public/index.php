@@ -70,18 +70,23 @@ if (BASE !== '' && str_starts_with($path, BASE)) {
 $path = trim($path, '/');
 $segments = $path === '' ? [] : explode('/', $path);
 
-[$tpl, $vars] = match ($segments[0] ?? '') {
-    ''       => Controller::home(),
-    'tag'    => Controller::tag($segments[1] ?? ''),
-    'tags'   => Controller::tags(),
-    'user'   => Controller::user($segments[1] ?? ''),
-    'login'  => Controller::login(),
-    'logout' => Controller::logout(),
-    'add'    => Controller::add(),
-    'edit'   => Controller::edit($segments[1] ?? ''),
-    'delete' => Controller::delete($segments[1] ?? ''),
-    default  => Controller::notFound(),
-};
+try {
+    [$tpl, $vars] = match ($segments[0] ?? '') {
+        ''       => Controller::home(),
+        'tag'    => Controller::tag($segments[1] ?? ''),
+        'tags'   => Controller::tags(),
+        'user'   => Controller::user($segments[1] ?? ''),
+        'login'  => Controller::login(),
+        'logout' => Controller::logout(),
+        'add'    => Controller::add(),
+        'edit'   => Controller::edit($segments[1] ?? ''),
+        'delete' => Controller::delete($segments[1] ?? ''),
+        default  => Controller::notFound(),
+    };
+} catch (Redirect $redirect) {
+    header('Location: ' . $redirect->location);
+    exit;
+}
 
 extract($vars, EXTR_SKIP);
 $view = PRIVATE_DIR . 'template/' . $tpl . '.php';

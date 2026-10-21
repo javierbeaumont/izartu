@@ -168,13 +168,12 @@ class Auth
      * Require an authenticated user; redirect anonymous requests to `/login`.
      *
      * @return void
+     * @throws Redirect For an anonymous request.
      */
     public static function guard(): void
     {
         if (!self::check()) {
-            header('Location: ' . BASE . '/login');
-
-            exit;
+            throw new Redirect(BASE . '/login');
         }
     }
 
