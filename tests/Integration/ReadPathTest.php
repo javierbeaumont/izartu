@@ -61,16 +61,6 @@ final class ReadPathTest extends TestCase
         $this->assertSame(1, $page['pages']);
     }
 
-    public function testGetTagsReturnsTheTagsOfABookmark(): void
-    {
-        $this->seedBookmarkWithTags();
-
-        $names = array_column($this->probe()->tagsOf(1), 'name');
-        sort($names);
-
-        $this->assertSame(['php', 'sql'], $names);
-    }
-
     public function testTagCloudCountsBookmarksPerTag(): void
     {
         $this->seedBookmarkWithTags();
@@ -360,11 +350,6 @@ final class ReadPathTest extends TestCase
                 ?string $username = null,
             ): array {
                 return $this->orderByDate($viewer, $page, $tags, $username);
-            }
-
-            public function tagsOf(int $id): array
-            {
-                return $this->getTags($id);
             }
 
             public function cloud(?int $viewer = null, array $tags = [], ?string $username = null): array

@@ -191,41 +191,7 @@ class Bookmark extends Crud
     }
 
     /**
-     * The names of this bookmark's tags.
-     *
-     * For a listing, fetch every row's tags in one query with `tagsFor()`
-     * instead of calling this per bookmark.
-     *
-     * @return list<string> Tag names, alphabetical.
-     */
-    public function tags(): array
-    {
-        /** @var list<array{name: string}> $rows */
-        $rows = $this->read(
-            <<<'SQL'
-            SELECT
-                `name`
-            FROM `tag`
-            WHERE
-                `id` IN (
-                    SELECT
-                        `tag`
-                    FROM `bookmark_tag`
-                    WHERE
-                        `bookmark` = :id
-                )
-            ORDER BY
-                `name`
-            SQL,
-            [[':id', $this->id, PDO::PARAM_INT, 255]],
-        );
-
-        return array_column($rows, 'name');
-    }
-
-    /**
-     * The tag names of several bookmarks in a single query (one page's worth),
-     * the batch counterpart of `tags()`.
+     * The tag names of several bookmarks in a single query (one page's worth).
      *
      * @param list<int> $ids Bookmark ids.
      * @return array<int, list<string>> Tag names (alphabetical) per bookmark

@@ -25,37 +25,6 @@
 trait Tag
 {
     /**
-     * Return the tags attached to a single bookmark.
-     *
-     * @param int $id Bookmark id.
-     * @return list<array{id: int, name: string}> One row per tag.
-     */
-    private function getTags(int $id): array
-    {
-        $param[0] = [':bookmark', $id, PDO::PARAM_INT, 255];
-
-        /** @var list<array{id: int, name: string}> $rows */
-        $rows = $this->read(
-            <<<'SQL'
-            SELECT
-                `id`, `name`
-            FROM `tag`
-            WHERE
-                `id` IN (
-                    SELECT
-                        `tag`
-                    FROM `bookmark_tag`
-                    WHERE
-                        `bookmark` = :bookmark
-                )
-            SQL,
-            $param,
-        );
-
-        return $rows;
-    }
-
-    /**
      * Return the tag-cloud data for the current list: the `CLOUD_SIZE`
      * most-used tags among the bookmarks the list shows, with their counts,
      * ordered alphabetically.
