@@ -40,22 +40,39 @@ final class FormatTest extends TestCase
             [0, 'just now'],
             [59, 'just now'],
             [60, '1 minute ago'],
+            [119, '1 minute ago'],
             [120, '2 minutes ago'],
+            [3599, '59 minutes ago'],
             [3600, '1 hour ago'],
+            [5399, '1 hour ago'],
             [7200, '2 hours ago'],
+            [86399, '23 hours ago'],
             [86400, '1 day ago'],
             [172800, '2 days ago'],
+            [604799, '6 days ago'],
             [604800, '1 week ago'],
+            [2419200, '4 weeks ago'],
+            [2591999, '4 weeks ago'],
             [2592000, '1 month ago'],
+            [31103999, '11 months ago'],
             [31536000, '1 year ago'],
             [63072000, '2 years ago'],
         ];
     }
 
     #[DataProvider('ages')]
-    public function testAgoReadsAsTheLargestFittingUnit(int $secondsAgo, string $expected): void
+    public function testAgoReadsAsTheLargestFittingUnitTruncated(int $secondsAgo, string $expected): void
     {
         $this->assertSame($expected, Format::ago(self::NOW - $secondsAgo, self::NOW));
+    }
+
+    /**
+     * Regression: twelve 30-day months are 360 days, short of a 365-day year, so 360 to 364 days read "12 months ago".
+     */
+    public function testTwelveMonthsReadAsAYear(): void
+    {
+        $this->assertSame('1 year ago', Format::ago(self::NOW - 31104000, self::NOW));
+        $this->assertSame('1 year ago', Format::ago(self::NOW - 31535999, self::NOW));
     }
 
     public function testAFutureMomentDoesNotReadAsNegative(): void
@@ -67,9 +84,26 @@ final class FormatTest extends TestCase
         );
     }
 
-    public function testAbsoluteAndIsoDescribeTheSameMoment(): void
+    public function testWithoutAReferencePointItIsNow(): void
     {
-        $this->assertSame(date('j F Y \a\t H:i', self::NOW), Format::absolute(self::NOW));
-        $this->assertSame(date('c', self::NOW), Format::iso(self::NOW));
+        $this->assertSame('just now', Format::ago(time()));
+    }
+
+    public function testAbsoluteAndIsoFollowTheDefaultTimezone(): void
+    {
+        $zone = date_default_timezone_get();
+
+        try {
+            date_default_timezone_set('UTC');
+            $this->assertSame('25 July 2026 at 17:20', Format::absolute(self::NOW));
+            $this->assertSame('2026-07-25T17:20:00+00:00', Format::iso(self::NOW));
+            $this->assertSame('1 August 2026 at 09:05', Format::absolute(1785575100), 'no padded day, a padded hour');
+
+            date_default_timezone_set('Europe/Madrid');
+            $this->assertSame('25 July 2026 at 19:20', Format::absolute(self::NOW));
+            $this->assertSame('2026-07-25T19:20:00+02:00', Format::iso(self::NOW));
+        } finally {
+            date_default_timezone_set($zone);
+        }
     }
 }

@@ -61,6 +61,11 @@ final class Format
             if ($diff >= $unit['seconds']) {
                 $count = (int) ($diff / $unit['seconds']);
 
+                // Twelve 30-day months are 360 days, short of a 365-day year.
+                if ($unit['name'] === 'month' && $count >= 12) {
+                    return '1 year ago';
+                }
+
                 return $count . ' ' . $unit['name'] . ($count === 1 ? '' : 's') . ' ago';
             }
         }
