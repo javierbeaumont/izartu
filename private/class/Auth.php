@@ -81,9 +81,20 @@ class Auth
      */
     protected static function verify(?array $user, string $password): bool
     {
-        $hash = $user['hash'] ?? '$2y$12$' . str_repeat('.', 53);
+        $hash = $user['hash'] ?? self::dummyHash();
 
         return password_verify($password, $hash) && $user !== null;
+    }
+
+    /**
+     * A well-formed bcrypt hash for an unknown user, at the cost `password_hash()` uses on this PHP, so checking it
+     * takes as long as checking a real user's hash.
+     *
+     * @return string A bcrypt hash at `PASSWORD_BCRYPT_DEFAULT_COST`.
+     */
+    protected static function dummyHash(): string
+    {
+        return sprintf('$2y$%02d$', PASSWORD_BCRYPT_DEFAULT_COST) . str_repeat('.', 53);
     }
 
     /**

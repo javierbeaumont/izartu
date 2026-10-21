@@ -141,6 +141,23 @@ final class AuthTest extends TestCase
         $this->assertFalse(self::probe()::probeVerify(null, 'secret123'));
     }
 
+    public function testVerifyRejectsACorruptHash(): void
+    {
+        $this->assertFalse(self::probe()::probeVerify(['hash' => 'not a hash'] + self::user(), 'secret123'));
+    }
+
+    /**
+     * Regression: the dummy hash was fixed at bcrypt cost 12 while `password_hash()` uses 10 on PHP 8.2 and 8.3, so an
+     * unknown email took about four times as long as a real one, and the response time told which accounts exist.
+     */
+    public function testTheDummyHashCostsWhatARealHashDoes(): void
+    {
+        $real = password_get_info(password_hash('secret123', PASSWORD_DEFAULT));
+        $dummy = password_get_info(self::probe()::probeDummyHash());
+
+        $this->assertSame([$real['algo'], $real['options']], [$dummy['algo'], $dummy['options']]);
+    }
+
     public function testLoginRegeneratesTheSessionAndStoresTheUser(): void
     {
         $before = session_id();
@@ -182,6 +199,11 @@ final class AuthTest extends TestCase
             public static function probeLogin(array $user): void
             {
                 self::login($user);
+            }
+
+            public static function probeDummyHash(): string
+            {
+                return self::dummyHash();
             }
         };
     }
