@@ -18,8 +18,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# End-to-end smoke test against a running instance, with curl only: home,
-# login, inline add, feed, tag page and tag search. Needs an existing user.
+# End-to-end smoke test against a running instance, with curl only: what no in-process test can show. The home page is
+# up, a login carries its session cookie across requests, and an encoded slash in a tag URL reaches the app. Needs an
+# existing user; it changes nothing.
 #
 #     BASE_URL=http://localhost:8080 SMOKE_EMAIL=... SMOKE_PASSWORD=... SMOKE_USERNAME=... tests/E2E/smoke.sh
 
@@ -42,7 +43,7 @@ csrf() {
     curl -sf -b "$JAR" -c "$JAR" "$1" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -n1
 }
 
-echo "1/7 home is up"
+echo "1/4 home is up"
 
 for _ in $(seq 1 30); do
     code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/" || true)"
@@ -52,7 +53,7 @@ done
 
 [ "$code" = "200" ] || fail "home returned $code"
 
-echo "2/7 log in"
+echo "2/4 log in"
 
 TOKEN="$(csrf "$BASE_URL/login")"
 [ -n "$TOKEN" ] || fail "no CSRF token on /login"
@@ -64,33 +65,14 @@ case "$LOCATION" in
     *) fail "login did not land on /user/$SMOKE_USERNAME (got '$LOCATION')" ;;
 esac
 
-echo "3/7 add a bookmark inline"
+echo "3/4 the session stays logged in"
 
-TOKEN="$(csrf "$BASE_URL/user/$SMOKE_USERNAME?add")"
-[ -n "$TOKEN" ] || fail "no CSRF token on the inline add form"
+curl -sf -b "$JAR" -c "$JAR" "$BASE_URL/user/$SMOKE_USERNAME?add" | grep -q 'name="title"' \
+    || fail "no add form on /user/$SMOKE_USERNAME?add: the session did not survive the login"
 
-curl -sf -b "$JAR" -c "$JAR" -o /dev/null \
-    -d "csrf=$TOKEN&title=Smoke test&link=https://smoke.example&description=ok" \
-    -d "tags=smoke, ci/cd&visibility=public&return=user/$SMOKE_USERNAME" \
-    "$BASE_URL/add"
+echo "4/4 an encoded slash in a tag URL reaches the app"
 
-echo "4/7 the anonymous feed shows it"
-
-curl -sf "$BASE_URL/" | grep -q 'Smoke test' || fail "bookmark missing from the feed"
-
-echo "5/7 the tag page shows it"
-
-curl -sf "$BASE_URL/tag/smoke" | grep -q 'Smoke test' || fail "bookmark missing from /tag/smoke"
-
-echo "6/7 a tag with a slash links to its page"
-
-# Regression: Apache refuses %2F in a path unless AllowEncodedSlashes allows it, so such a tag linked to a 404.
-curl -sf "$BASE_URL/" | grep -q 'href="tag/ci%2Fcd"' || fail "no link to the ci/cd tag in the feed"
-curl -sf "$BASE_URL/tag/ci%2Fcd" | grep -q 'Smoke test' || fail "bookmark missing from /tag/ci%2Fcd"
-
-echo "7/7 the tag search finds the tag"
-
-# The anchor's text also holds the count, so match its href.
-curl -sf "$BASE_URL/tags?q=smo" | grep -q 'href="tag/smoke"' || fail "tag missing from /tags search"
+# Regression: Apache refuses %2F in a path unless AllowEncodedSlashes allows it, so a tag with a slash linked to a 404.
+curl -sf -o /dev/null "$BASE_URL/tag/ci%2Fcd" || fail "/tag/ci%2Fcd did not reach the app"
 
 echo "SMOKE OK"

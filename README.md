@@ -204,8 +204,8 @@ script with curl.
 * **Unit** (`tests/Unit/`): the code in isolation, with no database.
 * **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against a
   dedicated `izartu_test` database so they never touch real data.
-* **E2E** (`tests/E2E/`): `smoke.sh` drives the running app over HTTP (log in, add a bookmark, feed, tag page, tag
-  search).
+* **E2E** (`tests/E2E/`): `smoke.sh` drives the running app over HTTP for what only real HTTP can show: the home page
+  up, a login keeping its session across requests, and a tag URL with an encoded slash reaching the app.
 
 #### With Docker
 
