@@ -18,14 +18,17 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# A separate izartu_test database (same schema) so tests never touch dev data.
+# Test databases, so tests never touch dev data: izartu_test with the schema, an empty one for the migration tests.
 
 set -e
 
 mysql -uroot -p"$MYSQL_ROOT_PASSWORD" <<SQL
 CREATE DATABASE IF NOT EXISTS izartu_test
   CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE DATABASE IF NOT EXISTS izartu_migration_test
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 GRANT ALL PRIVILEGES ON izartu_test.* TO '$MYSQL_USER'@'%';
+GRANT ALL PRIVILEGES ON izartu_migration_test.* TO '$MYSQL_USER'@'%';
 FLUSH PRIVILEGES;
 SQL
 

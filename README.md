@@ -202,16 +202,16 @@ Tests come in three tiers. Unit and integration run with PHPUnit, a **dev-only**
 script with curl.
 
 * **Unit** (`tests/Unit/`): the code in isolation, with no database.
-* **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against a
-  dedicated `izartu_test` database so they never touch real data.
+* **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against dedicated
+  test databases so they never touch real data.
 * **E2E** (`tests/E2E/`): `smoke.sh` drives the running app over HTTP for what only real HTTP can show: the home page
   up, a login keeping its session across requests, and a tag URL with an encoded slash reaching the app.
 
 #### With Docker
 
-The `izartu_test` database is created automatically on the first `db` start
-(run `docker compose down -v` once if the volume predates it). Install the
-dev dependencies once (writes `vendor/`, gitignored):
+The test databases (`izartu_test`, and an empty `izartu_migration_test` for the migration tests) are created
+automatically on the first `db` start (run `docker compose down -v` once if the volume predates them). Install the dev
+dependencies once (writes `vendor/`, gitignored):
 
 ```sh
 make deps
@@ -232,8 +232,8 @@ creates a user, runs `smoke.sh` against it and removes it all, whatever the outc
 
 #### Without Docker
 
-Needs PHP + Composer on the host, MySQL reachable, and an `izartu_test`
-database loaded with the schema:
+Needs PHP + Composer on the host, MySQL reachable, an `izartu_test` database loaded with the schema and an empty
+`izartu_migration_test` one, both accessible to your MySQL user:
 
 ```sh
 composer install
