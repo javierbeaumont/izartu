@@ -59,6 +59,32 @@ final class AuthTest extends TestCase
         $this->assertSame(PHP_SESSION_NONE, session_status());
     }
 
+    public function testTheSessionCookieIsHardened(): void
+    {
+        Auth::logout();
+        Auth::start();
+
+        $cookie = session_get_cookie_params();
+
+        $this->assertSame([true, 'Lax', '/', false], [
+            $cookie['httponly'], $cookie['samesite'], $cookie['path'], $cookie['secure'],
+        ]);
+    }
+
+    public function testOverHttpsTheSessionCookieIsSecure(): void
+    {
+        Auth::logout();
+        $_SERVER['HTTPS'] = 'on';
+
+        try {
+            Auth::start();
+
+            $this->assertTrue(session_get_cookie_params()['secure']);
+        } finally {
+            unset($_SERVER['HTTPS']);
+        }
+    }
+
     public function testIdIsNullForAnonymousAndSetWhenLoggedIn(): void
     {
         $this->assertNull(Auth::id());

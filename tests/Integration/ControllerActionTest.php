@@ -81,6 +81,16 @@ final class ControllerActionTest extends TestCase
         $this->assertSame(['id' => 1, 'username' => 'owner', 'role' => 'user'], Auth::user());
     }
 
+    public function testALoginWithoutTheSessionTokenIsRefusedEvenWithTheRightPassword(): void
+    {
+        foreach (['a wrong token' => 'wrong', 'no token' => null] as $case => $token) {
+            $_POST = ['csrf' => $token, 'email' => 'owner@izartu.test', 'password' => 'secret123'];
+
+            $this->assertSame(['login', ['error' => true]], Controller::login(), $case);
+            $this->assertFalse(Auth::check(), $case);
+        }
+    }
+
     public function testAValidBookmarkIsSavedWithItsTagsAndTheListComesBack(): void
     {
         $this->logIn();
@@ -134,6 +144,18 @@ final class ControllerActionTest extends TestCase
         $this->assertSame(Visibility::Private, $saved->visibility, 'an unticked visibility box means private');
         $this->assertSame(['sql'], $this->tagsOf(1), 'the old tags are replaced');
         $this->assertSame('Bookmark saved.', Flash::pull());
+    }
+
+    public function testAnEditWithAStaleTokenSavesNothing(): void
+    {
+        $this->logIn();
+        $_POST = ['csrf' => 'stale', 'title' => 'Edited', 'link' => 'https://edited.test', 'tags' => 'sql'];
+
+        [, $vars] = Controller::edit('1');
+
+        $this->assertArrayHasKey('csrf', $vars['formErrors']);
+        $this->assertSame('Old', Bookmark::find(1)?->title);
+        $this->assertSame(['old'], $this->tagsOf(1));
     }
 
     public function testDeletingRemovesTheBookmarkAndItsTagLinks(): void
