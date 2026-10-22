@@ -99,6 +99,61 @@ final class ControllerTest extends TestCase
         $this->assertSame('notfound', $template);
     }
 
+    /**
+     * @return list<array{string, string}> A request URI and the template it renders.
+     */
+    public static function routes(): array
+    {
+        return [
+            ['/', 'home'],
+            ['/?page=2', 'home'],
+            ['/tags', 'tags'],
+            ['/tags?q=php', 'tags'],
+            ['/tag/php', 'home'],
+            ['/tag/php/', 'home'],
+            ['/user/javi', 'home'],
+            ['/login', 'login'],
+            ['/tag/', 'notfound'],
+            ['/user/', 'notfound'],
+            ['/nope', 'notfound'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('routes')]
+    public function testEachRouteGoesToItsTemplate(string $uri, string $template): void
+    {
+        $this->assertSame($template, Controller::dispatch($uri, '')[0]);
+    }
+
+    public function testThePathSegmentReachesTheController(): void
+    {
+        $this->assertSame(['docs', 'php'], Controller::dispatch('/tag/docs,php', '')[1]['tagNames']);
+        $this->assertSame(['ci/cd'], Controller::dispatch('/tag/ci%2Fcd', '')[1]['tagNames'], 'an encoded slash');
+        $this->assertSame('javi', Controller::dispatch('/user/javi', '')[1]['userName']);
+    }
+
+    public function testASubDirectoryInstallRoutesBelowItsBase(): void
+    {
+        $this->assertSame('tags', Controller::dispatch('/sub/tags', '/sub')[0]);
+        $this->assertSame('home', Controller::dispatch('/sub', '/sub')[0]);
+        $this->assertSame('home', Controller::dispatch('/sub/', '/sub')[0]);
+    }
+
+    /**
+     * Regression: the base was stripped as a bare prefix, so with the app in `/sub` a request for `/subtags` was served
+     * as `/tags`.
+     */
+    public function testThePathMustStartWithTheWholeBase(): void
+    {
+        $this->assertSame('notfound', Controller::dispatch('/subtags', '/sub')[0]);
+    }
+
+    public function testARouteThatRedirectsThrowsFromDispatch(): void
+    {
+        $this->assertSame('/login', self::redirectOf(fn() => Controller::dispatch('/edit/1', '')));
+        $this->assertSame('/', self::redirectOf(fn() => Controller::dispatch('/logout', '')));
+    }
+
     public function testANonCanonicalTagListRedirectsToItsCanonicalUrl(): void
     {
         $this->assertSame('/tag/docs,php', self::redirectOf(fn() => Controller::tag('php,docs')), 'sorted');

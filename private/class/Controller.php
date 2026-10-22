@@ -27,6 +27,61 @@
 class Controller
 {
     /**
+     * Route a request URI to its controller: the view template to render and its variables.
+     *
+     * The path is taken relative to the install's base path, so the app works at a domain root or in a sub-directory;
+     * the query string stays in `$_GET`.
+     *
+     * Routes:
+     * - `/`          Home: public bookmark feed + tag cloud.
+     * - `/tag/NAMES` The feed filtered by tags, comma-separated (`/tag/php,docs` lists bookmarks carrying both). The
+     *                sidebar cloud shows the tags of the listed bookmarks; its links add to the filter.
+     * - `/tags`      Tag index: every visible tag with its count, paginated; `?q=TERM` narrows it to the matching tags.
+     * - `/user/NAME` The feed filtered by one user (your own page shows your private bookmarks too when logged in).
+     *                `/user/me` is a reserved alias for the logged-in user's own page.
+     * - `/login`     Login form (GET) + handler (POST).
+     * - `/logout`    Destroy the session, redirect home.
+     * - `/add`       Create bookmark (POST action). Login required.
+     * - `/edit/ID`   Save bookmark (POST action). Owner/admin only.
+     * - `/delete/ID` Delete bookmark (POST action). Owner/admin only.
+     *
+     * Editing is inline: on any list, `?edit=ID` renders that row as an in-place form and `?add` renders an empty one
+     * on top (a GET to `/add` or `/edit/ID` redirects to the user's own page with that state). The forms POST to the
+     * action routes above and return to the list they were on.
+     *
+     * Any unmatched path renders the 404 view.
+     *
+     * @param string $uri The request URI, as `$_SERVER['REQUEST_URI']` holds it.
+     * @param string $base The install's base path: '' at a domain root, '/sub' in a sub-directory (`BASE`).
+     * @return array{0: string, 1: array<string, mixed>} Template name and its variables.
+     * @throws Redirect When the route redirects.
+     */
+    public static function dispatch(string $uri, string $base = BASE): array
+    {
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = is_string($path) ? $path : '/';
+        if ($base !== '' && ($path === $base || str_starts_with($path, $base . '/'))) {
+            $path = substr($path, strlen($base));
+        }
+
+        $path = trim($path, '/');
+        $segments = $path === '' ? [] : explode('/', $path);
+
+        return match ($segments[0] ?? '') {
+            ''       => self::home(),
+            'tag'    => self::tag($segments[1] ?? ''),
+            'tags'   => self::tags(),
+            'user'   => self::user($segments[1] ?? ''),
+            'login'  => self::login(),
+            'logout' => self::logout(),
+            'add'    => self::add(),
+            'edit'   => self::edit($segments[1] ?? ''),
+            'delete' => self::delete($segments[1] ?? ''),
+            default  => self::notFound(),
+        };
+    }
+
+    /**
      * Home page: one page of the bookmark feed (`?page=N`) and the tag cloud.
      *
      * @return array{0: string, 1: array<string, mixed>} Template name and its variables.

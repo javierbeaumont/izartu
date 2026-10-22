@@ -72,5 +72,5 @@ $tagsByBookmark = $model->tagsFor(array_column($bookmarks, 'id'));
 <?php endif; ?>
 <?php include PRIVATE_DIR . 'template/pagination.php'; ?>
         </section>
-<?php include_once PRIVATE_DIR . 'template/option.php'; ?>
+<?php include PRIVATE_DIR . 'template/option.php'; ?>
       </div>
