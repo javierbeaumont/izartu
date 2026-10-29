@@ -154,40 +154,68 @@ class Bookmark extends Crud
     /**
      * Replace this bookmark's tags with the ones in a comma-separated string.
      *
-     * Each name is upserted into `tag` (reusing the id when the name exists)
-     * and linked in `bookmark_tag`.
+     * The names missing from `tag` are created, and every name is linked in `bookmark_tag` by name, so a name that
+     * exists spends no id and two spellings of one tag (the `ai_ci` collation) make one link.
      *
      * @param string $tags Comma-separated tag names, as typed by the user.
      * @return void
+     * @throws PDOException When a new tag has no id left, or the database fails.
      */
     public function saveTags(string $tags): void
     {
         $this->deleteTags();
 
-        $tag = self::db()->prepare(
+        $names = self::parseTags($tags);
+        if (!$names) {
+            return;
+        }
+
+        $create = self::db()->prepare(
             <<<'SQL'
             INSERT INTO `tag`
                 (`name`)
-            VALUES
-                (:name)
-            ON DUPLICATE KEY UPDATE
-                `id` = LAST_INSERT_ID(`id`)
+            SELECT
+                `candidate`.`name`
+            FROM (SELECT :name AS `name`) AS `candidate`
+            WHERE
+                NOT EXISTS (SELECT 1 FROM `tag` WHERE `tag`.`name` = `candidate`.`name`)
             SQL,
         );
 
-        $link = self::db()->prepare(
-            <<<'SQL'
-            INSERT INTO `bookmark_tag`
-                (`bookmark`, `tag`)
-            VALUES
-                (:bookmark, :tag)
-            SQL,
-        );
+        foreach ($names as $name) {
+            try {
+                $create->execute([':name' => $name]);
+            } catch (PDOException $e) {
+                // Another save created the same tag at once (a deadlock, or the name taken): the second run finds it.
+                if (!in_array($e->errorInfo[1] ?? null, [1062, 1213], true)) {
+                    throw $e;
+                }
 
-        foreach (self::parseTags($tags) as $name) {
-            $tag->execute([':name' => $name]);
-            $link->execute([':bookmark' => $this->id, ':tag' => (int) self::db()->lastInsertId()]);
+                $create->execute([':name' => $name]);
+            }
         }
+
+        $in = [];
+        $param = [':bookmark' => $this->id];
+        foreach ($names as $i => $name) {
+            $in[] = ':name' . $i;
+            $param[':name' . $i] = $name;
+        }
+
+        self::db()->prepare(
+            sprintf(
+                <<<'SQL'
+                INSERT INTO `bookmark_tag`
+                    (`bookmark`, `tag`)
+                SELECT DISTINCT
+                    :bookmark, `id`
+                FROM `tag`
+                WHERE
+                    `name` IN (%s)
+                SQL,
+                implode(', ', $in),
+            ),
+        )->execute($param);
     }
 
     /**

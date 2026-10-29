@@ -23,6 +23,37 @@ use PHPUnit\Framework\TestCase;
 
 final class BookmarkTagsTest extends TestCase
 {
+    /**
+     * The rival save of the race test, as a second process with its own connection. It locks the gap where `php` would
+     * go, waits until the test's insert has been blocked on that lock for a second, then inserts `php` itself. Its
+     * transaction has already inserted a row, so it outweighs the test's and the test's is the one rolled back.
+     */
+    private const RIVAL = <<<'PHP'
+        require $argv[1] . 'bootstrap.php';
+        $pdo = new PDO(Database::dsn(DB_HOST, DB_PORT, DB_NAME), DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+        $pdo->beginTransaction();
+        $pdo->exec("INSERT INTO `tag` (`name`) VALUES ('rival')");
+        $pdo->query("SELECT 1 FROM `tag` WHERE `name` = 'php' FOR SHARE")->fetchAll();
+        echo "ready\n";
+        $deadline = microtime(true) + 10;
+        do {
+            usleep(100000);
+            $blocked = false;
+            foreach ($pdo->query('SHOW FULL PROCESSLIST') as $thread) {
+                $inserting = str_starts_with((string) $thread['Info'], 'INSERT INTO `tag`');
+                $blocked = $blocked || ($inserting && $thread['Time'] >= 1);
+            }
+        } while (!$blocked && microtime(true) < $deadline);
+        if (!$blocked) {
+            fwrite(STDERR, "The test's insert never blocked.\n");
+            exit(1);
+        }
+        $pdo->exec("INSERT INTO `tag` (`name`) VALUES ('php')");
+        $pdo->commit();
+        PHP;
+
     private PDO $pdo;
 
     protected function setUp(): void
@@ -62,6 +93,79 @@ final class BookmarkTagsTest extends TestCase
         $count = $this->pdo->query("SELECT COUNT(*) FROM `tag` WHERE `name` = 'php'")->fetchColumn();
         $this->assertSame(1, (int) $count);
         $this->assertSame(['php'], $this->linkedTagNames($bookmark->id));
+    }
+
+    /**
+     * Regression: the upsert spent an id every time the tag already existed, so ids ran out long before that many tags
+     * existed.
+     */
+    public function testReusingATagSpendsNoId(): void
+    {
+        $this->savedBookmark()->saveTags('php');
+        $this->savedBookmark()->saveTags('php');
+        $this->savedBookmark()->saveTags('php, sql');
+
+        $ids = $this->pdo->query('SELECT `name`, `id` FROM `tag` ORDER BY `id`')->fetchAll(PDO::FETCH_KEY_PAIR);
+        $this->assertSame(['php' => 1, 'sql' => 2], $ids);
+    }
+
+    /**
+     * Regression: at the id limit a new tag hit the upsert's duplicate-key path and silently took the id of an existing
+     * tag.
+     */
+    public function testANewTagWithNoIdLeftFails(): void
+    {
+        $this->pdo->exec('ALTER TABLE `tag` AUTO_INCREMENT = 4294967295');
+        $this->savedBookmark()->saveTags('php');
+        $bookmark = $this->savedBookmark();
+
+        try {
+            $bookmark->saveTags('sql');
+            $this->fail('A tag with no id left must not be saved.');
+        } catch (PDOException) {
+        }
+
+        $this->assertSame([], $this->linkedTagNames($bookmark->id));
+    }
+
+    /**
+     * Two saves creating the same new tag at once: under REPEATABLE READ both lock the gap the tag goes into, so the
+     * loser's insert fails (a deadlock, or the name taken), runs again and finds the tag the winner created.
+     */
+    public function testASaveThatLosesTheRaceForANewTagRetries(): void
+    {
+        Debug::reset();
+        $bookmark = $this->savedBookmark();
+        $rival = proc_open(
+            [PHP_BINARY, '-r', self::RIVAL, PRIVATE_DIR],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+        );
+        $this->assertSame("ready\n", fgets($pipes[1]));
+
+        $bookmark->saveTags('php');
+
+        $error = (string) stream_get_contents($pipes[2]);
+        $this->assertSame(0, proc_close($rival), $error);
+        $this->assertSame(['php'], $this->linkedTagNames($bookmark->id));
+        $inserts = array_filter(
+            Debug::queries(),
+            fn(array $query): bool => str_starts_with($query['sql'], 'INSERT INTO `tag`'),
+        );
+        $this->assertCount(2, $inserts, 'the insert failed once and ran again');
+    }
+
+    /**
+     * Regression: the two spellings are one tag under `ai_ci`, so the second link duplicated the first and the save
+     * failed.
+     */
+    public function testAWordAndItsAccentedSpellingInOneSaveAreOneLink(): void
+    {
+        $bookmark = $this->savedBookmark();
+
+        $bookmark->saveTags('cafe, café');
+
+        $this->assertSame(['cafe'], $this->linkedTagNames($bookmark->id));
     }
 
     /**
