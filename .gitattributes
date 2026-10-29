@@ -10,6 +10,5 @@ VERSION export-subst
 /README.md -export-ignore
 /SECURITY.md -export-ignore
 /VERSION -export-ignore
-/izartu.sql -export-ignore
 /private -export-ignore
 /public -export-ignore

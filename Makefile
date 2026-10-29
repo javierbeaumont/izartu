@@ -54,7 +54,7 @@ test-unit: ## run the unit tests (no database)
 	$(COMPOSE) run --rm --no-deps -e DB_HOST=no-database.invalid test vendor/bin/phpunit --testsuite unit
 
 test-integration: ## run the integration tests (MySQL, filesystem)
-	$(COMPOSE) run --rm test vendor/bin/phpunit --testsuite integration
+	$(COMPOSE) run --rm test sh -c 'php private/cli/migrate.php && vendor/bin/phpunit --testsuite integration'
 
 test-e2e: ## run the end-to-end test on a throwaway stack
 	tests/E2E/run.sh

@@ -216,7 +216,8 @@ final class GitVersionTest extends TestCase
     {
         $files = [
             '.github/workflows/tests.yml', 'Dockerfile', 'LICENSE', 'Makefile', 'README.md', 'composer.json',
-            'izartu.sql', 'private/class/Kept.php', 'public/.htaccess', 'public/index.php', 'tests/Unit/LeftTest.php',
+            'private/class/Kept.php', 'private/migration/0001-baseline.sql', 'public/.htaccess', 'public/index.php',
+            'tests/Unit/LeftTest.php',
         ];
         foreach ($files as $file) {
             is_dir(dirname($this->repo . '/' . $file)) || mkdir(dirname($this->repo . '/' . $file), 0700, true);
@@ -227,8 +228,8 @@ final class GitVersionTest extends TestCase
 
         $out = $this->export('HEAD');
 
-        foreach (['LICENSE', 'README.md', 'VERSION', 'izartu.sql', 'private/class/Kept.php', 'public/.htaccess',
-            'public/index.php'] as $kept) {
+        foreach (['LICENSE', 'README.md', 'VERSION', 'private/class/Kept.php', 'private/migration/0001-baseline.sql',
+            'public/.htaccess', 'public/index.php'] as $kept) {
             $this->assertFileExists($out . '/' . $kept);
         }
         foreach (['.gitattributes', '.github', 'Dockerfile', 'Makefile', 'composer.json', 'tests'] as $left) {

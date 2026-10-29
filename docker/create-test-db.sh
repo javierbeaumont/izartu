@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# Test databases, so tests never touch dev data: izartu_test with the schema, an empty one for the migration tests.
+# Test databases, so tests never touch dev data.
 
 set -e
 
@@ -31,5 +31,3 @@ GRANT ALL PRIVILEGES ON izartu_test.* TO '$MYSQL_USER'@'%';
 GRANT ALL PRIVILEGES ON izartu_migration_test.* TO '$MYSQL_USER'@'%';
 FLUSH PRIVILEGES;
 SQL
-
-mysql -uroot -p"$MYSQL_ROOT_PASSWORD" izartu_test < /docker-entrypoint-initdb.d/izartu.sql

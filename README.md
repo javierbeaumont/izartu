@@ -75,9 +75,8 @@ Then bring the stack up:
 docker compose up --build
 ```
 
-Open <http://localhost:8080>. The database is created from `izartu.sql` on
-first start. Create your first user (interactive; give it the `owner` role):
-
+Open <http://localhost:8080>. Every time it starts, the app container applies the migrations the database lacks, so the
+first start builds the schema. Create your first user (interactive; give it the `owner` role):
 ```sh
 docker compose exec app php /var/www/izartu/private/cli/adduser.php
 ```
@@ -100,7 +99,7 @@ Steps:
 
 1. Copy the repository to the server. Point the web server's document root
    at `public/`; `private/` must stay outside the web root (as shipped).
-2. Create a MySQL database and load the schema: `mysql izartu < izartu.sql`.
+2. Create an empty MySQL database, and a user with every privilege on it: the migrations create and alter its tables.
 3. Provide the `DB_*` environment variables (see Configuration) to the PHP
    process. With Apache and mod_php, a minimal vhost looks like:
 
@@ -121,13 +120,22 @@ Steps:
    ```
 
    (With PHP-FPM, set the same variables in the pool's `env[...]` entries.)
-4. Create the first user: `php private/cli/adduser.php`.
-5. Log in at `/login`.
+4. Build the schema: `php private/cli/migrate.php`. Like every CLI script, it reads the `DB_*` variables from its own
+   environment (for example `DB_USER=user_name DB_PASS=user_password php private/cli/migrate.php`).
+5. Create the first user: `php private/cli/adduser.php`.
+6. Log in at `/login`.
 
 izartu also runs from a sub-directory (e.g. `https://example.org/bookmarks/`);
 no configuration is needed, the base path is detected from the request. Set
 `BASE` only if a reverse proxy serves the app under a path the request does not
 carry.
+
+## Upgrading
+
+Back up the database first: migrations only go forward. Then replace the files with the new release and apply its
+migrations: with Docker, `docker compose up -d --build` (the app applies them on start); without Docker,
+`php private/cli/migrate.php`. `migrate.php` applies, in order, every migration the database lacks, and refuses a
+database it cannot continue from: one newer than the code, or one it did not build.
 
 ## Configuration
 
@@ -209,9 +217,9 @@ script with curl.
 
 #### With Docker
 
-The test databases (`izartu_test`, and an empty `izartu_migration_test` for the migration tests) are created
-automatically on the first `db` start (run `docker compose down -v` once if the volume predates them). Install the dev
-dependencies once (writes `vendor/`, gitignored):
+The test databases, `izartu_test` and `izartu_migration_test`, are created empty on the first `db` start, and
+`make test-integration` migrates `izartu_test` before the suite runs (a volume created before the migrations needs
+`docker compose down -v` once). Install the dev dependencies once (writes `vendor/`, gitignored):
 
 ```sh
 make deps
@@ -232,11 +240,12 @@ creates a user, runs `smoke.sh` against it and removes it all, whatever the outc
 
 #### Without Docker
 
-Needs PHP + Composer on the host, MySQL reachable, an `izartu_test` database loaded with the schema and an empty
-`izartu_migration_test` one, both accessible to your MySQL user:
+Needs PHP + Composer on the host, MySQL reachable, and two empty databases, `izartu_test` and `izartu_migration_test`,
+both accessible to your MySQL user. Migrate the first, then run the suite:
 
 ```sh
 composer install
+DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass php private/cli/migrate.php
 DEBUG=1 DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass vendor/bin/phpunit
 ```
 
