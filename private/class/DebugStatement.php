@@ -29,7 +29,7 @@ class DebugStatement extends PDOStatement
     protected function __construct() {}
 
     /**
-     * Execute the statement, timing it (see `PDOStatement::execute`).
+     * Execute the statement, timing it whether it succeeds or fails (see `PDOStatement::execute`).
      *
      * @param array<int|string, mixed>|null $params Bind values, or null when
      *   the values were bound beforehand.
@@ -38,9 +38,11 @@ class DebugStatement extends PDOStatement
     public function execute(?array $params = null): bool
     {
         $start = microtime(true);
-        $result = parent::execute($params);
-        Debug::query($this->queryString, (microtime(true) - $start) * 1000);
 
-        return $result;
+        try {
+            return parent::execute($params);
+        } finally {
+            Debug::query($this->queryString, (microtime(true) - $start) * 1000);
+        }
     }
 }

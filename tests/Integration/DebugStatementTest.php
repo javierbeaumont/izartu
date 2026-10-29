@@ -48,4 +48,22 @@ final class DebugStatementTest extends TestCase
         $this->assertSame('SELECT 42 AS `answer`', Debug::queries()[0]['sql']);
         $this->assertGreaterThan(0, Debug::queries()[0]['ms']);
     }
+
+    public function testAStatementThatFailsIsCollectedToo(): void
+    {
+        $crud = new class extends Crud {
+            public function probe(): void
+            {
+                self::db()->prepare('SELECT JSON_EXTRACT(:document, \'$\')')->execute([':document' => 'not JSON']);
+            }
+        };
+
+        try {
+            $crud->probe();
+            $this->fail('Extracting from text that is not JSON must fail.');
+        } catch (PDOException) {
+        }
+
+        $this->assertSame(["SELECT JSON_EXTRACT(:document, '$')"], array_column(Debug::queries(), 'sql'));
+    }
 }
