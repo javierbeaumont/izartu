@@ -160,6 +160,17 @@ final class Migration
     }
 
     /**
+     * Whether the database lacks a migration.
+     *
+     * @return bool
+     * @throws RuntimeException When `version()` refuses the database.
+     */
+    public function pending(): bool
+    {
+        return $this->version() < (int) array_key_last($this->migrations);
+    }
+
+    /**
      * Apply the next migration the database lacks, and record it.
      *
      * @return string|null The migration applied, as `NNNN-name`, or null when the database is up to date.

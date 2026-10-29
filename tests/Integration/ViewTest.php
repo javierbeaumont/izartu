@@ -94,4 +94,27 @@ final class ViewTest extends TestCase
         $this->assertStringContainsString('Find a tag', $first);
         $this->assertStringContainsString('Find a tag', $second);
     }
+
+    /**
+     * Regression: a template that threw left its output buffer open, half a page in it, which would have come out
+     * before the error page.
+     */
+    public function testATemplateThatFailsLeavesNoOutputBehind(): void
+    {
+        $level = ob_get_level();
+        $broken = new class {
+            public function __toString(): string
+            {
+                throw new RuntimeException('Broken on purpose.');
+            }
+        };
+
+        try {
+            View::render('error', ['reason' => 'error', 'cause' => $broken]);
+            $this->fail('Printing the cause must fail.');
+        } catch (RuntimeException) {
+        }
+
+        $this->assertSame($level, ob_get_level());
+    }
 }

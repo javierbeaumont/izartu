@@ -97,6 +97,20 @@ final class MigrationApplyTest extends TestCase
         $this->assertSame([[1, 'baseline'], [2, 'add-b'], [10, 'fill']], $this->recorded());
     }
 
+    public function testAMigrationIsPendingUntilItIsApplied(): void
+    {
+        $this->write('0001-baseline.sql', self::BASELINE);
+        $this->write('0002-add-b.sql', 'ALTER TABLE `a` ADD `b` int;');
+        $migration = new Migration($this->pdo, $this->dir);
+        $migration->applyNext();
+
+        $this->assertTrue($migration->pending());
+
+        $migration->applyNext();
+
+        $this->assertFalse($migration->pending());
+    }
+
     public function testTablesWithoutAMigrationHistoryAreRefused(): void
     {
         $this->pdo->exec('CREATE TABLE `stray` (`id` int)');

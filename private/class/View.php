@@ -33,6 +33,7 @@ final class View
      * @param string $template The view's name in `private/template/`, without `.php`.
      * @param array<string, mixed> $vars The variables the templates read.
      * @return string The page's HTML.
+     * @throws Throwable Whatever a template throws, with the output it had written discarded.
      */
     public static function render(string $template, array $vars): string
     {
@@ -40,7 +41,14 @@ final class View
         $view = PRIVATE_DIR . 'template/' . $template . '.php';
 
         ob_start();
-        require PRIVATE_DIR . 'template/layout.php';
+
+        try {
+            require PRIVATE_DIR . 'template/layout.php';
+        } catch (Throwable $e) {
+            ob_end_clean();
+
+            throw $e;
+        }
 
         return (string) ob_get_clean();
     }

@@ -135,7 +135,8 @@ carry.
 Back up the database first: migrations only go forward. Then replace the files with the new release and apply its
 migrations: with Docker, `docker compose up -d --build` (the app applies them on start); without Docker,
 `php private/cli/migrate.php`. `migrate.php` applies, in order, every migration the database lacks, and refuses a
-database it cannot continue from: one newer than the code, or one it did not build.
+database it cannot continue from: one newer than the code, or one it did not build. Until the migrations are applied, a
+page the old schema cannot serve answers 503, and PHP's error log says to run `migrate.php`.
 
 ## Configuration
 
@@ -159,11 +160,10 @@ it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 * `PAGE_SIZE`: bookmarks per feed page; optional, defaults to `10`.
 * `TAGS_PAGE_SIZE`: tags per page on the tag index; optional, defaults
   to `100`.
-* `DEBUG`: optional, off by default. Set it to `1` to enable debug mode:
-  error output, a `Server-Timing` response header with request metrics (PHP
-  time, database time and query count, peak memory; shown natively in the
-  browser devtools network panel) and a collapsible per-query timing panel
-  at the bottom of every page, where repeated queries are flagged.
+* `DEBUG`: optional, off by default. Set it to `1` to enable debug mode: PHP's errors and the cause of a failed request
+  on the page, a `Server-Timing` response header with request metrics (PHP time, database time and query count, peak
+  memory; shown natively in the browser devtools network panel) and a collapsible per-query timing panel at the bottom
+  of every page, where repeated queries are flagged.
 
 ## Managing users
 
@@ -187,6 +187,23 @@ docker compose exec app php /var/www/izartu/private/cli/adduser.php
 ```sh
 php private/cli/adduser.php
 ```
+
+## Errors and logs
+
+A request that fails because the database is unreachable or behind the code answers 503 with `Retry-After`; any other
+failure answers 500. The cause goes to PHP's error log, and debug mode shows it on the page too.
+
+### With Docker
+
+PHP's log goes to the app container's output, mixed with Apache's access log; its lines are tagged `php:`.
+
+```sh
+docker compose logs app | grep 'php:'
+```
+
+### Without Docker
+
+PHP's log is the file `error_log` names in `php.ini` or, when it names none, the web server's error log.
 
 ## Development
 

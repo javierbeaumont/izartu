@@ -57,7 +57,7 @@ define('PAGE_SIZE', max(1, (int) env('PAGE_SIZE', '10')));
 define('TAGS_PAGE_SIZE', max(1, (int) env('TAGS_PAGE_SIZE', '100')));
 
 /**
- * Debug mode (off by default; `1`/`true`/`on`/`yes` enable it): error output,
- * the Server-Timing header and the query panel.
+ * Debug mode (off by default; `1`/`true`/`on`/`yes` enable it): PHP's errors and the cause of a failed request on the
+ * page, the Server-Timing header and the query panel.
  */
 define('DEBUG', filter_var(env('DEBUG'), FILTER_VALIDATE_BOOL));

@@ -27,8 +27,9 @@
 
 require_once dirname(__DIR__) . '/private/bootstrap.php';
 
+// Without a php.ini, PHP shows errors on the page.
+ini_set('display_errors', DEBUG ? 'stdout' : '0');
 if (DEBUG) {
-    ini_set('display_errors', 'stdout');
     error_reporting(E_ALL);
 }
 
@@ -38,13 +39,21 @@ $uri = $_SERVER['REQUEST_URI'] ?? '/';
 
 try {
     [$template, $vars] = Controller::dispatch(is_string($uri) ? $uri : '/');
+
+    // Rendered to a string first: the Server-Timing header, which times the render too, must go out before any output.
+    $page = View::render($template, $vars);
 } catch (Redirect $redirect) {
     header('Location: ' . $redirect->location);
     exit;
-}
+} catch (Throwable $failure) {
+    ['status' => $status, 'reason' => $reason] = Failure::answer($failure, Database::behind(...), error_log(...));
+    http_response_code($status);
+    if ($status === 503) {
+        header('Retry-After: 60');
+    }
 
-// Rendered to a string first: the Server-Timing header, which times the render too, must go out before any output.
-$page = View::render($template, $vars);
+    $page = View::render('error', ['reason' => $reason, 'cause' => DEBUG ? (string) $failure : '']);
+}
 
 if (DEBUG) {
     header('Server-Timing: ' . Debug::serverTiming());

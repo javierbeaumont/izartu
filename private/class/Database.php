@@ -31,13 +31,13 @@ class Database
      * The shared database connection, opened on first use.
      *
      * Building, validating or formatting a model therefore needs no database. The connection comes from the `DB_*`
-     * constants; a failure triggers `E_USER_ERROR`. With DEBUG on, statements are created as DebugStatement so every
-     * query execution is timed.
+     * constants. With DEBUG on, statements are created as DebugStatement so every query execution is timed.
      *
      * Prepared statements are native, so integer columns come back as `int`; the charset is utf8mb4 and the timezone
      * is the server's.
      *
      * @return PDO The shared connection.
+     * @throws DatabaseUnavailable When the database cannot be reached.
      */
     final protected static function db(): PDO
     {
@@ -52,11 +52,22 @@ class Database
                     self::$db->setAttribute(PDO::ATTR_STATEMENT_CLASS, [DebugStatement::class]);
                 }
             } catch (PDOException $e) {
-                trigger_error($e->getMessage(), E_USER_ERROR);
+                throw new DatabaseUnavailable($e->getMessage(), 0, $e);
             }
         }
 
         return self::$db;
+    }
+
+    /**
+     * Whether the database lacks migrations the code has.
+     *
+     * @return bool
+     * @throws RuntimeException When the database cannot be checked (see `Migration::version()`).
+     */
+    public static function behind(): bool
+    {
+        return (new Migration(self::db(), PRIVATE_DIR . 'migration'))->pending();
     }
 
     /**
