@@ -38,7 +38,20 @@ final class BookmarkModelTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
-        $this->pdo->exec('TRUNCATE `bookmark`');
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        foreach (['bookmark_tag', 'bookmark', 'tag', 'user'] as $table) {
+            $this->pdo->exec('TRUNCATE `' . $table . '`');
+        }
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'owner', 'owner@izartu.test', 'x', 'user')
+            SQL,
+        );
     }
 
     public function testFindReturnsNullWhenMissing(): void

@@ -39,9 +39,11 @@ final class ViewTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach (['bookmark_tag', 'bookmark', 'tag', 'user'] as $table) {
             $pdo->exec('TRUNCATE `' . $table . '`');
         }
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         $pdo->exec(
             <<<'SQL'

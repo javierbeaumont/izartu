@@ -41,9 +41,20 @@ final class ControllerAccessTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
-        foreach (['bookmark_tag', 'bookmark'] as $table) {
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        foreach (['bookmark_tag', 'bookmark', 'tag', 'user'] as $table) {
             $this->pdo->exec('TRUNCATE `' . $table . '`');
         }
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'owner', 'owner@izartu.test', 'x', 'user')
+            SQL,
+        );
 
         $this->pdo->exec(
             <<<'SQL'

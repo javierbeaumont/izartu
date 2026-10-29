@@ -40,7 +40,9 @@ final class AuthAttemptTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         $this->pdo->exec('TRUNCATE `user`');
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
     }
 
     protected function tearDown(): void

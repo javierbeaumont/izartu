@@ -41,9 +41,11 @@ final class ControllerActionTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach (['bookmark_tag', 'bookmark', 'tag', 'user'] as $table) {
             $this->pdo->exec('TRUNCATE `' . $table . '`');
         }
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         $query = $this->pdo->prepare(
             <<<'SQL'

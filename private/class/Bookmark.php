@@ -112,14 +112,12 @@ class Bookmark extends Crud
     }
 
     /**
-     * Delete this bookmark and its tag links.
+     * Delete this bookmark and, through the foreign key's cascade, its tag links.
      *
      * @return void
      */
     public function delete(): void
     {
-        $this->deleteTags();
-
         $query = self::db()->prepare(
             <<<'SQL'
             DELETE FROM `bookmark`

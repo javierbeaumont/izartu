@@ -38,9 +38,20 @@ final class TagSearchTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
-        foreach (['bookmark_tag', 'bookmark', 'tag'] as $table) {
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        foreach (['bookmark_tag', 'bookmark', 'tag', 'user'] as $table) {
             $this->pdo->exec('TRUNCATE `' . $table . '`');
         }
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+
+        $this->pdo->exec(
+            <<<'SQL'
+            INSERT INTO `user`
+                (`id`, `username`, `email`, `hash`, `role`)
+            VALUES
+                (1, 'owner', 'owner@izartu.test', 'x', 'user')
+            SQL,
+        );
 
         // Bookmarks 1 and 3 are public; 2 is private to user 1.
         $this->pdo->exec(
@@ -130,7 +141,9 @@ final class TagSearchTest extends TestCase
 
     public function testSearchScopedToAUserOnlySeesTheirTags(): void
     {
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         $this->pdo->exec('TRUNCATE `user`');
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `user`
