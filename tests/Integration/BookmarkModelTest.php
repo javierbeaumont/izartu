@@ -86,14 +86,14 @@ final class BookmarkModelTest extends TestCase
         $bookmark->save();
 
         $found = Bookmark::find($bookmark->id);
-        $this->assertNotNull($found->add);
-        $this->assertSame($found->add, $found->mod, 'a new bookmark is added and modified at the same instant');
+        $this->assertNotNull($found->created);
+        $this->assertSame($found->created, $found->modified, 'a new bookmark is created and modified at once');
 
         // Asked of the engine, so the check holds whatever timezone it runs in.
         $query = $this->pdo->prepare(
             <<<'SQL'
             SELECT
-                ABS(TIMESTAMPDIFF(SECOND, `add`, NOW()))
+                ABS(TIMESTAMPDIFF(SECOND, `created`, NOW()))
             FROM `bookmark`
             WHERE
                 `id` = :id
@@ -106,8 +106,8 @@ final class BookmarkModelTest extends TestCase
         $found->save();
 
         $again = Bookmark::find($found->id);
-        $this->assertSame($found->add, $again->add, 'add never moves');
-        $this->assertGreaterThanOrEqual($again->add, $again->mod);
+        $this->assertSame($found->created, $again->created, 'created never moves');
+        $this->assertGreaterThanOrEqual($again->created, $again->modified);
     }
 
     public function testSaveUpdatesAnExistingBookmark(): void
@@ -129,7 +129,7 @@ final class BookmarkModelTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'Example', 'https://e.test', 'x', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,

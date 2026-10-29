@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS `bookmark` (
   `text` varchar(1024) NOT NULL,
   `user` smallint unsigned NOT NULL,
   `visibility` enum('public','private') NOT NULL DEFAULT 'private',
-  `add` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

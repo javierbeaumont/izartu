@@ -48,7 +48,7 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`title`, `hlink`, `text`, `user`, `add`, `mod`)
+                (`title`, `hlink`, `text`, `user`, `created`, `modified`)
             VALUES
                 ('Older', 'https://a.test', 'a', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
                 ('Newer', 'https://b.test', 'b', 1, '2026-01-02 10:00:00', '2026-01-02 10:00:00')
@@ -117,7 +117,7 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`title`, `hlink`, `text`, `user`, `add`, `mod`)
+                (`title`, `hlink`, `text`, `user`, `created`, `modified`)
             VALUES
                 ('Mine', 'https://m.test', 'm', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,
@@ -173,7 +173,7 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (3, 'BobPublic', 'https://bp.test', 'b', 2, 'public', '2026-01-03 10:00:00', '2026-01-03 10:00:00')
             SQL,
@@ -198,7 +198,7 @@ final class ReadPathTest extends TestCase
         $insert = $this->pdo->prepare(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (:title, 'https://n.test', 'n', 1, 'public', :stamp, :stamp)
             SQL,
@@ -276,7 +276,7 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'Manual', 'https://m.test', '', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
                 (2, 'PHPUnit', 'https://u.test', '', 1, 'public', '2026-01-02 10:00:00', '2026-01-02 10:00:00'),
@@ -296,7 +296,7 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'Public', 'https://p.test', 'p', 1, 'public', '2026-01-02 10:00:00', '2026-01-02 10:00:00'),
                 (2, 'Secret', 'https://s.test', 's', 1, 'private', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
@@ -311,7 +311,7 @@ final class ReadPathTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'B', 'https://b.test', 't', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,

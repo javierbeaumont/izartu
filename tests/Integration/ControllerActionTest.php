@@ -58,7 +58,7 @@ final class ControllerActionTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'Old', 'https://old.test', 'o', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,

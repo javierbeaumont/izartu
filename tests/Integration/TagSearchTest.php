@@ -46,7 +46,7 @@ final class TagSearchTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'Pub A', 'https://a.test', '', 1, 'public', '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
                 (2, 'Priv', 'https://p.test', '', 1, 'private', '2026-01-01 11:00:00', '2026-01-01 11:00:00'),

@@ -48,7 +48,7 @@ final class ControllerAccessTest extends TestCase
         $this->pdo->exec(
             <<<'SQL'
             INSERT INTO `bookmark`
-                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `add`, `mod`)
+                (`id`, `title`, `hlink`, `text`, `user`, `visibility`, `created`, `modified`)
             VALUES
                 (1, 'Secret', 'https://s.test', 's', 1, 'private', '2026-01-01 10:00:00', '2026-01-01 10:00:00')
             SQL,

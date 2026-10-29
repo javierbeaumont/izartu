@@ -34,12 +34,13 @@
         // The host only: a full URL can run to dozens of lines.
         $host = parse_url($bookmark->hlink, PHP_URL_HOST) ?: $bookmark->hlink;
         // The wording must match the moment it shows: an edited bookmark gains a clause for the modification.
-        $edited = $bookmark->mod !== null && $bookmark->add !== null && $bookmark->mod !== $bookmark->add;
-        $when = $bookmark->mod ?? $bookmark->add;
-        $stamp = $bookmark->add === null ? '' : 'Added ' . Format::absolute($bookmark->add);
+        $edited = $bookmark->modified !== null && $bookmark->created !== null
+            && $bookmark->modified !== $bookmark->created;
+        $when = $bookmark->modified ?? $bookmark->created;
+        $stamp = $bookmark->created === null ? '' : 'Added ' . Format::absolute($bookmark->created);
         // Seconds apart, the two moments render the same.
-        if ($edited && Format::absolute($bookmark->mod) !== Format::absolute($bookmark->add)) {
-            $stamp .= ', modified ' . Format::absolute($bookmark->mod);
+        if ($edited && Format::absolute($bookmark->modified) !== Format::absolute($bookmark->created)) {
+            $stamp .= ', modified ' . Format::absolute($bookmark->modified);
         }
         ?>
           <article class="bookmark">

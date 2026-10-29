@@ -33,9 +33,9 @@ class Bookmark extends Crud
     public string $username = '';
     public Visibility $visibility = Visibility::Private;
     /** Creation time, as epoch seconds. */
-    public ?int $add = null;
+    public ?int $created = null;
     /** Last-modification time, as epoch seconds. */
-    public ?int $mod = null;
+    public ?int $modified = null;
 
     /**
      * Find a bookmark by id.
@@ -53,8 +53,8 @@ class Bookmark extends Crud
     /**
      * Insert this bookmark when it is new, or update it when it has an id.
      *
-     * `add` and `mod` are left to the database, so both come from one clock;
-     * this object does not learn their values until it is read back.
+     * `created` and `modified` are left to the database, so both come from one clock; this object does not learn their
+     * values until it is read back.
      *
      * @return void
      */
@@ -276,7 +276,7 @@ class Bookmark extends Crud
         bool $order = false,
     ): array {
         [$cond, $param] = $this->filter($viewer, $tags, $username);
-        $cond .= ' ORDER BY `bookmark`.`mod` ' . ($order ? 'ASC' : 'DESC');
+        $cond .= ' ORDER BY `bookmark`.`modified` ' . ($order ? 'ASC' : 'DESC');
         $cond .= ' LIMIT ' . PAGE_SIZE . ' OFFSET ' . (($page - 1) * PAGE_SIZE);
 
         return [
@@ -368,24 +368,22 @@ class Bookmark extends Crud
      * @param string|false $cond Extra SQL appended to the base SELECT, or false.
      * @param list<array{0: string, 1: mixed, 2: int, 3: int}>|false $param
      *   Bind parameters for $cond (each: [name, value, PDO type, length]), or false.
-     * @return list<array{id: int, title: string, hlink: string,
-     *   text: string, user: int, visibility: string, add: int,
-     *   mod: int, username: string|null}> One raw row per bookmark.
+     * @return list<array{id: int, title: string, hlink: string, text: string, user: int, visibility: string,
+     *   created: int, modified: int, username: string|null}> One raw row per bookmark.
      */
     private function select(string|false $cond, array|false $param): array
     {
         /**
-         * @var list<array{id: int, title: string, hlink: string,
-         *   text: string, user: int, visibility: string,
-         *   add: int, mod: int, username: string|null}> $rows
+         * @var list<array{id: int, title: string, hlink: string, text: string, user: int, visibility: string,
+         *   created: int, modified: int, username: string|null}> $rows
          */
         $rows = $this->read(
             <<<SQL
             SELECT
                 `bookmark`.`id`, `bookmark`.`title`, `bookmark`.`hlink`, `bookmark`.`text`,
                 `bookmark`.`user`, `bookmark`.`visibility`,
-                UNIX_TIMESTAMP(`bookmark`.`add`) AS `add`,
-                UNIX_TIMESTAMP(`bookmark`.`mod`) AS `mod`,
+                UNIX_TIMESTAMP(`bookmark`.`created`) AS `created`,
+                UNIX_TIMESTAMP(`bookmark`.`modified`) AS `modified`,
                 `user`.`username`
             FROM `bookmark`
             LEFT JOIN
@@ -401,9 +399,8 @@ class Bookmark extends Crud
     /**
      * Build a Bookmark from a database row.
      *
-     * @param array{id: int, title: string, hlink: string,
-     *   text: string, user: int, visibility: string, add: int,
-     *   mod: int, username: string|null} $row A bookmark row (see `select`).
+     * @param array{id: int, title: string, hlink: string, text: string, user: int, visibility: string, created: int,
+     *   modified: int, username: string|null} $row A bookmark row (see `select`).
      * @return self The hydrated bookmark.
      */
     private static function hydrate(array $row): self
@@ -416,8 +413,8 @@ class Bookmark extends Crud
         $bookmark->user = $row['user'];
         $bookmark->username = (string) ($row['username'] ?? '');
         $bookmark->visibility = Visibility::from($row['visibility']);
-        $bookmark->add = $row['add'];
-        $bookmark->mod = $row['mod'];
+        $bookmark->created = $row['created'];
+        $bookmark->modified = $row['modified'];
 
         return $bookmark;
     }
