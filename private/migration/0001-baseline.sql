@@ -6,11 +6,11 @@ CREATE TABLE IF NOT EXISTS `migration` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `bookmark` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `hlink` varchar(2048) COLLATE utf8mb4_bin NOT NULL,
   `text` varchar(1024) NOT NULL,
-  `user` smallint unsigned NOT NULL,
+  `user` int unsigned NOT NULL,
   `visibility` enum('public','private') NOT NULL DEFAULT 'private',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -18,21 +18,21 @@ CREATE TABLE IF NOT EXISTS `bookmark` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `bookmark_tag` (
-  `bookmark` smallint unsigned NOT NULL,
-  `tag` smallint unsigned NOT NULL,
+  `bookmark` int unsigned NOT NULL,
+  `tag` int unsigned NOT NULL,
   PRIMARY KEY (`bookmark`,`tag`),
   UNIQUE KEY `tag_bookmark` (`tag`,`bookmark`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `tag` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `user` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(32) NOT NULL,
   `email` varchar(255) NOT NULL,
   `hash` varchar(255) NOT NULL,
