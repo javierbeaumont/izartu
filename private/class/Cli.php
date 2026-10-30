@@ -45,7 +45,13 @@ final class Cli
      */
     public static function secret(string $label): string
     {
-        $terminal = stream_isatty(STDIN);
+        // STDIN may hold input read ahead, which stream_isatty() warns is lost; a handle of its own holds none.
+        $input = fopen('php://stdin', 'r');
+        $terminal = $input !== false && stream_isatty($input);
+        if ($input !== false) {
+            fclose($input);
+        }
+
         if ($terminal) {
             system('stty -echo');
         }
