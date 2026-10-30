@@ -43,7 +43,7 @@ trap 'exit 1' INT TERM
 
 compose up -d --build --wait app
 
-printf '%s\n' "$E2E_EMAIL" "$E2E_USERNAME" "$E2E_PASSWORD" owner |
+printf '%s\n' "$E2E_EMAIL" "$E2E_USERNAME" "$E2E_PASSWORD" "$E2E_PASSWORD" owner |
     compose exec -T app php /var/www/izartu/private/cli/adduser.php
 
 compose run --rm --build -e BASE_URL=http://app -e SMOKE_EMAIL="$E2E_EMAIL" -e SMOKE_USERNAME="$E2E_USERNAME" \

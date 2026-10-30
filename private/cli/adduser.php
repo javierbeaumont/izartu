@@ -29,8 +29,8 @@
  *   docker compose exec app php /var/www/izartu/private/cli/adduser.php   (Docker)
  *   php private/cli/adduser.php                                           (bare PHP)
  *
- * Prompts for email, username, password and role, hashes the password with
- * `password_hash()` and inserts the user.
+ * Prompts for email, username, password and role, the password twice and without showing it on a terminal; hashes it
+ * with `password_hash()` and inserts the user.
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -42,10 +42,14 @@ require dirname(__DIR__) . '/bootstrap.php';
 
 $email    = strtolower(Cli::prompt('Email: '));
 $username = Cli::prompt('Username: ');
-$password = Cli::prompt('Password: ');
+$password = Cli::secret('Password: ');
+$again    = Cli::secret('Repeat it: ');
 $role     = Cli::prompt('Role (owner/admin/user) [owner]: ') ?: 'owner';
 
 $errors = User::validate($email, $username, $password, $role);
+if ($password !== $again) {
+    $errors['password'] = 'The two passwords differ.';
+}
 if ($errors) {
     fwrite(STDERR, implode("\n", $errors) . "\n");
     exit(1);

@@ -45,7 +45,7 @@ final class AddUserTest extends TestCase
 
     public function testCreatesTheUserWithAHashedPassword(): void
     {
-        [$code] = $this->addUser(['cli@izartu.test', 'cli', 'secret123', 'admin']);
+        [$code] = $this->addUser(['cli@izartu.test', 'cli', 'secret123', 'secret123', 'admin']);
 
         $row = $this->rows()[0];
 
@@ -57,7 +57,7 @@ final class AddUserTest extends TestCase
 
     public function testTheEmailIsLowerCasedAndAnEmptyRoleIsOwner(): void
     {
-        $this->addUser(['  CLI@Izartu.Test ', 'cli', 'secret123', '']);
+        $this->addUser(['  CLI@Izartu.Test ', 'cli', 'secret123', 'secret123', '']);
 
         $row = $this->rows()[0];
 
@@ -67,7 +67,10 @@ final class AddUserTest extends TestCase
     public function testInvalidInputIsRefusedBeforeConnecting(): void
     {
         // An unresolvable host: if the script tried to connect, the error would be a connection failure instead.
-        [$code, $error] = $this->addUser(['not an email', 'me', 'short', 'root'], ['DB_HOST' => 'no-database.invalid']);
+        [$code, $error] = $this->addUser(
+            ['not an email', 'me', 'short', 'short', 'root'],
+            ['DB_HOST' => 'no-database.invalid'],
+        );
 
         $this->assertSame(1, $code);
         $this->assertStringContainsString('A valid email address', $error);
@@ -77,15 +80,26 @@ final class AddUserTest extends TestCase
         $this->assertStringNotContainsString('Could not create the user', $error);
     }
 
+    public function testPasswordsThatDifferAreRefusedBeforeConnecting(): void
+    {
+        [$code, $error] = $this->addUser(
+            ['cli@izartu.test', 'cli', 'secret123', 'secret124', 'owner'],
+            ['DB_HOST' => 'no-database.invalid'],
+        );
+
+        $this->assertSame(1, $code);
+        $this->assertSame("The two passwords differ.\n", $error);
+    }
+
     /**
      * Both columns are unique under the `ai_ci` collation, so a change of case does not make a second account.
      */
     public function testAUsernameOrEmailAlreadyTakenIsRefused(): void
     {
-        $this->addUser(['cli@izartu.test', 'cli', 'secret123', 'user']);
+        $this->addUser(['cli@izartu.test', 'cli', 'secret123', 'secret123', 'user']);
 
-        [$sameName, $nameError] = $this->addUser(['other@izartu.test', 'CLI', 'secret123', 'user']);
-        [$sameEmail, $emailError] = $this->addUser(['cli@izartu.test', 'other', 'secret123', 'user']);
+        [$sameName, $nameError] = $this->addUser(['other@izartu.test', 'CLI', 'secret123', 'secret123', 'user']);
+        [$sameEmail, $emailError] = $this->addUser(['cli@izartu.test', 'other', 'secret123', 'secret123', 'user']);
 
         $this->assertSame([1, 1], [$sameName, $sameEmail]);
         $this->assertStringContainsString('Could not create the user', $nameError);
@@ -99,7 +113,10 @@ final class AddUserTest extends TestCase
      */
     public function testConnectsThroughTheConfiguredPort(): void
     {
-        [$code, $error] = $this->addUser(['cli@izartu.test', 'cli', 'secret123', 'owner'], ['DB_PORT' => '1']);
+        [$code, $error] = $this->addUser(
+            ['cli@izartu.test', 'cli', 'secret123', 'secret123', 'owner'],
+            ['DB_PORT' => '1'],
+        );
 
         $this->assertSame(1, $code);
         $this->assertStringContainsString('Could not create the user', $error);
@@ -113,9 +130,9 @@ final class AddUserTest extends TestCase
     }
 
     /**
-     * Run the script as an operator would, answering its four prompts.
+     * Run the script as an operator would, answering its five prompts.
      *
-     * @param list<string> $answers Email, username, password and role, in the order it asks for them.
+     * @param list<string> $answers Email, username, password, the password again and role.
      * @param array<string, string> $env Variables to set on top of the current environment.
      * @return array{int, string} The exit code and what the script wrote to stderr.
      */

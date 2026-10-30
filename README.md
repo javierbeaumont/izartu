@@ -168,8 +168,8 @@ it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 ## Managing users
 
 Users are managed from the command line. `adduser.php` prompts for email, username, password and role (`owner`, `admin`
-or `user`), hashes the password and inserts the user. Login is by email; the username is the public display name shown
-next to the user's bookmarks.
+or `user`), the password twice and without showing it on a terminal, hashes it and inserts the user. Login is by email;
+the username is the public display name shown next to the user's bookmarks.
 
 Inputs are validated: a real email address, a username of 3-32 characters
 (letters, digits, `_` or `-`), and a password of at least 8 characters. The
