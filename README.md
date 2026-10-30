@@ -87,7 +87,7 @@ Log in at `/login` and start adding bookmarks.
 
 Requirements:
 
-* PHP with the `pdo_mysql` extension. izartu supports every PHP version with [security
+* PHP with the `pdo_mysql` and `mbstring` extensions. izartu supports every PHP version with [security
   support](https://www.php.net/supported-versions.php) (currently 8.2 to 8.5; the floor rises as versions reach end of
   life), and CI runs the unit and integration tests on each of them.
 * MySQL >= 8.4
