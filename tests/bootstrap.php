@@ -22,6 +22,6 @@
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../private/bootstrap.php';
 
-// The front controller's job (public/index.php); the suite calls the same code
-// without it, and Auth::attempt()'s session_regenerate_id() needs a session.
+// The front controller's job (public/index.php); the suite calls the same code without it, and Auth::attempt() moves an
+// open session to a new id.
 Auth::start();

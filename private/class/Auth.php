@@ -98,20 +98,89 @@ class Auth
     }
 
     /**
-     * Log a user in: regenerate the session id (to prevent fixation) and store the user's id, username and role.
+     * Log a user in: move the session to a new id that starts with the user's id, `<id>-<random>`, and store the user's
+     * id, username and role.
+     *
+     * The new id prevents session fixation, and its prefix lets `endSessions()` find the user's sessions. The data
+     * moves to the new id, and the old session is deleted.
      *
      * @param array{id: int, username: string, email: string, hash: string, role: string} $user The user row.
      * @return void
+     * @throws RuntimeException When PHP cannot create a session id.
      */
     protected static function login(array $user): void
     {
-        session_regenerate_id(true);
+        $id = session_create_id($user['id'] . '-');
+        if ($id === false) {
+            throw new RuntimeException('PHP could not create a session id.');
+        }
+
+        $data = $_SESSION;
+        session_destroy();
+        session_id($id);
+        session_start();
+        $_SESSION = $data;
 
         $_SESSION['user'] = [
             'id' => (int) $user['id'],
             'username' => $user['username'],
             'role' => $user['role'],
         ];
+    }
+
+    /**
+     * End every open session of a user by deleting their files; the next request of each finds an empty session.
+     *
+     * The sessions are found by their id's prefix (see `login()`). It works with PHP's files session handler only, run
+     * with the web server's `session.save_path` by a user who may read and delete those files.
+     *
+     * @param int $user The user's id.
+     * @return int How many sessions were ended.
+     * @throws RuntimeException When the session directory cannot be read or a session file cannot be deleted.
+     */
+    public static function endSessions(int $user): int
+    {
+        [$dir, $pattern] = self::sessionFiles($user, (string) session_save_path());
+        if (!is_dir($dir) || !is_readable($dir)) {
+            throw new RuntimeException("Cannot read the session directory {$dir}.");
+        }
+
+        $ended = 0;
+        foreach (glob($pattern) ?: [] as $file) {
+            if (@unlink($file)) {
+                $ended++;
+            } elseif (is_file($file)) {
+                throw new RuntimeException("Cannot delete the session file {$file}.");
+            }
+        }
+
+        return $ended;
+    }
+
+    /**
+     * Where PHP's files session handler keeps a user's sessions.
+     *
+     * `session.save_path` is a directory, empty for the system's temporary one, or `N;[MODE;]directory`, which spreads
+     * the files over N levels of subdirectories named after the first characters of the session id.
+     *
+     * @param int $user The user's id.
+     * @param string $savePath The value of `session.save_path`.
+     * @return array{string, string} The session directory, and a `glob()` pattern for the user's session files.
+     */
+    protected static function sessionFiles(int $user, string $savePath): array
+    {
+        $parts = explode(';', $savePath);
+        $dir = rtrim((string) end($parts), '/');
+        $dir = $dir === '' ? sys_get_temp_dir() : $dir;
+        $depth = count($parts) > 1 ? (int) $parts[0] : 0;
+
+        $prefix = $user . '-';
+        $levels = '';
+        for ($level = 0; $level < $depth; $level++) {
+            $levels .= '/' . ($prefix[$level] ?? '*');
+        }
+
+        return [$dir, $dir . $levels . '/sess_' . $prefix . '*'];
     }
 
     /**

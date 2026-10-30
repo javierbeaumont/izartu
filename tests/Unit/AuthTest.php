@@ -184,14 +184,45 @@ final class AuthTest extends TestCase
         $this->assertSame([$real['algo'], $real['options']], [$dummy['algo'], $dummy['options']]);
     }
 
-    public function testLoginRegeneratesTheSessionAndStoresTheUser(): void
+    public function testLoginMovesTheSessionToAnIdThatStartsWithTheUserIdAndKeepsItsData(): void
     {
         $before = session_id();
+        $_SESSION['csrf'] = 'token';
 
         self::probe()::probeLogin(self::user());
 
         $this->assertNotSame($before, session_id());
+        $this->assertMatchesRegularExpression('/^1-[0-9a-f]{32}$/', (string) session_id());
+        $this->assertSame('token', $_SESSION['csrf']);
         $this->assertSame(['id' => 1, 'username' => 'owner', 'role' => 'owner'], Auth::user());
+    }
+
+    /**
+     * @return array<string, array{int, string, array{string, string}}> A user, a `session.save_path`, and the directory
+     *   and pattern expected for it.
+     */
+    public static function savePaths(): array
+    {
+        $tmp = sys_get_temp_dir();
+
+        return [
+            'empty: the temporary directory' => [7, '', [$tmp, "{$tmp}/sess_7-*"]],
+            'a directory' => [7, '/var/lib/php/sessions', ['/var/lib/php/sessions', '/var/lib/php/sessions/sess_7-*']],
+            'a trailing slash' => [7, '/srv/sessions/', ['/srv/sessions', '/srv/sessions/sess_7-*']],
+            'two levels' => [7, '2;/srv/sessions', ['/srv/sessions', '/srv/sessions/7/-/sess_7-*']],
+            'two levels, a two-digit user id' => [70, '2;/srv/sessions', [
+                '/srv/sessions', '/srv/sessions/7/0/sess_70-*',
+            ]],
+            'three levels, one past the prefix, with a mode' => [7, '3;0600;/srv/sessions', [
+                '/srv/sessions', '/srv/sessions/7/-/*/sess_7-*',
+            ]],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('savePaths')]
+    public function testAUsersSessionFilesAreFoundByTheirPrefix(int $user, string $savePath, array $expected): void
+    {
+        $this->assertSame($expected, self::probe()::probeSessionFiles($user, $savePath));
     }
 
     private static function user(): array
@@ -230,6 +261,11 @@ final class AuthTest extends TestCase
             public static function probeDummyHash(): string
             {
                 return self::dummyHash();
+            }
+
+            public static function probeSessionFiles(int $user, string $savePath): array
+            {
+                return self::sessionFiles($user, $savePath);
             }
         };
     }
