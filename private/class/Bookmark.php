@@ -150,7 +150,44 @@ class Bookmark extends Crud
     }
 
     /**
-     * Replace this bookmark's tags with the ones in a comma-separated string.
+     * Save this bookmark and replace its tags, in one transaction.
+     *
+     * A failure leaves the bookmark and its tags as they were. A deadlock rolls the save back and it runs again, three
+     * attempts at most.
+     *
+     * @param string $tags Comma-separated tag names, as typed by the user.
+     * @return void
+     * @throws PDOException When a new tag has no id left, the database fails, or the third attempt deadlocks.
+     */
+    public function saveWithTags(string $tags): void
+    {
+        $id = $this->id;
+
+        for ($attempt = 1; ; $attempt++) {
+            self::db()->beginTransaction();
+
+            try {
+                $this->save();
+                $this->saveTags($tags);
+                self::db()->commit();
+
+                return;
+            } catch (Throwable $e) {
+                if (self::db()->inTransaction()) {
+                    self::db()->rollBack();
+                }
+                // The rollback undid a new bookmark's insert, so the id it got no longer exists.
+                $this->id = $id;
+
+                if ($attempt === 3 || !$e instanceof PDOException || ($e->errorInfo[1] ?? null) !== 1213) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
+     * Replace this bookmark's tags, inside `saveWithTags()`'s transaction.
      *
      * The names missing from `tag` are created, and every name is linked in `bookmark_tag` by name, so a name that
      * exists spends no id and two spellings of one tag (the `ai_ci` collation) make one link.
@@ -159,7 +196,7 @@ class Bookmark extends Crud
      * @return void
      * @throws PDOException When a new tag has no id left, or the database fails.
      */
-    public function saveTags(string $tags): void
+    private function saveTags(string $tags): void
     {
         $this->deleteTags();
 
@@ -184,8 +221,8 @@ class Bookmark extends Crud
             try {
                 $create->execute([':name' => $name]);
             } catch (PDOException $e) {
-                // Another save created the same tag at once (a deadlock, or the name taken): the second run finds it.
-                if (!in_array($e->errorInfo[1] ?? null, [1062, 1213], true)) {
+                // Another save committed this new tag first: only the statement failed, and the rerun finds the tag.
+                if (($e->errorInfo[1] ?? null) !== 1062) {
                     throw $e;
                 }
 

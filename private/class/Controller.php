@@ -296,8 +296,7 @@ class Controller
 
         if (!$errors) {
             $bookmark->user = (int) Auth::id();
-            $bookmark->save();
-            $bookmark->saveTags($tags);
+            $bookmark->saveWithTags($tags);
             Flash::set('Bookmark added.');
             self::redirect(BASE . '/' . self::returnPath());
         }
@@ -339,8 +338,7 @@ class Controller
         $errors = self::apply($bookmark);
 
         if (!$errors) {
-            $bookmark->save();
-            $bookmark->saveTags($tags);
+            $bookmark->saveWithTags($tags);
             Flash::set('Bookmark saved.');
             self::redirect(BASE . '/' . self::returnPath());
         }

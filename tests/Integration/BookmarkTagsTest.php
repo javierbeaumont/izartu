@@ -25,8 +25,9 @@ final class BookmarkTagsTest extends TestCase
 {
     /**
      * The rival save of the race test, as a second process with its own connection. It locks the gap where `php` would
-     * go, waits until the test's insert has been blocked on that lock for a second, then inserts `php` itself. Its
-     * transaction has already inserted a row, so it outweighs the test's and the test's is the one rolled back.
+     * go, waits until the test's insert has been blocked on that lock for a second, then inserts `php` itself. InnoDB
+     * rolls back the lighter transaction, weighing the rows it changed and the locks it holds; twenty inserted rows
+     * keep the rival the heavier.
      */
     private const RIVAL = <<<'PHP'
         require $argv[1] . 'bootstrap.php';
@@ -34,7 +35,10 @@ final class BookmarkTagsTest extends TestCase
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $pdo->beginTransaction();
-        $pdo->exec("INSERT INTO `tag` (`name`) VALUES ('rival')");
+        $pdo->exec('INSERT INTO `tag` (`name`) VALUES ' . implode(', ', array_map(
+            fn(int $i): string => "('rival{$i}')",
+            range(1, 20),
+        )));
         $pdo->query("SELECT 1 FROM `tag` WHERE `name` = 'php' FOR SHARE")->fetchAll();
         echo "ready\n";
         $deadline = microtime(true) + 10;
@@ -85,21 +89,21 @@ final class BookmarkTagsTest extends TestCase
         );
     }
 
-    public function testSaveTagsCreatesAndLinksTags(): void
+    public function testASaveCreatesAndLinksTags(): void
     {
         $bookmark = $this->savedBookmark();
 
-        $bookmark->saveTags('php, sql');
+        $bookmark->saveWithTags('php, sql');
 
         $this->assertSame(['php', 'sql'], $this->linkedTagNames($bookmark->id));
     }
 
-    public function testSaveTagsReusesAnExistingTag(): void
+    public function testASaveReusesAnExistingTag(): void
     {
         $this->pdo->exec("INSERT INTO `tag` (`name`) VALUES ('php')");
         $bookmark = $this->savedBookmark();
 
-        $bookmark->saveTags('php');
+        $bookmark->saveWithTags('php');
 
         $count = $this->pdo->query("SELECT COUNT(*) FROM `tag` WHERE `name` = 'php'")->fetchColumn();
         $this->assertSame(1, (int) $count);
@@ -112,9 +116,9 @@ final class BookmarkTagsTest extends TestCase
      */
     public function testReusingATagSpendsNoId(): void
     {
-        $this->savedBookmark()->saveTags('php');
-        $this->savedBookmark()->saveTags('php');
-        $this->savedBookmark()->saveTags('php, sql');
+        $this->savedBookmark()->saveWithTags('php');
+        $this->savedBookmark()->saveWithTags('php');
+        $this->savedBookmark()->saveWithTags('php, sql');
 
         $ids = $this->pdo->query('SELECT `name`, `id` FROM `tag` ORDER BY `id`')->fetchAll(PDO::FETCH_KEY_PAIR);
         $this->assertSame(['php' => 1, 'sql' => 2], $ids);
@@ -127,11 +131,11 @@ final class BookmarkTagsTest extends TestCase
     public function testANewTagWithNoIdLeftFails(): void
     {
         $this->pdo->exec('ALTER TABLE `tag` AUTO_INCREMENT = 4294967295');
-        $this->savedBookmark()->saveTags('php');
+        $this->savedBookmark()->saveWithTags('php');
         $bookmark = $this->savedBookmark();
 
         try {
-            $bookmark->saveTags('sql');
+            $bookmark->saveWithTags('sql');
             $this->fail('A tag with no id left must not be saved.');
         } catch (PDOException) {
         }
@@ -140,8 +144,8 @@ final class BookmarkTagsTest extends TestCase
     }
 
     /**
-     * Two saves creating the same new tag at once: under REPEATABLE READ both lock the gap the tag goes into, so the
-     * loser's insert fails (a deadlock, or the name taken), runs again and finds the tag the winner created.
+     * Two saves creating the same new tag at once: under REPEATABLE READ both lock the gap the tag goes into and
+     * deadlock, so the loser's transaction runs again and finds the tag the winner created.
      */
     public function testASaveThatLosesTheRaceForANewTagRetries(): void
     {
@@ -154,7 +158,7 @@ final class BookmarkTagsTest extends TestCase
         );
         $this->assertSame("ready\n", fgets($pipes[1]));
 
-        $bookmark->saveTags('php');
+        $bookmark->saveWithTags('php');
 
         $error = (string) stream_get_contents($pipes[2]);
         $this->assertSame(0, proc_close($rival), $error);
@@ -163,7 +167,43 @@ final class BookmarkTagsTest extends TestCase
             Debug::queries(),
             fn(array $query): bool => str_starts_with($query['sql'], 'INSERT INTO `tag`'),
         );
-        $this->assertCount(2, $inserts, 'the insert failed once and ran again');
+        $this->assertCount(2, $inserts, 'the transaction deadlocked once and ran again');
+    }
+
+    public function testAFailedEditLeavesTheBookmarkAndItsTagsAsTheyWere(): void
+    {
+        $this->pdo->exec('ALTER TABLE `tag` AUTO_INCREMENT = 4294967295');
+        $bookmark = $this->savedBookmark();
+        $bookmark->saveWithTags('php');
+        $bookmark->title = 'Renamed';
+
+        try {
+            $bookmark->saveWithTags('sql');
+            $this->fail('A tag with no id left must not be saved.');
+        } catch (PDOException) {
+        }
+
+        $this->assertSame('Tagged', Bookmark::find($bookmark->id)?->title);
+        $this->assertSame(['php'], $this->linkedTagNames($bookmark->id));
+    }
+
+    public function testAFailedAddLeavesNoBookmark(): void
+    {
+        $this->pdo->exec('ALTER TABLE `tag` AUTO_INCREMENT = 4294967295');
+        $this->savedBookmark()->saveWithTags('php');
+        $bookmark = new Bookmark();
+        $bookmark->title = 'New';
+        $bookmark->hlink = 'https://n.test';
+        $bookmark->user = 1;
+
+        try {
+            $bookmark->saveWithTags('sql');
+            $this->fail('A tag with no id left must not be saved.');
+        } catch (PDOException) {
+        }
+
+        $this->assertNull($bookmark->id);
+        $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM `bookmark`')->fetchColumn());
     }
 
     /**
@@ -174,7 +214,7 @@ final class BookmarkTagsTest extends TestCase
     {
         $bookmark = $this->savedBookmark();
 
-        $bookmark->saveTags('cafe, café');
+        $bookmark->saveWithTags('cafe, café');
 
         $this->assertSame(['cafe'], $this->linkedTagNames($bookmark->id));
     }
@@ -184,21 +224,21 @@ final class BookmarkTagsTest extends TestCase
      */
     public function testAWordAndItsAccentedSpellingAreOneTag(): void
     {
-        $this->savedBookmark()->saveTags('cafe');
+        $this->savedBookmark()->saveWithTags('cafe');
         $bookmark = $this->savedBookmark();
 
-        $bookmark->saveTags('café');
+        $bookmark->saveWithTags('café');
 
         $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM `tag`')->fetchColumn());
         $this->assertSame(['cafe'], $this->linkedTagNames($bookmark->id));
     }
 
-    public function testSaveTagsReplacesPreviousLinks(): void
+    public function testASaveReplacesPreviousLinks(): void
     {
         $bookmark = $this->savedBookmark();
-        $bookmark->saveTags('php, sql');
+        $bookmark->saveWithTags('php, sql');
 
-        $bookmark->saveTags('web');
+        $bookmark->saveWithTags('web');
 
         $this->assertSame(['web'], $this->linkedTagNames($bookmark->id));
     }
@@ -206,9 +246,9 @@ final class BookmarkTagsTest extends TestCase
     public function testTagsForBatchesAPageInOneMap(): void
     {
         $first = $this->savedBookmark();
-        $first->saveTags('sql, php');
+        $first->saveWithTags('sql, php');
         $second = $this->savedBookmark();
-        $second->saveTags('web');
+        $second->saveWithTags('web');
         $bare = $this->savedBookmark();
 
         $tags = $first->tagsFor([$first->id, $second->id, $bare->id]);
@@ -222,7 +262,7 @@ final class BookmarkTagsTest extends TestCase
     public function testDeleteRemovesTheBookmarkAndItsLinks(): void
     {
         $bookmark = $this->savedBookmark();
-        $bookmark->saveTags('php');
+        $bookmark->saveWithTags('php');
         $id = $bookmark->id;
 
         $bookmark->delete();
