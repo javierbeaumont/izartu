@@ -56,14 +56,26 @@ class User extends Crud
         } elseif (!preg_match('/^[A-Za-z0-9_-]{3,32}$/', $username)) {
             $errors['username'] = 'Username must be 3-32 characters of letters, digits, "_" or "-".';
         }
-        if (mb_strlen($password) < 8) {
-            $errors['password'] = 'Password must be at least 8 characters.';
+        $error = self::passwordError($password);
+        if ($error !== null) {
+            $errors['password'] = $error;
         }
         if (!in_array($role, self::ROLES, true)) {
             $errors['role'] = 'Role must be one of: ' . implode(', ', self::ROLES) . '.';
         }
 
         return $errors;
+    }
+
+    /**
+     * The reason to refuse a password, if there is one.
+     *
+     * @param string $password Plain password (checked before hashing).
+     * @return string|null The error message, or null for an acceptable password.
+     */
+    public static function passwordError(string $password): ?string
+    {
+        return mb_strlen($password) < 8 ? 'Password must be at least 8 characters.' : null;
     }
 
     /**

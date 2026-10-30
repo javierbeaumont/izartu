@@ -38,14 +38,7 @@ if (PHP_SAPI !== 'cli') {
 require dirname(__DIR__) . '/bootstrap.php';
 
 try {
-    $pdo = new PDO(
-        Database::dsn(DB_HOST, DB_PORT, DB_NAME),
-        DB_USER,
-        DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-    );
-
-    $migration = new Migration($pdo, PRIVATE_DIR . 'migration');
+    $migration = new Migration(Cli::connect(), PRIVATE_DIR . 'migration');
 
     while (($applied = $migration->applyNext()) !== null) {
         fwrite(STDOUT, "Applied {$applied}.\n");

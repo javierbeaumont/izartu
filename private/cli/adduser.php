@@ -40,16 +40,10 @@ if (PHP_SAPI !== 'cli') {
 
 require dirname(__DIR__) . '/bootstrap.php';
 
-function prompt(string $label): string
-{
-    fwrite(STDOUT, $label);
-    return trim((string) fgets(STDIN));
-}
-
-$email    = strtolower(prompt('Email: '));
-$username = prompt('Username: ');
-$password = prompt('Password: ');
-$role     = prompt('Role (owner/admin/user) [owner]: ') ?: 'owner';
+$email    = strtolower(Cli::prompt('Email: '));
+$username = Cli::prompt('Username: ');
+$password = Cli::prompt('Password: ');
+$role     = Cli::prompt('Role (owner/admin/user) [owner]: ') ?: 'owner';
 
 $errors = User::validate($email, $username, $password, $role);
 if ($errors) {
@@ -58,12 +52,7 @@ if ($errors) {
 }
 
 try {
-    $pdo = new PDO(
-        Database::dsn(DB_HOST, DB_PORT, DB_NAME),
-        DB_USER,
-        DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-    );
+    $pdo = Cli::connect();
 
     $query = $pdo->prepare(
         <<<'SQL'

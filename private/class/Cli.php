@@ -1,0 +1,79 @@
+<?php
+
+//  izartu: web bookmark manager based on tags
+//
+//  Copyright (C) 2011-2026 Javier Beaumont <javierbeaumont@users.noreply.github.com>
+//
+//  This file is part of izartu.
+//
+//  izartu is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU Affero General Public License as
+//  published by the Free Software Foundation, either version 3 of the
+//  License, or (at your option) any later version.
+//
+//  izartu is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//  GNU Affero General Public License for more details.
+//
+//  You should have received a copy of the GNU Affero General Public License
+//  along with izartu. If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * What the command-line scripts in `private/cli/` share: their prompts and their database connection.
+ */
+final class Cli
+{
+    /**
+     * Ask a question on the terminal and read the answer.
+     *
+     * @param string $label The question, printed as is.
+     * @return string The answer, without surrounding whitespace.
+     */
+    public static function prompt(string $label): string
+    {
+        fwrite(STDOUT, $label);
+
+        return trim((string) fgets(STDIN));
+    }
+
+    /**
+     * Ask for a password without showing what is typed, when the input is a terminal.
+     *
+     * @param string $label The question, printed as is.
+     * @return string The answer, without surrounding whitespace.
+     */
+    public static function secret(string $label): string
+    {
+        $terminal = stream_isatty(STDIN);
+        if ($terminal) {
+            system('stty -echo');
+        }
+
+        try {
+            return self::prompt($label);
+        } finally {
+            if ($terminal) {
+                system('stty echo');
+                fwrite(STDOUT, "\n");
+            }
+        }
+    }
+
+    /**
+     * Open a connection to the database the `DB_*` settings name.
+     *
+     * Errors throw, and prepared statements are native, so integer columns come back as `int`, as on the app's own
+     * connection.
+     *
+     * @return PDO The connection.
+     * @throws PDOException When the database cannot be reached.
+     */
+    public static function connect(): PDO
+    {
+        return new PDO(Database::dsn(DB_HOST, DB_PORT, DB_NAME), DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+    }
+}

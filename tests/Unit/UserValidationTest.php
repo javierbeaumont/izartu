@@ -35,6 +35,14 @@ final class UserValidationTest extends TestCase
         }
     }
 
+    public function testAPasswordNeedsEightCharactersHoweverManyBytes(): void
+    {
+        $this->assertSame('Password must be at least 8 characters.', User::passwordError('1234567'));
+        $this->assertNull(User::passwordError('12345678'));
+        $this->assertSame('Password must be at least 8 characters.', User::passwordError(str_repeat("\u{00f1}", 7)));
+        $this->assertNull(User::passwordError(str_repeat("\u{00f1}", 8)));
+    }
+
     public function testAnUnknownRoleIsRejected(): void
     {
         $this->assertArrayHasKey('role', User::validate('a@b.test', 'javi', 'secret123', 'root'));
