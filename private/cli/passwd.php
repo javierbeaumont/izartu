@@ -90,5 +90,4 @@ try {
     exit(1);
 }
 
-fwrite(STDOUT, "Changed the password of {$email} and ended {$ended} open " . ($ended === 1 ? 'session' : 'sessions')
-    . ".\n");
+fwrite(STDOUT, "Changed the password of {$email} and ended " . Cli::plural($ended, 'open session') . ".\n");

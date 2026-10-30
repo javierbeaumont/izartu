@@ -205,6 +205,31 @@ class Bookmark extends Crud
             return;
         }
 
+        $in = [];
+        $param = [];
+        foreach ($names as $i => $name) {
+            $in[] = ':name' . $i;
+            $param[':name' . $i] = $name;
+        }
+
+        // The tags that exist, locked until the commit through the `name` index and in its order: whoever deletes tags
+        // locks them the same way first, so it waits for the links instead of deadlocking with this save.
+        $lock = self::db()->prepare(
+            sprintf(
+                <<<'SQL'
+                SELECT
+                    `id`
+                FROM `tag` FORCE INDEX (`name`)
+                WHERE
+                    `name` IN (%s)
+                FOR SHARE
+                SQL,
+                implode(', ', $in),
+            ),
+        );
+        $lock->execute($param);
+        $lock->closeCursor();
+
         $create = self::db()->prepare(
             <<<'SQL'
             INSERT INTO `tag`
@@ -230,13 +255,6 @@ class Bookmark extends Crud
             }
         }
 
-        $in = [];
-        $param = [':bookmark' => $this->id];
-        foreach ($names as $i => $name) {
-            $in[] = ':name' . $i;
-            $param[':name' . $i] = $name;
-        }
-
         self::db()->prepare(
             sprintf(
                 <<<'SQL'
@@ -250,7 +268,7 @@ class Bookmark extends Crud
                 SQL,
                 implode(', ', $in),
             ),
-        )->execute($param);
+        )->execute([':bookmark' => $this->id] + $param);
     }
 
     /**

@@ -67,6 +67,18 @@ final class Cli
     }
 
     /**
+     * A count and its noun, in the plural unless the count is 1: `2 sessions`.
+     *
+     * @param int $count The count.
+     * @param string $noun The noun in the singular, whose plural adds an `s`.
+     * @return string The count, a space and the noun.
+     */
+    public static function plural(int $count, string $noun): string
+    {
+        return $count . ' ' . $noun . ($count === 1 ? '' : 's');
+    }
+
+    /**
      * Open a connection to the database the `DB_*` settings name.
      *
      * Errors throw, and prepared statements are native, so integer columns come back as `int`, as on the app's own

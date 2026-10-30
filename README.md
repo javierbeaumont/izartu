@@ -176,14 +176,21 @@ Inputs are validated: a real email address, a username of 3-32 characters
 username `me` is reserved, since `/user/me` is the alias for your own page.
 
 `passwd.php` changes a user's password: it asks for the email and the new password, twice, without showing it on a
-terminal, and ends every session the user has open, so a leaked password stops working at once. Ending them takes PHP's
-session files and the right to delete them: without Docker, run it as root or as the web server's user.
+terminal, and ends every session the user has open, so a leaked password stops working at once.
+
+`deluser.php` deletes a user with their bookmarks and the tags only that user's bookmarks have. It asks for the email,
+shows the username, the role and how many bookmarks go with them, and deletes only once the email is typed again. It
+ends the user's open sessions too. The only owner cannot be deleted.
+
+Ending sessions takes PHP's session files and the right to delete them: without Docker, run `passwd.php` and
+`deluser.php` as root or as the web server's user.
 
 ### With Docker
 
 ```sh
 docker compose exec app php /var/www/izartu/private/cli/adduser.php
 docker compose exec app php /var/www/izartu/private/cli/passwd.php
+docker compose exec app php /var/www/izartu/private/cli/deluser.php
 ```
 
 ### Without Docker
@@ -191,6 +198,7 @@ docker compose exec app php /var/www/izartu/private/cli/passwd.php
 ```sh
 php private/cli/adduser.php
 php private/cli/passwd.php
+php private/cli/deluser.php
 ```
 
 ## Errors and logs
