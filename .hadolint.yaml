@@ -1,0 +1,4 @@
+# apk and apt packages stay unpinned, so every build takes the distribution's fixes.
+ignored:
+  - DL3008
+  - DL3018

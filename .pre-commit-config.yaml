@@ -19,12 +19,12 @@ repos:
       - id: destroyed-symlinks
       - id: forbid-submodules
       - id: check-yaml
-        exclude: ^tests/E2E/docker-compose\.yml$
+        exclude: ^(tests/E2E/)?docker-compose\.yml$
       # Compose's "!reset" tag is valid YAML that the safe loader rejects.
       - id: check-yaml
         name: check yaml (syntax only, Compose tags)
         args: [--unsafe]
-        files: ^tests/E2E/docker-compose\.yml$
+        files: ^(tests/E2E/)?docker-compose\.yml$
       - id: check-json
       - id: check-xml
       - id: check-illegal-windows-names

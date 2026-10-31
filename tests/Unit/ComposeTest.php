@@ -39,11 +39,11 @@ final class ComposeTest extends TestCase
     }
 
     /**
-     * @return list<string> The variables `docker-compose.yml` sets on the `app` service.
+     * @return list<string> The variables `docker/compose.yaml` sets on the `app` service.
      */
     private function appEnvironment(): array
     {
-        $compose = (string) file_get_contents(dirname(PRIVATE_DIR) . '/docker-compose.yml');
+        $compose = (string) file_get_contents(dirname(PRIVATE_DIR) . '/docker/compose.yaml');
         preg_match('/^  app:\n(?:    .*\n)*?    environment:\n((?:      .*\n)+)/m', $compose, $block);
         preg_match_all('/^      ([A-Z_]+):/m', $block[1] ?? '', $names);
 

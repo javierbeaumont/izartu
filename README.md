@@ -73,7 +73,7 @@ and MySQL 8.4 or later. CI runs the tests on each of those PHP versions against 
 
 * Docker with the Compose plugin.
 
-The stack runs PHP 8.5 with Apache and MySQL 9.7; [Configuration](#configuration) says how to choose other versions.
+The stack runs PHP 8.5 with nginx and MySQL 9.7; [Configuration](#configuration) says how to choose another MySQL.
 
 ### Without Docker
 
@@ -268,7 +268,7 @@ php_fastcgi /bookmarks/* unix//run/php/php8.4-fpm.sock {
 Over HTTPS, the session cookie is marked `Secure`. A web server that serves HTTPS itself tells PHP so with no setting;
 behind a proxy that terminates TLS, it has to tell PHP from the proxy's `X-Forwarded-Proto`. Do it only when every
 request comes through the proxy: otherwise a client could send that header itself, though it would only mark its own
-cookie `Secure`.
+cookie `Secure`. The Docker image does it already.
 
 Apache, in the vhost:
 
@@ -315,6 +315,8 @@ log says to run `migrate.php`.
 git pull                             # or check out the new release's tag
 docker compose up -d --build --wait  # the app applies the new migrations on start
 ```
+
+Sessions live in the app container, so recreating it, as a new image does, logs everyone out.
 
 ### Without Docker
 
@@ -399,11 +401,10 @@ repeated ones. It shows errors to every visitor, so keep it off on a public inst
 ### With Docker
 
 The settings go in `.env`, except `DB_HOST`, `DB_NAME`, `DB_PORT` and `DB_SSL_ENABLED`, which
-[`docker-compose.yml`](docker-compose.yml) sets for the bundled MySQL, unencrypted since it runs on the same machine.
-Three more shape the stack:
+[`docker/compose.yaml`](docker/compose.yaml) sets for the bundled MySQL, unencrypted since it runs on the same machine.
+Two more shape the stack:
 
 * `APP_PORT`: the port the app is published on, `8080` by default.
-* `PHP_VERSION`: `8.5` by default.
 * `MYSQL_VERSION`: `9.7` by default. Choose it before the first start: a database one MySQL version created may not
   start on an older one.
 
@@ -492,10 +493,11 @@ start (a `TIMEZONE` PHP does not know): that page is empty.
 
 ### With Docker
 
-PHP's log goes to the app container's output, mixed with Apache's access log; its lines are tagged `php:`.
+PHP's log goes to the app container's output, mixed with nginx's access log; each of its entries starts with the date
+and `UTC` in brackets.
 
 ```sh
-docker compose logs app | grep 'php:'
+docker compose logs app
 ```
 
 ### Without Docker

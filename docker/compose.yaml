@@ -1,0 +1,45 @@
+# izartu from its published image, with its settings in a .env beside this file.
+services:
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BASE: ${BASE:-}
+      CLOUD_SIZE: ${CLOUD_SIZE:-}
+      DB_HOST: db
+      DB_NAME: izartu
+      DB_PASS: ${DB_PASS:-}
+      DB_PORT: 3306
+      DB_SSL_ENABLED: 0 # MySQL runs on the same machine, where TLS only costs time.
+      DB_USER: ${DB_USER:-}
+      DEBUG: ${DEBUG:-}
+      PAGE_SIZE: ${PAGE_SIZE:-}
+      TAGS_PAGE_SIZE: ${TAGS_PAGE_SIZE:-}
+      TIMEZONE: ${TIMEZONE:-}
+      VERSION: ${VERSION:-}
+    image: javierbeaumont/izartu:0.0
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  db:
+    environment:
+      MYSQL_DATABASE: izartu
+      MYSQL_PASSWORD: ${DB_PASS:-}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-}
+      MYSQL_USER: ${DB_USER:-}
+    healthcheck:
+      # Over TCP, as the app connects: on its first start MySQL runs a temporary server without networking.
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1]
+      start_period: 60s
+      start_interval: 1s
+      timeout: 20s
+      retries: 10
+    image: mysql:${MYSQL_VERSION:-9.7}
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

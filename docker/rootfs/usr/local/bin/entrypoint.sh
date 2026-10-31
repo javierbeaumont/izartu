@@ -20,5 +20,8 @@
 
 set -e
 
-php "$(dirname "$0")/../private/cli/migrate.php"
-exec apache2-foreground
+php /var/www/izartu/private/cli/migrate.php
+
+# s6-svscan writes into the directory it watches, and /etc is read-only to www-data.
+cp -R /etc/s6 /tmp/
+exec s6-svscan /tmp/s6

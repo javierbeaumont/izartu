@@ -18,9 +18,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# The e2e tier: smoke.sh against a throwaway stack, torn down whatever happens. Its own project name, credentials and
-# volume, and no published port, keep it off the dev stack; the explicit -f and --env-file keep COMPOSE_FILE, local
-# overrides and .env out.
+# The e2e tier: smoke.sh against a throwaway stack of the published image, built from the tracked files as they are now,
+# and torn down whatever happens. Its own project name, credentials and volume, and no published port, keep it off the
+# dev stack; the explicit -f and --env-file keep COMPOSE_FILE, local overrides and .env out.
 
 set -e
 
@@ -35,17 +35,26 @@ E2E_EMAIL=e2e@izartu.test
 E2E_USERNAME=e2e
 E2E_PASSWORD=e2e-password
 
+SOURCE="$(mktemp -d)"
+export SOURCE
+
 compose() {
-    docker compose -p "$PROJECT" --env-file /dev/null -f docker-compose.yml -f tests/E2E/docker-compose.yml "$@"
+    docker compose -p "$PROJECT" --project-directory . --env-file /dev/null -f docker/compose.yaml \
+        -f tests/E2E/docker-compose.yml "$@"
 }
 
-trap 'compose down -v' EXIT
+trap 'compose down -v; rm -rf "$SOURCE"' EXIT
 trap 'exit 1' INT TERM
+
+# The release archive of the tracked files, staged or not. `stash create` commits them without touching the tree or the
+# stash, and prints nothing when nothing changed; the identity is for CI's checkout, which has none.
+TREE="$(git -c user.name=e2e -c user.email=e2e@izartu.test stash create)"
+git archive "${TREE:-HEAD}" | tar -x -C "$SOURCE"
 
 compose up -d --build --wait app
 
 printf '%s\n' "$E2E_EMAIL" "$E2E_USERNAME" "$E2E_PASSWORD" "$E2E_PASSWORD" owner |
     compose exec -T app php /var/www/izartu/private/cli/adduser.php
 
-compose run --rm --build -e BASE_URL=http://app -e SMOKE_EMAIL="$E2E_EMAIL" -e SMOKE_USERNAME="$E2E_USERNAME" \
-    -e SMOKE_PASSWORD="$E2E_PASSWORD" test tests/E2E/smoke.sh
+compose run --rm --build -e BASE_URL=http://app:8080 -e SMOKE_EMAIL="$E2E_EMAIL" -e SMOKE_USERNAME="$E2E_USERNAME" \
+    -e SMOKE_PASSWORD="$E2E_PASSWORD" smoke

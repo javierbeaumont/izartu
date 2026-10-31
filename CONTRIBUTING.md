@@ -51,9 +51,9 @@ did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
   `make test-integration` migrates `izartu_test` first.
 * **E2E** ([`tests/E2E/`](tests/E2E/)): [`smoke.sh`](tests/E2E/smoke.sh), a shell script with curl, drives the running
   app over HTTP, for what only real HTTP shows: the home page up, a login keeping its session across requests, and a tag
-  URL with an encoded slash reaching the app. It runs on a stack of its own (separate Compose project, database and
-  credentials, no published port), removed whatever the outcome; it ignores `.env`, so the app runs on its default
-  settings, and needs no `make deps`.
+  URL with an encoded slash reaching the app. It runs the published image, built from the tracked files as they are, on
+  a stack of its own (separate Compose project, database and credentials, no published port), removed whatever the
+  outcome; it ignores `.env`, so the app runs on its default settings, and needs no `make deps`.
 
 ```sh
 make test              # all three

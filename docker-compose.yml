@@ -1,54 +1,23 @@
 services:
   app:
+    extends:
+      file: docker/compose.yaml
+      service: app
     build:
       context: .
-      target: runtime
-      args:
-        PHP_VERSION: ${PHP_VERSION:-8.5}
-    command: [/var/www/izartu/docker/entrypoint.sh]
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      BASE: ${BASE:-}
-      CLOUD_SIZE: ${CLOUD_SIZE:-}
-      DB_HOST: db
-      DB_NAME: izartu
-      DB_PASS: ${DB_PASS:-}
-      DB_PORT: 3306
-      DB_SSL_ENABLED: 0 # MySQL runs on the same machine, where TLS only costs time.
-      DB_USER: ${DB_USER:-}
-      DEBUG: ${DEBUG:-}
-      PAGE_SIZE: ${PAGE_SIZE:-}
-      TAGS_PAGE_SIZE: ${TAGS_PAGE_SIZE:-}
-      TIMEZONE: ${TIMEZONE:-}
-      VERSION: ${VERSION:-}
-    healthcheck:
-      test: [CMD, curl, -fsS, -o, /dev/null, http://localhost/]
-      start_period: 60s
-      start_interval: 1s
-    ports:
-      - "${APP_PORT:-8080}:80"
+      target: base
+    image: !reset null
+    restart: !reset null
     volumes:
       - .:/var/www/izartu
 
   db:
-    environment:
-      MYSQL_DATABASE: izartu
-      MYSQL_PASSWORD: ${DB_PASS:-}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-}
-      MYSQL_USER: ${DB_USER:-}
-    healthcheck:
-      # Over TCP, as the app connects: on its first start MySQL runs a temporary server without networking.
-      test: [CMD, mysqladmin, ping, -h, 127.0.0.1]
-      start_period: 60s
-      start_interval: 1s
-      timeout: 20s
-      retries: 10
-    image: mysql:${MYSQL_VERSION:-9.7}
+    extends:
+      file: docker/compose.yaml
+      service: db
+    restart: !reset null
     volumes:
       - ./docker/create-test-db.sh:/docker-entrypoint-initdb.d/create-test-db.sh
-      - db_data:/var/lib/mysql
 
   test:
     # Dev-only tooling; the profile keeps `docker compose up` from booting it

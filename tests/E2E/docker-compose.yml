@@ -1,4 +1,19 @@
-# No published port, so the throwaway e2e stack never clashes with a running dev stack.
+# The published image, built from this tree's release archive (SOURCE), with no published port, so the throwaway e2e
+# stack never clashes with a running dev stack; and the smoke test, on the dev image, which has curl.
 services:
   app:
+    build:
+      context: .
+      target: release
+      additional_contexts:
+        source: ${SOURCE:?the extracted release archive}
+    image: !reset null
     ports: !reset []
+
+  smoke:
+    build:
+      context: .
+      target: test
+    command: [/smoke.sh]
+    volumes:
+      - ./tests/E2E/smoke.sh:/smoke.sh:ro
