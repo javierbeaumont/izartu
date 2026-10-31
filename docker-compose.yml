@@ -10,10 +10,17 @@ services:
       db:
         condition: service_healthy
     environment:
+      BASE: ${BASE:-}
+      CLOUD_SIZE: ${CLOUD_SIZE:-}
       DB_HOST: db
       DB_NAME: izartu
       DB_PASS: ${DB_PASS:-}
+      DB_PORT: 3306
       DB_USER: ${DB_USER:-}
+      DEBUG: ${DEBUG:-}
+      PAGE_SIZE: ${PAGE_SIZE:-}
+      TAGS_PAGE_SIZE: ${TAGS_PAGE_SIZE:-}
+      VERSION: ${VERSION:-}
     healthcheck:
       test: [CMD, curl, -fsS, -o, /dev/null, http://localhost/]
       start_period: 60s

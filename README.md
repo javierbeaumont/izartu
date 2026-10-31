@@ -265,8 +265,8 @@ make test-e2e          # e2e only, on a throwaway stack
 ```
 
 `make test-e2e` brings up a stack of its own (separate Compose project, database and credentials, no published port),
-creates a user, runs `smoke.sh` against it and removes it all, whatever the outcome. It needs neither your `.env` nor
-`make deps`.
+creates a user, runs `smoke.sh` against it and removes it all, whatever the outcome. It ignores your `.env`, so the app
+runs on its default settings, and needs no `make deps`.
 
 #### Without Docker
 

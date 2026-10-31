@@ -19,7 +19,8 @@
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 # The e2e tier: smoke.sh against a throwaway stack, torn down whatever happens. Its own project name, credentials and
-# volume, and no published port, keep it off the dev stack; the explicit -f keeps COMPOSE_FILE and local overrides out.
+# volume, and no published port, keep it off the dev stack; the explicit -f and --env-file keep COMPOSE_FILE, local
+# overrides and .env out.
 
 set -e
 
@@ -35,7 +36,7 @@ E2E_USERNAME=e2e
 E2E_PASSWORD=e2e-password
 
 compose() {
-    docker compose -p "$PROJECT" -f docker-compose.yml -f tests/E2E/docker-compose.yml "$@"
+    docker compose -p "$PROJECT" --env-file /dev/null -f docker-compose.yml -f tests/E2E/docker-compose.yml "$@"
 }
 
 trap 'compose down -v' EXIT
