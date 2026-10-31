@@ -5,6 +5,26 @@ your bookmarks are private by default, and making one public shares it on
 your instance's feed. Plain PHP and MySQL, **zero runtime dependencies** (no
 framework, no packages in production), released under the GNU AGPLv3.
 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset=".github/screenshots/app-desktop-light.webp">
+  <img src=".github/screenshots/app-desktop-dark.webp" alt="The izartu feed on a laptop, a user logged in: the latest
+    bookmarks with their tags, one of them private, and the tag cloud beside them.">
+</picture>
+
+<details>
+  <summary>In the other theme</summary>
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset=".github/screenshots/app-desktop-dark.webp">
+    <img src=".github/screenshots/app-desktop-light.webp" alt="The same feed in the other theme.">
+  </picture>
+</details>
+
+<p>
+  <img src=".github/screenshots/app-phone-dark.webp" width="49%" alt="The same feed on a phone, in the dark theme: the
+    tag cloud first, then the latest bookmarks.">
+  <img src=".github/screenshots/app-phone-light.webp" width="49%" alt="And in the light theme.">
+</p>
+
 ## Why izartu
 
 * **Personal first, social second.** Every bookmark is private (only you) or
