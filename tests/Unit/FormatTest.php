@@ -95,13 +95,21 @@ final class FormatTest extends TestCase
 
         try {
             date_default_timezone_set('UTC');
-            $this->assertSame('25 July 2026 at 17:20', Format::absolute(self::NOW));
+            $this->assertSame('25 July 2026 at 17:20 UTC', Format::absolute(self::NOW));
             $this->assertSame('2026-07-25T17:20:00+00:00', Format::iso(self::NOW));
-            $this->assertSame('1 August 2026 at 09:05', Format::absolute(1785575100), 'no padded day, a padded hour');
+            $this->assertSame(
+                '1 August 2026 at 09:05 UTC',
+                Format::absolute(1785575100),
+                'no padded day, a padded hour',
+            );
 
             date_default_timezone_set('Europe/Madrid');
-            $this->assertSame('25 July 2026 at 19:20', Format::absolute(self::NOW));
+            $this->assertSame('25 July 2026 at 19:20 CEST', Format::absolute(self::NOW));
             $this->assertSame('2026-07-25T19:20:00+02:00', Format::iso(self::NOW));
+            $this->assertSame('21 January 2026 at 13:53 CET', Format::absolute(1769000000), 'winter time');
+
+            date_default_timezone_set('America/Sao_Paulo');
+            $this->assertSame('25 July 2026 at 14:20 -03', Format::absolute(self::NOW), 'a zone with no abbreviation');
         } finally {
             date_default_timezone_set($zone);
         }

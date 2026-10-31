@@ -20,6 +20,7 @@ services:
       DEBUG: ${DEBUG:-}
       PAGE_SIZE: ${PAGE_SIZE:-}
       TAGS_PAGE_SIZE: ${TAGS_PAGE_SIZE:-}
+      TIMEZONE: ${TIMEZONE:-}
       VERSION: ${VERSION:-}
     healthcheck:
       test: [CMD, curl, -fsS, -o, /dev/null, http://localhost/]

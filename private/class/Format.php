@@ -74,14 +74,14 @@ final class Format
     }
 
     /**
-     * The full date and time, for the tooltip that backs the relative text.
+     * The full date and time, and its timezone, for the tooltip that backs the relative text.
      *
      * @param int $timestamp The moment, as epoch seconds.
-     * @return string For example '1 August 2026 at 14:14'.
+     * @return string For example '1 August 2026 at 14:14 CEST'; a zone with no abbreviation shows its offset, '-03'.
      */
     public static function absolute(int $timestamp): string
     {
-        return date('j F Y \a\t H:i', $timestamp);
+        return date('j F Y \a\t H:i T', $timestamp);
     }
 
     /**

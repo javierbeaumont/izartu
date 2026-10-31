@@ -160,6 +160,9 @@ it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 * `PAGE_SIZE`: bookmarks per feed page; optional, defaults to `10`.
 * `TAGS_PAGE_SIZE`: tags per page on the tag index; optional, defaults
   to `100`.
+* `TIMEZONE`: timezone of the dates shown, a name from [PHP's list](https://www.php.net/timezones) such as
+  `Europe/Madrid`; optional, defaults to PHP's `date.timezone`, UTC when that is unset. A name PHP does not know stops
+  the app.
 * `DEBUG`: optional, off by default. Set it to `1` to enable debug mode: PHP's errors and the cause of a failed request
   on the page, a `Server-Timing` response header with request metrics (PHP time, database time and query count, peak
   memory; shown natively in the browser devtools network panel) and a collapsible per-query timing panel at the bottom

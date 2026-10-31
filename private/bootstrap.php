@@ -84,3 +84,8 @@ function asset(string $path): string
 }
 
 require_once __DIR__ . '/config.php';
+
+// PHP meets an unknown name with a notice and keeps its zone, so every date would be quietly off.
+if (!@date_default_timezone_set(TIMEZONE)) {
+    throw new RuntimeException('Unknown TIMEZONE "' . TIMEZONE . '": use a name from https://www.php.net/timezones.');
+}

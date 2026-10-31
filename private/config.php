@@ -57,6 +57,12 @@ define('PAGE_SIZE', max(1, (int) env('PAGE_SIZE', '10')));
 define('TAGS_PAGE_SIZE', max(1, (int) env('TAGS_PAGE_SIZE', '100')));
 
 /**
+ * Timezone of the dates shown, such as 'Europe/Madrid' (PHP's `date.timezone` by default; UTC when that is unset). A
+ * name PHP does not know stops the app.
+ */
+define('TIMEZONE', env('TIMEZONE', date_default_timezone_get()));
+
+/**
  * Debug mode (off by default; `1`/`true`/`on`/`yes` enable it): PHP's errors and the cause of a failed request on the
  * page, the Server-Timing header and the query panel.
  */
