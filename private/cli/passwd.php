@@ -48,7 +48,7 @@ if ($error !== null) {
 }
 
 try {
-    $pdo = Cli::connect();
+    $pdo = Database::connect();
 
     $find = $pdo->prepare(
         <<<'SQL'

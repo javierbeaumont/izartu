@@ -55,7 +55,7 @@ if ($errors) {
 }
 
 try {
-    $pdo = Cli::connect();
+    $pdo = Database::connect();
 
     $query = $pdo->prepare(
         <<<'SQL'

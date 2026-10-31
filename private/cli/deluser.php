@@ -41,7 +41,7 @@ require dirname(__DIR__) . '/bootstrap.php';
 $email = strtolower(Cli::prompt('Email: '));
 
 try {
-    $pdo = Cli::connect();
+    $pdo = Database::connect();
 
     $find = $pdo->prepare(
         <<<'SQL'

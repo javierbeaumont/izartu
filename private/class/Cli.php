@@ -20,7 +20,7 @@
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * What the command-line scripts in `private/cli/` share: their prompts and their database connection.
+ * What the command-line scripts in `private/cli/` share: their prompts.
  */
 final class Cli
 {
@@ -76,22 +76,5 @@ final class Cli
     public static function plural(int $count, string $noun): string
     {
         return $count . ' ' . $noun . ($count === 1 ? '' : 's');
-    }
-
-    /**
-     * Open a connection to the database the `DB_*` settings name.
-     *
-     * Errors throw, and prepared statements are native, so integer columns come back as `int`, as on the app's own
-     * connection.
-     *
-     * @return PDO The connection.
-     * @throws PDOException When the database cannot be reached.
-     */
-    public static function connect(): PDO
-    {
-        return new PDO(Database::dsn(DB_HOST, DB_PORT, DB_NAME), DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
     }
 }

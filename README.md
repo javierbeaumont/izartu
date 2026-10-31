@@ -77,7 +77,7 @@ The stack runs PHP 8.5 with Apache and MySQL 9.7; [Configuration](#configuration
 
 ### Without Docker
 
-* PHP, with the `pdo_mysql` and `mbstring` extensions.
+* PHP, with the `pdo_mysql` and `mbstring` extensions, and `openssl` to encrypt the connection to MySQL over TCP.
 * MySQL.
 * A web server that routes every request to [`public/index.php`](public/index.php): Apache with `mod_rewrite`, through
   the shipped [`.htaccess`](public/.htaccess), or nginx or Caddy with PHP-FPM ([Web servers](#web-servers)).
@@ -352,20 +352,33 @@ mysql -u root -p izartu < izartu.sql   # restore
 [`private/config.php`](private/config.php) reads every setting from an environment variable, so a deployment never edits
 tracked files:
 
-| Setting          | Default                         | What it sets                            |
-|------------------|---------------------------------|-----------------------------------------|
-| `DB_USER`        | required                        | The app's MySQL account                 |
-| `DB_PASS`        | required                        | Its password                            |
-| `DB_HOST`        | `localhost`                     | MySQL's host                            |
-| `DB_PORT`        | `3306`                          | MySQL's port                            |
-| `DB_NAME`        | `izartu`                        | The database                            |
-| `TIMEZONE`       | PHP's `date.timezone`, else UTC | The time zone of the dates shown        |
-| `PAGE_SIZE`      | `10`                            | Bookmarks per feed page                 |
-| `TAGS_PAGE_SIZE` | `100`                           | Tags per page of the tag index          |
-| `CLOUD_SIZE`     | `50`                            | Tags in the cloud, the most used        |
-| `BASE`           | detected from the request       | The base path: empty at a domain root   |
-| `VERSION`        | read from the tree              | The running source, named in the footer |
-| `DEBUG`          | off                             | Debug mode                              |
+| Setting              | Default                             | What it sets                            |
+|----------------------|-------------------------------------|-----------------------------------------|
+| `DB_USER`            | required                            | The app's MySQL account                 |
+| `DB_PASS`            | required                            | Its password                            |
+| `DB_HOST`            | `localhost`                         | MySQL's host                            |
+| `DB_PORT`            | `3306`                              | MySQL's port                            |
+| `DB_NAME`            | `izartu`                            | The database                            |
+| `DB_SSL_ENABLED`     | `1`                                 | Encryption of the connection to MySQL   |
+| `DB_SSL_VERIFY_CERT` | `1` with `DB_SSL_CA_FILE`, else `0` | Verification of MySQL's certificate     |
+| `DB_SSL_CA_FILE`     | unset: the CAs the system trusts    | The CA that signs MySQL's certificate   |
+| `TIMEZONE`           | PHP's `date.timezone`, else UTC     | The time zone of the dates shown        |
+| `PAGE_SIZE`          | `10`                                | Bookmarks per feed page                 |
+| `TAGS_PAGE_SIZE`     | `100`                               | Tags per page of the tag index          |
+| `CLOUD_SIZE`         | `50`                                | Tags in the cloud, the most used        |
+| `BASE`               | detected from the request           | The base path: empty at a domain root   |
+| `VERSION`            | read from the tree                  | The running source, named in the footer |
+| `DEBUG`              | `0`                                 | Debug mode                              |
+
+`DB_SSL_ENABLED` encrypts the connection to MySQL over TCP; `DB_SSL_ENABLED=0` turns it off, for a MySQL on the same
+machine, where it only costs time, or one without TLS, which cannot be reached otherwise. A Unix socket, which
+`DB_HOST=localhost` uses, is never encrypted: it does not leave the machine.
+
+Out of the box, MySQL uses a certificate of its own, whose name never matches `DB_HOST`, so the server is not verified
+by default. `DB_SSL_VERIFY_CERT=1` verifies it: its certificate must be signed by a CA the system trusts, such as a
+public one, and issued for `DB_HOST`. `DB_SSL_CA_FILE` verifies it against a CA file instead, such as a provider's own
+CA, and changes the default of `DB_SSL_VERIFY_CERT` to `1`. `DB_SSL_ENABLED=0` leaves the other two without effect, and
+`DB_SSL_VERIFY_CERT=0` leaves `DB_SSL_CA_FILE`; [`migrate.php`](private/cli/migrate.php) warns of both.
 
 `TIMEZONE` takes a name from [PHP's list](https://www.php.net/timezones), such as `Europe/Madrid`; a name PHP does not
 know stops the app.
@@ -385,8 +398,9 @@ repeated ones. It shows errors to every visitor, so keep it off on a public inst
 
 ### With Docker
 
-The settings go in `.env`, except `DB_HOST`, `DB_NAME` and `DB_PORT`, which [`docker-compose.yml`](docker-compose.yml)
-sets for the bundled MySQL. Three more shape the stack:
+The settings go in `.env`, except `DB_HOST`, `DB_NAME`, `DB_PORT` and `DB_SSL_ENABLED`, which
+[`docker-compose.yml`](docker-compose.yml) sets for the bundled MySQL, unencrypted since it runs on the same machine.
+Three more shape the stack:
 
 * `APP_PORT`: the port the app is published on, `8080` by default.
 * `PHP_VERSION`: `8.5` by default.

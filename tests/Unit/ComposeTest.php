@@ -31,7 +31,11 @@ final class ComposeTest extends TestCase
     {
         preg_match_all("/\\benv\\('([A-Z_]+)'/", (string) file_get_contents(PRIVATE_DIR . 'config.php'), $settings);
 
-        $this->assertEqualsCanonicalizing($settings[1], $this->appEnvironment());
+        // These do nothing with DB_SSL_ENABLED off, as the bundled MySQL has it.
+        $this->assertEqualsCanonicalizing(
+            array_values(array_diff($settings[1], ['DB_SSL_CA_FILE', 'DB_SSL_VERIFY_CERT'])),
+            $this->appEnvironment(),
+        );
     }
 
     /**

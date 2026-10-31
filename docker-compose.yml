@@ -16,6 +16,7 @@ services:
       DB_NAME: izartu
       DB_PASS: ${DB_PASS:-}
       DB_PORT: 3306
+      DB_SSL_ENABLED: 0 # MySQL runs on the same machine, where TLS only costs time.
       DB_USER: ${DB_USER:-}
       DEBUG: ${DEBUG:-}
       PAGE_SIZE: ${PAGE_SIZE:-}

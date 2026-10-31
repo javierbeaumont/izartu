@@ -44,6 +44,26 @@ define('DB_NAME', env('DB_NAME', 'izartu'));
 define('DB_PASS', env('DB_PASS'));
 /** Database port (3306 by default). */
 define('DB_PORT', (int) env('DB_PORT', '3306'));
+/** CA file to verify the server's certificate against (unset by default: the CAs the system trusts). */
+define('DB_SSL_CA_FILE', env('DB_SSL_CA_FILE'));
+/**
+ * Encrypt the connection over TCP; a Unix socket, `localhost` included, never is. On by default; `0`/`false`/`off`/`no`
+ * turn it off, any other value on.
+ */
+define('DB_SSL_ENABLED', filter_var(
+    env('DB_SSL_ENABLED', '1'),
+    FILTER_VALIDATE_BOOL,
+    FILTER_NULL_ON_FAILURE,
+) !== false);
+/**
+ * Verify the server's certificate, name included. On by default with `DB_SSL_CA_FILE`, off without it;
+ * `0`/`false`/`off`/`no` turn it off, any other value on.
+ */
+define('DB_SSL_VERIFY_CERT', filter_var(
+    env('DB_SSL_VERIFY_CERT', DB_SSL_CA_FILE === '' ? '0' : '1'),
+    FILTER_VALIDATE_BOOL,
+    FILTER_NULL_ON_FAILURE,
+) !== false);
 /** Database user (required, no default). */
 define('DB_USER', env('DB_USER'));
 

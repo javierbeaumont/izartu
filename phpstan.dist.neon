@@ -23,6 +23,9 @@ parameters:
         - DB_NAME
         - DB_USER
         - DB_PASS
+        - DB_SSL_CA_FILE
+        - DB_SSL_ENABLED
+        - DB_SSL_VERIFY_CERT
         - DEBUG
         - PAGE_SIZE
         - CLOUD_SIZE

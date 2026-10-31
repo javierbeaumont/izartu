@@ -72,6 +72,16 @@ final class MigrateScriptTest extends TestCase
         $this->assertStringStartsWith('Could not migrate: ', $error);
     }
 
+    public function testASettingLeftWithoutEffectIsWarned(): void
+    {
+        [$code, , $error] = $this->migrate(['DB_SSL_ENABLED' => '0', 'DB_SSL_CA_FILE' => '/ca.pem']);
+
+        $this->assertSame(0, $code);
+        // Over a Unix socket the warning names the socket instead of DB_SSL_ENABLED.
+        $this->assertStringStartsWith('Warning: ', $error);
+        $this->assertStringEndsWith(": DB_SSL_VERIFY_CERT and DB_SSL_CA_FILE are ignored.\n", $error);
+    }
+
     /**
      * Run the script in a process, against the migration test database.
      *

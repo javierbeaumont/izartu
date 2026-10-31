@@ -40,4 +40,61 @@ final class DatabaseConnectionTest extends TestCase
         $this->assertSame(1, (int) $pdo->query('SELECT 1')->fetchColumn());
     }
 
+    public function testTcpIsEncrypted(): void
+    {
+        $this->assertNotSame('', $this->cipher(Database::options($this->tcpHost(), true, false, '')));
+    }
+
+    public function testSslOffConnectsInClear(): void
+    {
+        $this->assertSame('', $this->cipher(Database::options($this->tcpHost(), false, false, '')));
+    }
+
+    public function testACaThatDidNotSignTheServerIsRefused(): void
+    {
+        $key = openssl_pkey_new();
+        $cert = openssl_csr_sign(openssl_csr_new(['commonName' => 'izartu test CA'], $key), null, $key, 1);
+        $ca = tempnam(sys_get_temp_dir(), 'izartu-ca');
+        $this->assertTrue(openssl_x509_export_to_file($cert, $ca));
+
+        try {
+            // Database::sslHint() recognizes this failure by its message.
+            $this->expectException(PDOException::class);
+            $this->expectExceptionMessage('Cannot connect to MySQL using SSL');
+            $this->cipher(Database::options($this->tcpHost(), true, true, $ca));
+        } finally {
+            unlink($ca);
+        }
+    }
+
+    public function testTheSystemsCasRefuseMysqlsOwnCertificate(): void
+    {
+        $this->expectException(PDOException::class);
+        $this->expectExceptionMessage('Cannot connect to MySQL using SSL');
+        $this->cipher(Database::options($this->tcpHost(), true, true, ''));
+    }
+
+    /**
+     * DB_HOST, skipping the test when it is a Unix socket, where TLS does not work.
+     */
+    private function tcpHost(): string
+    {
+        if (DB_HOST === 'localhost' || str_starts_with(DB_HOST, '/')) {
+            $this->markTestSkipped('DB_HOST is a Unix socket');
+        }
+
+        return DB_HOST;
+    }
+
+    /**
+     * The cipher of a new connection with these options: '' when it is not encrypted.
+     *
+     * @param array<int, bool|int|string> $options
+     */
+    private function cipher(array $options): string
+    {
+        $pdo = new PDO(Database::dsn(DB_HOST, DB_PORT, DB_NAME), DB_USER, DB_PASS, $options);
+
+        return (string) $pdo->query("SHOW SESSION STATUS LIKE 'Ssl_cipher'")->fetch(PDO::FETCH_NUM)[1];
+    }
 }

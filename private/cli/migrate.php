@@ -23,7 +23,8 @@
  * CLI: bring the database schema up to date.
  *
  * Applies, in order, every migration the database lacks (all of them on a fresh install), then reports its version. It
- * refuses a database it cannot continue from and stops at the first migration that fails.
+ * refuses a database it cannot continue from and stops at the first migration that fails. Before connecting, it warns
+ * of any `DB_SSL_*` setting another one leaves without effect.
  *
  * Run it:
  *   docker compose exec app php /var/www/izartu/private/cli/migrate.php   (Docker)
@@ -37,8 +38,13 @@ if (PHP_SAPI !== 'cli') {
 
 require dirname(__DIR__) . '/bootstrap.php';
 
+$ignored = Database::sslConflict(DB_HOST, DB_SSL_ENABLED, DB_SSL_VERIFY_CERT, DB_SSL_CA_FILE);
+if ($ignored !== '') {
+    fwrite(STDERR, "Warning: {$ignored}\n");
+}
+
 try {
-    $migration = new Migration(Cli::connect(), PRIVATE_DIR . 'migration');
+    $migration = new Migration(Database::connect(), PRIVATE_DIR . 'migration');
 
     while (($applied = $migration->applyNext()) !== null) {
         fwrite(STDOUT, "Applied {$applied}.\n");
