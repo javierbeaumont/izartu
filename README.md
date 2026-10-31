@@ -170,23 +170,24 @@ it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 
 ## Managing users
 
-Users are managed from the command line. `adduser.php` prompts for email, username, password and role (`owner`, `admin`
-or `user`), the password twice and without showing it on a terminal, hashes it and inserts the user. Login is by email;
-the username is the public display name shown next to the user's bookmarks.
+Users are managed from the command line. Login is by email; the username is the public display name shown next to the
+user's bookmarks and in the URL of their page, `/user/USERNAME`.
 
-Inputs are validated: a real email address, a username of 3-32 characters
-(letters, digits, `_` or `-`), and a password of at least 8 characters. The
-username `me` is reserved, since `/user/me` is the alias for your own page.
+`adduser.php` asks for the email, the username, the password (twice, without showing it on a terminal) and the role, and
+stores only the password's hash. The email must be valid and the username 3-32 characters (letters, digits, `_` or `-`),
+neither of them another user's; `me` is reserved, since `/user/me` is the alias for your own page. A password needs at
+least 8 characters.
+
+The role sets whose bookmarks a user may edit and delete: `owner` and `admin` any public one, `user` only their own. No
+one sees another user's private bookmarks. `owner` and `admin` differ only in that the only owner cannot be deleted. An
+empty role gives `user`, so type `owner` for the first user.
 
 `passwd.php` changes a user's password: it asks for the email and the new password, twice, without showing it on a
 terminal, and ends every session the user has open, so a leaked password stops working at once.
 
 `deluser.php` deletes a user with their bookmarks and the tags only that user's bookmarks have. It asks for the email,
 shows the username, the role and how many bookmarks go with them, and deletes only once the email is typed again. It
-ends the user's open sessions too. The only owner cannot be deleted.
-
-Ending sessions takes PHP's session files and the right to delete them: without Docker, run `passwd.php` and
-`deluser.php` as root or as the web server's user.
+ends the user's open sessions too.
 
 ### With Docker
 
@@ -203,6 +204,11 @@ php private/cli/adduser.php
 php private/cli/passwd.php
 php private/cli/deluser.php
 ```
+
+Like `migrate.php`, each script reads the `DB_*` variables from its own environment. `passwd.php` and `deluser.php` end
+a user's sessions by deleting the web server's session files, so the web server must use PHP's default session handler,
+which keeps them in files, and the scripts must run as root or as its user, with its `session.save_path`
+(`php -d session.save_path=...` when the command line's differs).
 
 ## Errors and logs
 
