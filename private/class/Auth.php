@@ -53,22 +53,37 @@ class Auth
      *
      * @param string $email Email typed at login (normalised to lower-case here).
      * @param string $password Plain password typed at login.
-     * @return bool True if the credentials are valid and the user is now logged in.
+     * @return bool True if the credentials are valid, and still are once the user is logged in.
      */
     public static function attempt(string $email, string $password): bool
     {
-        $user = (new User())->findByEmail(strtolower(trim($email)));
+        $users = new User();
+        $user = $users->findByEmail(strtolower(trim($email)));
 
         if (!self::verify($user, $password)) {
             return false;
         }
 
+        $hash = $user['hash'];
+
         // At the dummy hash's cost, so this email's login takes as long as an unknown one's.
-        if (password_needs_rehash($user['hash'], PASSWORD_DEFAULT)) {
-            (new User())->replaceHash($user['id'], $user['hash'], password_hash($password, PASSWORD_DEFAULT));
+        if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+            $new = password_hash($password, PASSWORD_DEFAULT);
+            if ($users->replaceHash($user['id'], $hash, $new)) {
+                $hash = $new;
+            }
         }
 
         self::login($user);
+
+        // endSessions() runs after the password changes or the user is deleted, and misses a session not yet created.
+        // This one exists now: a change that lands from here on ends it, and one that landed before shows in the hash.
+        if ($users->hashOf($user['id']) !== $hash) {
+            unset($_SESSION['user']);
+            session_regenerate_id(true);
+
+            return false;
+        }
 
         return true;
     }

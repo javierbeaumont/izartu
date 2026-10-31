@@ -109,6 +109,29 @@ class User extends Crud
     }
 
     /**
+     * Find a user's password hash.
+     *
+     * @param int $id The user's id.
+     * @return string|null The hash, or null if no user has that id.
+     */
+    public function hashOf(int $id): ?string
+    {
+        /** @var list<array{hash: string}> $rows */
+        $rows = $this->read(
+            <<<'SQL'
+            SELECT
+                `hash`
+            FROM `user`
+            WHERE
+                `id` = :id
+            SQL,
+            [[':id', $id, PDO::PARAM_INT, 255]],
+        );
+
+        return $rows[0]['hash'] ?? null;
+    }
+
+    /**
      * Replace a user's password hash, unless it changed since it was read.
      *
      * @param int $id The user's id.

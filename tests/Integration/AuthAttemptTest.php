@@ -47,6 +47,11 @@ final class AuthAttemptTest extends TestCase
 
     protected function tearDown(): void
     {
+        // The rest of the suite needs PHP's own session handler and a session open (see tests/bootstrap.php).
+        session_write_close();
+        session_module_name('files');
+        session_id('');
+        Auth::start();
         $_SESSION = [];
     }
 
@@ -118,6 +123,85 @@ final class AuthAttemptTest extends TestCase
         $this->assertFalse((new User())->replaceHash(1, $read, password_hash('secret123', PASSWORD_DEFAULT)));
 
         $this->assertSame(strtoupper($read), $this->storedHash());
+    }
+
+    /**
+     * passwd.php stores the new hash and ends the user's sessions; a login that verified the old password and had not
+     * yet created its session would keep it. It fails instead, and leaves the request anonymous with its session data,
+     * such as the login form's CSRF token.
+     */
+    public function testALoginFailsWhenThePasswordChangesBeforeItsSessionExists(): void
+    {
+        $this->seedUser();
+        $login = $this->beforeTheSessionOpens(function (): void {
+            $hash = password_hash('another-secret', PASSWORD_BCRYPT, ['cost' => 4]);
+            $this->pdo->prepare('UPDATE `user` SET `hash` = :hash WHERE `id` = 1')->execute([':hash' => $hash]);
+            Auth::endSessions(1);
+        });
+        $_SESSION['csrf'] = 'token';
+
+        $this->assertFalse(Auth::attempt('owner@izartu.test', 'secret123'));
+
+        $this->assertSame(PHP_SESSION_ACTIVE, session_status());
+        $this->assertSame(['csrf' => 'token'], $_SESSION);
+        $this->assertSame([], $this->sessionData($login->id));
+    }
+
+    public function testALoginFailsWhenTheUserIsDeletedBeforeItsSessionExists(): void
+    {
+        $this->seedUser();
+        $login = $this->beforeTheSessionOpens(function (): void {
+            $this->pdo->exec('DELETE FROM `user` WHERE `id` = 1');
+            Auth::endSessions(1);
+        });
+
+        $this->assertFalse(Auth::attempt('owner@izartu.test', 'secret123'));
+
+        $this->assertSame([], $this->sessionData($login->id));
+    }
+
+    /**
+     * Run `$meanwhile` when a login opens the session it moves user 1 to, before PHP creates its file.
+     *
+     * @return SessionHandler A handler that keeps that session's id in `$id`.
+     */
+    private function beforeTheSessionOpens(Closure $meanwhile): SessionHandler
+    {
+        session_write_close();
+        $handler = new class ($meanwhile) extends SessionHandler {
+            public string $id = '';
+
+            public function __construct(private ?Closure $meanwhile) {}
+
+            public function read(string $id): string|false
+            {
+                if ($this->meanwhile !== null && str_starts_with($id, '1-')) {
+                    ($this->meanwhile)();
+                    $this->meanwhile = null;
+                    $this->id = $id;
+                }
+
+                return parent::read($id);
+            }
+        };
+        session_set_save_handler($handler);
+        session_start();
+
+        return $handler;
+    }
+
+    /**
+     * What a request with that session's cookie would find in it.
+     */
+    private function sessionData(string $id): array
+    {
+        session_write_close();
+        session_id($id);
+        session_start();
+        $data = $_SESSION;
+        session_write_close();
+
+        return $data;
     }
 
     private function seedUser(?string $hash = null): void
