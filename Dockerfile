@@ -4,7 +4,7 @@ ARG PHP_VERSION=8.5
 # ===== The published image =====
 
 # PHP, compiled with only the modules izartu uses.
-FROM alpine:3.24 AS php
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS php
 
 ARG PHP_SOURCE_VERSION=8.5.12
 ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
@@ -70,7 +70,7 @@ RUN apk add --no-cache \
  && find /usr/local -newer main/php_version.h -exec touch -h -r main/php_version.h {} +
 
 # The image: Alpine, with nginx and PHP-FPM under s6 as www-data on port 8080, its layers from the least changing.
-FROM alpine:3.24 AS base
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS base
 
 # adduser dates /etc/shadow by the day and keeps backups in /etc/*-, which would change the layer daily.
 RUN --mount=type=bind,from=php,source=/rundeps,target=/rundeps \

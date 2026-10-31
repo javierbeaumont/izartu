@@ -51,9 +51,10 @@ did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
   `make test-integration` migrates `izartu_test` first.
 * **E2E** ([`tests/E2E/`](tests/E2E/)): [`smoke.sh`](tests/E2E/smoke.sh), a shell script with curl, drives the running
   app over HTTP, for what only real HTTP shows: the home page up, a login keeping its session across requests, and a tag
-  URL with an encoded slash reaching the app. It runs the published image, built from the tracked files as they are, on
-  a stack of its own (separate Compose project, database and credentials, no published port), removed whatever the
-  outcome; it ignores `.env`, so the app runs on its default settings, and needs no `make deps`.
+  URL with an encoded slash reaching the app. It runs the published image, built from the tracked files as they are (or
+  the one `IMAGE` names, local or in a registry), on a stack of its own (separate Compose project, database and
+  credentials, no published port), removed whatever the outcome; it ignores `.env`, so the app runs on its default
+  settings, and needs no `make deps`.
 
 ```sh
 make test              # all three
@@ -105,7 +106,8 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 Every pull request and every push to `main` runs the workflows in [`.github/workflows/`](.github/workflows/): the unit
 tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test,
 style and static analysis, the hooks that need no PHP, and an audit of the dev dependencies, which also runs weekly. A
-local `make check` covers one PHP and one MySQL; CI covers the rest.
+push to `main` that changes the image builds it for amd64 and arm64, runs the e2e test on each, and publishes it on
+Docker Hub and GHCR as `main`. A local `make check` covers one PHP and one MySQL; CI covers the rest.
 
 ## License
 

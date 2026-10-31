@@ -1,0 +1,203 @@
+name: Container images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - docker/pin-mtimes.sh
+      - docker/rootfs/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One run at a time, so an older run never tags `main` after a newer one.
+concurrency:
+  group: ${{ github.workflow }}
+
+# Built and tested natively on each platform; `main` is tagged only when every platform passed.
+jobs:
+  build:
+    name: Build / ${{ matrix.arch }}
+    runs-on: ubuntu-${{ matrix.ubuntu }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
+    timeout-minutes: 30
+    # Holds DOCKERHUB_PUSH_TOKEN, and only `main` may use it.
+    environment: container-registries
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+        # One Ubuntu for both platforms: arm64 has no `-latest` label to follow.
+        ubuntu:
+          - '26.04'
+    env:
+      NAMES: docker.io/${{ github.repository }},ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # What a release download carries, and the commit's time, which caps the image's file times.
+      - name: Extract the release archive
+        run: |
+          mkdir "$RUNNER_TEMP/source"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/source"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The Docker Hub account is the repository owner's.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
+          username: ${{ github.repository_owner }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+
+      - name: Build the image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          build-contexts: source=${{ runner.temp }}/source
+          context: .
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          outputs: type=docker,rewrite-timestamp=true
+          tags: izartu-e2e
+          target: release
+
+      - name: Run the end-to-end test
+        env:
+          IMAGE: izartu-e2e
+        run: make test-e2e
+
+      # The same build, from the cache: the image just tested.
+      - name: Push the image by digest
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          build-contexts: source=${{ runner.temp }}/source
+          context: .
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          outputs: type=image,"name=${{ env.NAMES }}",push-by-digest=true,push=true,rewrite-timestamp=true
+          provenance: mode=max
+          sbom: true
+          target: release
+
+      # buildx's attestations are unsigned: each platform's SBOM is signed with Sigstore, on its image as the index
+      # lists it.
+      - name: Extract the SBOM
+        id: sbom
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          docker buildx imagetools inspect "ghcr.io/$REPOSITORY@$DIGEST" --format '{{json .SBOM.SPDX}}' \
+            > "$RUNNER_TEMP/sbom.spdx.json"
+          docker buildx imagetools inspect "ghcr.io/$REPOSITORY@$DIGEST" --format '{{json .Manifest}}' \
+            | jq -r '.manifests[] | select(.platform.os != "unknown") | "digest=" + .digest' >> "$GITHUB_OUTPUT"
+
+      - name: Sign the SBOM on Docker Hub
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          push-to-registry: true
+          sbom-path: ${{ runner.temp }}/sbom.spdx.json
+          subject-digest: ${{ steps.sbom.outputs.digest }}
+          subject-name: docker.io/${{ github.repository }}
+
+      - name: Sign the SBOM on GHCR
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          push-to-registry: true
+          sbom-path: ${{ runner.temp }}/sbom.spdx.json
+          subject-digest: ${{ steps.sbom.outputs.digest }}
+          subject-name: ghcr.io/${{ github.repository }}
+
+      - name: Record the digest
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          mkdir "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          if-no-files-found: error
+          name: digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          retention-days: 1
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: container-registries
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          merge-multiple: true
+          path: ${{ runner.temp }}/digests
+          pattern: digest-*
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          password: ${{ secrets.DOCKERHUB_PUSH_TOKEN }}
+          username: ${{ github.repository_owner }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+
+      - name: Tag main
+        id: index
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          sources=()
+          for digest in *; do
+            sources+=("ghcr.io/$REPOSITORY@sha256:$digest")
+          done
+          docker buildx imagetools create --tag "docker.io/$REPOSITORY:main" --tag "ghcr.io/$REPOSITORY:main" \
+            "${sources[@]}"
+          docker buildx imagetools inspect "ghcr.io/$REPOSITORY:main" --format '{{json .Manifest}}' \
+            | jq -r '"digest=" + .digest' >> "$GITHUB_OUTPUT"
+
+      # The provenance signed with Sigstore, on the index.
+      - name: Sign the provenance on Docker Hub
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          push-to-registry: true
+          subject-digest: ${{ steps.index.outputs.digest }}
+          subject-name: docker.io/${{ github.repository }}
+
+      - name: Sign the provenance on GHCR
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          push-to-registry: true
+          subject-digest: ${{ steps.index.outputs.digest }}
+          subject-name: ghcr.io/${{ github.repository }}

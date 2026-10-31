@@ -18,9 +18,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# The e2e tier: smoke.sh against a throwaway stack of the published image, built from the tracked files as they are now,
-# and torn down whatever happens. Its own project name, credentials and volume, and no published port, keep it off the
-# dev stack; the explicit -f and --env-file keep COMPOSE_FILE, local overrides and .env out.
+# The e2e tier: smoke.sh against a throwaway stack of the published image (IMAGE, or else one built from the tracked
+# files as they are now), torn down whatever happens. Its own project name, credentials and volume, and no published
+# port, keep it off the dev stack; the explicit -f and --env-file keep COMPOSE_FILE, local overrides and .env out.
 
 set -e
 
@@ -51,7 +51,16 @@ trap 'exit 1' INT TERM
 TREE="$(git -c user.name=e2e -c user.email=e2e@izartu.test stash create)"
 git archive "${TREE:-HEAD}" | tar -x -C "$SOURCE"
 
-compose up -d --build --wait app
+# A given IMAGE is pulled if it is not local; a built one keeps Compose's default name.
+if [ -n "${IMAGE:-}" ]; then
+    BUILD=--no-build
+else
+    IMAGE="$PROJECT-app"
+    BUILD=--build
+fi
+export IMAGE
+
+compose up -d "$BUILD" --wait app
 
 printf '%s\n' "$E2E_EMAIL" "$E2E_USERNAME" "$E2E_PASSWORD" "$E2E_PASSWORD" owner |
     compose exec -T app php /var/www/izartu/private/cli/adduser.php
