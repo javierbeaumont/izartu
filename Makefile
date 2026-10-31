@@ -21,9 +21,8 @@
 # these targets. They all run in the dev-only `test` container.
 
 COMPOSE := docker compose
-# php-cs-fixer refuses PHP versions it does not know about yet; the image is 8.5. Only the integration tests need the
-# database, so no tool starts it.
-TOOL := $(COMPOSE) run --rm --no-deps -e PHP_CS_FIXER_IGNORE_ENV=1 test
+# Only the integration tests need the database, so no tool starts it.
+TOOL := $(COMPOSE) run --rm --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse validate audit \
 	check user hooks
@@ -59,6 +58,8 @@ test-integration: ## run the integration tests (MySQL, filesystem)
 test-e2e: ## run the end-to-end test on a throwaway stack
 	tests/E2E/run.sh
 
+# php-cs-fixer warns, here and in fmt, that it runs on a newer PHP than composer.json's floor: its locked dependencies
+# do not install on the floor, and CI runs the tests on every supported version.
 style: ## check the code style
 	$(TOOL) vendor/bin/php-cs-fixer fix --dry-run
 
