@@ -154,8 +154,9 @@ it, in `SetEnv` or the FPM pool). The catalogue, with its defaults, lives in
 * `BASE`: base URL path of the install; optional, detected from the request
   (empty at a domain root, `/bookmarks` under one).
 * `VERSION`: what the footer reports and links to as the running source; optional. When unset it comes from the tree: a
-  release download has it stamped in, and a clone reads it from its git metadata. Set it for a deploy that has neither;
-  failing all three, the footer links to the repository root.
+  release download has it stamped in, and a clone reads it from its git metadata, even kept outside the tree
+  (`git clone --separate-git-dir`) as long as the web server can read it. Set it for a deploy that has neither; failing
+  all three, the footer links to the repository root.
 * `DB_HOST`: optional, defaults to `localhost`.
 * `DB_NAME`: optional, defaults to `izartu`.
 * `DB_PASS`: required, no default.

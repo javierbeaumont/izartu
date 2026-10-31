@@ -163,6 +163,19 @@ final class GitVersionTest extends TestCase
         $this->assertSame($this->head($tree), Version::fromGit($tree));
     }
 
+    /**
+     * A deploy may keep the git directory out of the tree, as `git clone --separate-git-dir` does, leaving a `.git`
+     * file that points at it.
+     */
+    public function testACloneWithItsGitDirectoryOutsideTheTreeNamesItsCommit(): void
+    {
+        $tree = $this->root . '/tree';
+        $this->git($this->root, 'clone', '-q', '--separate-git-dir', $this->root . '/tree.git', $this->repo, $tree);
+
+        $this->assertTrue(is_file($tree . '/.git'), 'the tree has a .git file, not a directory');
+        $this->assertSame($this->head($this->repo), Version::fromGit($tree));
+    }
+
     public function testADetachedWorktreeNamesItsCommit(): void
     {
         $tree = $this->root . '/tree';
