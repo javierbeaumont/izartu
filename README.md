@@ -256,106 +256,11 @@ docker compose logs app | grep 'php:'
 
 PHP's log is the file `error_log` names in `php.ini` or, when it names none, the web server's error log.
 
-## Development
+## Contributing
 
-Every task below has a `make` target (`make help` lists them); the hooks and CI
-call the same targets, so there is a single definition of each command.
-
-### Pre-commit hooks
-
-The repo ships a [pre-commit](https://pre-commit.com) configuration
-([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) so nothing lands unchecked: formatting, static analysis, the AGPL
-headers and the usual hygiene and secret-scanning checks run on every commit, and the three test tiers on every push.
-The PHP hooks use the Docker toolchain, so they need your `.env`. Install them once:
-
-```sh
-make hooks
-```
-
-### Tests
-
-Tests come in three tiers. Unit and integration run with PHPUnit, a **dev-only** dependency (Composer); e2e is a shell
-script with curl.
-
-* **Unit** (`tests/Unit/`): the code in isolation, with no database.
-* **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against dedicated
-  test databases so they never touch real data.
-* **E2E** (`tests/E2E/`): `smoke.sh` drives the running app over HTTP for what only real HTTP can show: the home page
-  up, a login keeping its session across requests, and a tag URL with an encoded slash reaching the app.
-
-#### With Docker
-
-The test databases, `izartu_test` and `izartu_migration_test`, are created empty on the first `db` start, and
-`make test-integration` migrates `izartu_test` before the suite runs (a volume created before the migrations needs
-`docker compose down -v` once). Install the dev dependencies once (writes `vendor/`, gitignored):
-
-```sh
-make deps
-```
-
-Run the three tiers, or one:
-
-```sh
-make test              # all three
-make test-unit         # unit only; starts no database
-make test-integration  # integration only
-make test-e2e          # e2e only, on a throwaway stack
-```
-
-`make test-e2e` brings up a stack of its own (separate Compose project, database and credentials, no published port),
-creates a user, runs `smoke.sh` against it and removes it all, whatever the outcome. It ignores your `.env`, so the app
-runs on its default settings, and needs no `make deps`.
-
-#### Without Docker
-
-Needs PHP + Composer on the host, MySQL reachable, and two empty databases, `izartu_test` and `izartu_migration_test`,
-both accessible to your MySQL user. Migrate the first, then run the suite:
-
-```sh
-composer install
-DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass php private/cli/migrate.php
-DEBUG=1 DB_NAME=izartu_test DB_USER=you DB_PASS=yourpass vendor/bin/phpunit
-```
-
-(`DEBUG=1` because part of the suite exercises the debug instrumentation.) `vendor/bin/phpunit --testsuite unit` runs
-the unit tier alone, with no database at all.
-
-### Static analysis
-
-PHPStan (also a dev-only dependency) runs at level 10 (the maximum) over the runtime code;
-see [`phpstan.dist.neon`](phpstan.dist.neon).
-
-#### With Docker
-
-```sh
-make analyse
-```
-
-#### Without Docker
-
-```sh
-vendor/bin/phpstan analyse --memory-limit=512M
-```
-
-### Code style
-
-Code follows [PER Coding Style](https://www.php-fig.org/per/coding-style/)
-(max line length 120), enforced with PHP-CS-Fixer (also a dev-only
-dependency).
-
-#### With Docker
-
-```sh
-make fmt    # apply
-make style  # check only
-```
-
-#### Without Docker
-
-```sh
-vendor/bin/php-cs-fixer fix           # apply
-vendor/bin/php-cs-fixer fix --dry-run # check only
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md): what fits the project, how to report a bug or send a change, and how to run the
+tests and checks. Report a vulnerability privately, as [SECURITY.md](SECURITY.md) explains. Everyone taking part follows
+the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
