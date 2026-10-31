@@ -207,30 +207,42 @@ final class BookmarkTagsTest extends TestCase
     }
 
     /**
-     * Regression: the two spellings are one tag under `ai_ci`, so the second link duplicated the first and the save
-     * failed.
+     * Regression: two spellings of one tag in one save, here `ö` as one character and as `o` and a combining umlaut,
+     * linked it twice and the save failed.
      */
-    public function testAWordAndItsAccentedSpellingInOneSaveAreOneLink(): void
+    public function testTwoSpellingsOfOneTagInOneSaveAreOneLink(): void
     {
         $bookmark = $this->savedBookmark();
 
-        $bookmark->saveWithTags('cafe, café');
+        $bookmark->saveWithTags("schön, scho\u{0308}n");
 
-        $this->assertSame(['cafe'], $this->linkedTagNames($bookmark->id));
+        $this->assertSame(['schön'], $this->linkedTagNames($bookmark->id));
     }
 
     /**
-     * The tag name is unique under the `ai_ci` collation, so the first spelling saved names the tag for both.
+     * The tag name is unique under the `as_ci` collation, so the first spelling saved names the tag for both.
      */
-    public function testAWordAndItsAccentedSpellingAreOneTag(): void
+    public function testTwoSpellingsOfOneTagAreOneTag(): void
     {
-        $this->savedBookmark()->saveWithTags('cafe');
+        $this->savedBookmark()->saveWithTags('café');
         $bookmark = $this->savedBookmark();
 
-        $bookmark->saveWithTags('café');
+        $bookmark->saveWithTags("cafe\u{0301}");
 
         $this->assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM `tag`')->fetchColumn());
-        $this->assertSame(['cafe'], $this->linkedTagNames($bookmark->id));
+        $this->assertSame(['café'], $this->linkedTagNames($bookmark->id));
+    }
+
+    public function testWordsThatDifferOnlyInADiacriticAreTwoTags(): void
+    {
+        $bookmark = $this->savedBookmark();
+
+        $bookmark->saveWithTags('maño, mano, où, ou, avô, avó, här, har');
+
+        $this->assertEqualsCanonicalizing(
+            ['maño', 'mano', 'où', 'ou', 'avô', 'avó', 'här', 'har'],
+            $this->linkedTagNames($bookmark->id),
+        );
     }
 
     public function testASaveReplacesPreviousLinks(): void

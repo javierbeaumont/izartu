@@ -82,7 +82,7 @@ trait Tag
      * the current list). An empty term matches every tag (the tag index).
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
-     * @param string $term The search term (matched as a substring).
+     * @param string $term The search term, matched as a substring that ignores case and accents.
      * @param int $page 1-based page number (`TAGS_PAGE_SIZE` tags per page).
      * @param list<string> $tags The tag names the list is filtered by; empty for none.
      * @param string|null $username The username the list is filtered by, or null.
@@ -114,7 +114,7 @@ trait Tag
             WHERE
                 (`bookmark`.`visibility` = 'public' $cond)
                 $extra
-                AND `tag`.`name` LIKE :term
+                AND `tag`.`name` COLLATE utf8mb4_0900_ai_ci LIKE :term
             GROUP BY
                 `tag`.`id`, `tag`.`name`
             ORDER BY
@@ -131,7 +131,7 @@ trait Tag
      * Count the tags whose name contains the search term (see `searchTags`).
      *
      * @param int|null $viewer The viewer's user id (`Auth::id()`), or null for anonymous.
-     * @param string $term The search term (matched as a substring).
+     * @param string $term The search term, matched as a substring that ignores case and accents.
      * @param list<string> $tags The tag names the list is filtered by; empty for none.
      * @param string|null $username The username the list is filtered by, or null.
      * @return int How many visible tags match.
@@ -155,7 +155,7 @@ trait Tag
             WHERE
                 (`bookmark`.`visibility` = 'public' $cond)
                 $extra
-                AND `tag`.`name` LIKE :term
+                AND `tag`.`name` COLLATE utf8mb4_0900_ai_ci LIKE :term
             SQL,
             $param,
         );

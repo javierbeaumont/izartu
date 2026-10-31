@@ -190,7 +190,8 @@ class Bookmark extends Crud
      * Replace this bookmark's tags, inside `saveWithTags()`'s transaction.
      *
      * The names missing from `tag` are created, and every name is linked in `bookmark_tag` by name, so a name that
-     * exists spends no id and two spellings of one tag (the `ai_ci` collation) make one link.
+     * exists spends no id and two spellings of one tag (the `as_ci` collation: `é` as one character or as `e` and an
+     * accent) make one link.
      *
      * @param string $tags Comma-separated tag names, as typed by the user.
      * @return void
