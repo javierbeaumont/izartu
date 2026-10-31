@@ -210,11 +210,15 @@ final class DelUserTest extends TestCase
 
     public function testSessionsThatCannotBeEndedLeaveEverything(): void
     {
-        [$code, , $error] = $this->deluser(['other@izartu.test', 'other@izartu.test'], "{$this->sessions}/missing");
+        $missing = "{$this->sessions}/missing";
+
+        [$code, , $error] = $this->deluser(['other@izartu.test', 'other@izartu.test'], $missing);
 
         $this->assertSame(1, $code);
-        $this->assertStringStartsWith(
-            "The user's open sessions could not be ended, so nothing was deleted: Cannot read the session directory",
+        $this->assertSame(
+            "The user's open sessions could not be ended, so nothing was deleted: Cannot read the session directory"
+            . " {$missing}. Run this again with the web server's session.save_path, as a user who can list and delete"
+            . " its files.\n",
             $error,
         );
         $this->assertSame([1, 10], $this->column('SELECT `id` FROM `user` ORDER BY `id`'));

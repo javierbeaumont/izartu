@@ -99,7 +99,8 @@ try {
         $ended = Auth::endSessions($user['id']);
     } catch (RuntimeException $e) {
         fwrite(STDERR, "The user's open sessions could not be ended, so nothing was deleted: " . $e->getMessage()
-            . " Run this again as a user who can delete PHP's session files.\n");
+            . " Run this again with the web server's session.save_path,"
+            . " as a user who can list and delete its files.\n");
         exit(1);
     }
 

@@ -86,7 +86,7 @@ try {
     $ended = Auth::endSessions($id);
 } catch (RuntimeException $e) {
     fwrite(STDERR, "The password changed, but the user's open sessions could not be ended: " . $e->getMessage()
-        . " Run this again as a user who can delete PHP's session files.\n");
+        . " Run this again with the web server's session.save_path, as a user who can list and delete its files.\n");
     exit(1);
 }
 

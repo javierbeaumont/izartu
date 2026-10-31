@@ -133,8 +133,10 @@ final class PasswdTest extends TestCase
         [$code, , $error] = $this->passwd(['cli@izartu.test', 'newsecret1', 'newsecret1'], [], $missing);
 
         $this->assertSame(1, $code);
-        $this->assertStringStartsWith(
-            "The password changed, but the user's open sessions could not be ended: Cannot read the session directory",
+        $this->assertSame(
+            "The password changed, but the user's open sessions could not be ended: Cannot read the session directory"
+            . " {$missing}. Run this again with the web server's session.save_path, as a user who can list and delete"
+            . " its files.\n",
             $error,
         );
         $this->assertTrue(password_verify('newsecret1', $this->hash(1)));

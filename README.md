@@ -214,8 +214,9 @@ php private/cli/deluser.php
 
 Like `migrate.php`, each script reads the `DB_*` variables from its own environment. `passwd.php` and `deluser.php` end
 a user's sessions by deleting the web server's session files, so the web server must use PHP's default session handler,
-which keeps them in files, and the scripts must run as root or as its user, with its `session.save_path`
-(`php -d session.save_path=...` when the command line's differs).
+which keeps them in files, and the scripts must run with its `session.save_path` (`php -d session.save_path=...` when
+the command line's differs) and as a user who can list and delete those files: root, or the web server's user where the
+directory lets it list them (Debian's `/var/lib/php/sessions` does not).
 
 ## Errors and logs
 
