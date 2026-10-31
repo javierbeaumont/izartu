@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(32) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `hash` varchar(255) NOT NULL,
+  `hash` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `role` enum('owner','admin','user') NOT NULL DEFAULT 'user',
   PRIMARY KEY (`id`),

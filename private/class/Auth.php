@@ -49,7 +49,7 @@ class Auth
     }
 
     /**
-     * Verify an email/password pair and, on success, log the user in.
+     * Verify an email/password pair and, on success, bring the user's hash to PHP's default and log the user in.
      *
      * @param string $email Email typed at login (normalised to lower-case here).
      * @param string $password Plain password typed at login.
@@ -61,6 +61,11 @@ class Auth
 
         if (!self::verify($user, $password)) {
             return false;
+        }
+
+        // At the dummy hash's cost, so this email's login takes as long as an unknown one's.
+        if (password_needs_rehash($user['hash'], PASSWORD_DEFAULT)) {
+            (new User())->replaceHash($user['id'], $user['hash'], password_hash($password, PASSWORD_DEFAULT));
         }
 
         self::login($user);

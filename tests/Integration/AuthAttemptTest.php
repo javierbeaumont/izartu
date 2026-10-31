@@ -59,7 +59,68 @@ final class AuthAttemptTest extends TestCase
         $this->assertSame(['id' => 1, 'username' => 'owner', 'role' => 'owner'], Auth::user());
     }
 
-    private function seedUser(): void
+    /**
+     * A hash below PHP's default cost, as PHP 8.2 and 8.3 made them, reaches it at the next login: left behind, it
+     * would make its email's login slower or faster than an unknown one's.
+     */
+    public function testALoginBringsTheHashToTheDefaultCost(): void
+    {
+        $this->seedUser();
+
+        $this->assertTrue(Auth::attempt('owner@izartu.test', 'secret123'));
+
+        $hash = $this->storedHash();
+        $this->assertSame(PASSWORD_BCRYPT_DEFAULT_COST, password_get_info($hash)['options']['cost'] ?? null);
+        $this->assertTrue(password_verify('secret123', $hash));
+    }
+
+    public function testAHashAtTheDefaultCostIsKept(): void
+    {
+        $this->seedUser(password_hash('secret123', PASSWORD_DEFAULT));
+        $hash = $this->storedHash();
+
+        $this->assertTrue(Auth::attempt('owner@izartu.test', 'secret123'));
+
+        $this->assertSame($hash, $this->storedHash());
+    }
+
+    public function testAWrongPasswordKeepsTheHash(): void
+    {
+        $this->seedUser();
+        $hash = $this->storedHash();
+
+        $this->assertFalse(Auth::attempt('owner@izartu.test', 'wrong-password'));
+
+        $this->assertSame($hash, $this->storedHash());
+    }
+
+    /**
+     * A new password stored between a login's read of the hash and its rehash must stay: the rehash would bring back
+     * the old one.
+     */
+    public function testTheRehashKeepsAHashThatChangedSinceItWasRead(): void
+    {
+        $this->seedUser();
+        $read = $this->storedHash();
+        $this->pdo->exec("UPDATE `user` SET `hash` = 'changed' WHERE `id` = 1");
+
+        $this->assertFalse((new User())->replaceHash(1, $read, password_hash('secret123', PASSWORD_DEFAULT)));
+
+        $this->assertSame('changed', $this->storedHash());
+    }
+
+    public function testTheRehashTellsHashesThatDifferInCaseApart(): void
+    {
+        $this->seedUser();
+        $read = $this->storedHash();
+        $this->pdo->exec('UPDATE `user` SET `hash` = UPPER(`hash`) WHERE `id` = 1');
+
+        $this->assertFalse((new User())->replaceHash(1, $read, password_hash('secret123', PASSWORD_DEFAULT)));
+
+        $this->assertSame(strtoupper($read), $this->storedHash());
+    }
+
+    private function seedUser(?string $hash = null): void
     {
         $query = $this->pdo->prepare(
             <<<'SQL'
@@ -69,6 +130,11 @@ final class AuthAttemptTest extends TestCase
                 (1, 'owner', 'owner@izartu.test', :hash, 'owner')
             SQL,
         );
-        $query->execute([':hash' => password_hash('secret123', PASSWORD_BCRYPT, ['cost' => 4])]);
+        $query->execute([':hash' => $hash ?? password_hash('secret123', PASSWORD_BCRYPT, ['cost' => 4])]);
+    }
+
+    private function storedHash(): string
+    {
+        return (string) $this->pdo->query('SELECT `hash` FROM `user` WHERE `id` = 1')->fetchColumn();
     }
 }

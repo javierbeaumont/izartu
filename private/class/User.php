@@ -108,4 +108,29 @@ class User extends Crud
         return $rows[0] ?? null;
     }
 
+    /**
+     * Replace a user's password hash, unless it changed since it was read.
+     *
+     * @param int $id The user's id.
+     * @param string $old The hash as it was read.
+     * @param string $new The hash to store.
+     * @return bool Whether the hash was replaced.
+     */
+    public function replaceHash(int $id, string $old, string $new): bool
+    {
+        $query = self::db()->prepare(
+            <<<'SQL'
+            UPDATE `user`
+            SET
+                `hash` = :new
+            WHERE
+                `id` = :id
+                AND `hash` = :old
+            SQL,
+        );
+        $query->execute([':new' => $new, ':id' => $id, ':old' => $old]);
+
+        return $query->rowCount() === 1;
+    }
+
 }
