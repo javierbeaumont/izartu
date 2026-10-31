@@ -207,7 +207,8 @@ php private/cli/deluser.php
 ## Errors and logs
 
 A request that fails because the database is unreachable or behind the code answers 503 with `Retry-After`; any other
-failure answers 500. The cause goes to PHP's error log, and debug mode shows it on the page too.
+failure answers 500. The cause goes to PHP's error log, and debug mode shows it on the page too, unless the app fails to
+start (a `TIMEZONE` PHP does not know): that page is empty.
 
 ### With Docker
 

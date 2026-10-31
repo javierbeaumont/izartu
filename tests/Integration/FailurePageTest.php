@@ -75,6 +75,19 @@ final class FailurePageTest extends TestCase
         $this->assertStringContainsString('run php private/cli/migrate.php', $logged);
     }
 
+    /**
+     * Regression: without a php.ini, a bootstrap that threw answered 200, its error and file paths on the page, and
+     * logged nothing.
+     */
+    public function testAFailingBootstrapAnswers500AndKeepsTheCauseInTheLog(): void
+    {
+        [$headers, $body, $logged] = $this->request(['TIMEZONE' => 'Europe/Nowhere', 'DEBUG' => '']);
+
+        $this->assertStringContainsString(' 500 ', $headers[0]);
+        $this->assertSame('', $body);
+        $this->assertStringContainsString('Unknown TIMEZONE "Europe/Nowhere"', $logged);
+    }
+
     public function testInDebugModeThePageShowsTheCause(): void
     {
         [, $body] = $this->request(['DB_PORT' => '1', 'DEBUG' => '1']);

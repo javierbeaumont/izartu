@@ -25,11 +25,14 @@
  * Controller::dispatch().
  */
 
+// Without a php.ini, PHP shows its errors on the page and logs none, a failing bootstrap's included.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 require_once dirname(__DIR__) . '/private/bootstrap.php';
 
-// Without a php.ini, PHP shows errors on the page.
-ini_set('display_errors', DEBUG ? 'stdout' : '0');
 if (DEBUG) {
+    ini_set('display_errors', 'stdout');
     error_reporting(E_ALL);
 }
 
