@@ -46,6 +46,12 @@ Expect rough edges and breaking changes while the rebuild is under way.
 * Hardened sessions (HttpOnly, SameSite, Secure on HTTPS), CSRF-protected
   forms, and HTML-escaped output.
 
+## Known limitations
+
+* Users are managed from the command line only (see [Managing users](#managing-users)): there are scripts to add a user,
+  change their password and delete them, but none to list the users or change a role.
+* Login attempts are not rate limited: limit them in front of the app, in the web server or a reverse proxy.
+
 ## Installation with Docker
 
 Requires only Docker (with the compose plugin).
