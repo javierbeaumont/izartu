@@ -80,7 +80,7 @@ The stack runs PHP 8.5 with Apache and MySQL 9.7; [Configuration](#configuration
 * PHP, with the `pdo_mysql` and `mbstring` extensions.
 * MySQL.
 * A web server that routes every request to [`public/index.php`](public/index.php): Apache with `mod_rewrite`, through
-  the shipped [`.htaccess`](public/.htaccess).
+  the shipped [`.htaccess`](public/.htaccess), or nginx or Caddy with PHP-FPM ([Web servers](#web-servers)).
 
 ## Installation
 
@@ -122,30 +122,13 @@ The stack runs PHP 8.5 with Apache and MySQL 9.7; [Configuration](#configuration
 
 ### Without Docker
 
-1. Copy the repository to the server and point the web server's document root at `public/`; `private/` stays outside it.
+1. Copy the repository to the server.
 
 2. Create an empty MySQL database and an account with every privilege on it: the migrations create and alter its tables.
 
-3. Give the PHP process the `DB_*` settings ([Configuration](#configuration)). With Apache and mod_php, a minimal vhost:
-
-   ```apache
-   <VirtualHost *:80>
-     ServerName bookmarks.example.org
-     DocumentRoot /var/www/izartu/public
-     AllowEncodedSlashes NoDecode
-
-     <Directory /var/www/izartu/public>
-       AllowOverride All
-       Require all granted
-     </Directory>
-
-     SetEnv DB_USER user_name
-     SetEnv DB_PASS user_password
-   </VirtualHost>
-   ```
-
-   `AllowEncodedSlashes NoDecode` goes in the vhost because `.htaccess` cannot set it: without it, a tag with a `/` in
-   its name links to a 404.
+3. Set up the web server: `public/` as its document root, which leaves `private/` outside it, every request that is not
+   a file routed to `public/index.php`, and the `DB_*` settings for PHP ([Configuration](#configuration)).
+   [Web servers](#web-servers) has recipes for Apache, nginx and Caddy.
 
 4. Build the schema. Like every script in [`private/cli/`](private/cli/), `migrate.php` reads the `DB_*` settings from
    its own environment:
@@ -162,8 +145,162 @@ The stack runs PHP 8.5 with Apache and MySQL 9.7; [Configuration](#configuration
 
 6. Log in at `/login`.
 
-izartu also runs from a sub-directory, such as `https://example.org/bookmarks/`, mounted with an `Alias` to `public/` or
-a symlink to it: the base path is detected from the request.
+## Web servers
+
+Each recipe serves izartu at a domain root, then in a sub-directory, `/bookmarks`; the base path is detected from the
+request.
+
+### Apache
+
+With mod_php, a minimal vhost:
+
+```apache
+<VirtualHost *:80>
+  ServerName bookmarks.example.org
+  DocumentRoot /var/www/izartu/public
+  AllowEncodedSlashes NoDecode
+
+  <Directory /var/www/izartu/public>
+    AllowOverride All
+    Require all granted
+  </Directory>
+
+  SetEnv DB_USER user_name
+  SetEnv DB_PASS user_password
+</VirtualHost>
+```
+
+`AllowEncodedSlashes NoDecode` goes in the vhost because `.htaccess` cannot set it: without it, a tag with a `/` in its
+name links to a 404.
+
+In a sub-directory, in the site's vhost:
+
+```apache
+AllowEncodedSlashes NoDecode
+Alias /bookmarks /var/www/izartu/public
+
+<Directory /var/www/izartu/public>
+  AllowOverride All
+  Require all granted
+</Directory>
+
+SetEnv DB_USER user_name
+SetEnv DB_PASS user_password
+```
+
+A symlink to `public/` in the site's document root works too, with `Options FollowSymLinks` on that root and the same
+`<Directory>` block.
+
+### nginx
+
+With PHP-FPM, only `index.php` runs as PHP:
+
+```nginx
+server {
+    listen 80;
+    server_name bookmarks.example.org;
+    root /var/www/izartu/public;
+
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location = /index.php {
+        include fastcgi.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        fastcgi_param DB_USER user_name;
+        fastcgi_param DB_PASS user_password;
+    }
+}
+```
+
+`fastcgi_pass` names PHP-FPM's socket, whose name on Debian carries the PHP version.
+
+In a sub-directory, in the site's `server` block, with `bookmarks` in its root a symlink to `public/`:
+
+```nginx
+location /bookmarks/ {
+    try_files $uri /bookmarks/index.php$is_args$args;
+}
+
+location = /bookmarks/index.php {
+    include fastcgi.conf;
+    fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    fastcgi_param DB_USER user_name;
+    fastcgi_param DB_PASS user_password;
+}
+```
+
+### Caddy
+
+With PHP-FPM:
+
+<!-- editorconfig-checker-disable -->
+```caddyfile
+bookmarks.example.org {
+	root * /var/www/izartu/public
+	php_fastcgi unix//run/php/php8.4-fpm.sock {
+		env DB_USER user_name
+		env DB_PASS user_password
+	}
+	file_server
+}
+```
+<!-- editorconfig-checker-enable -->
+
+Caddy 2.6, Debian's, drops the errors PHP-FPM sends it: give PHP a file in `error_log`
+([Errors and logs](#errors-and-logs)).
+
+In a sub-directory, in the site's block, with `bookmarks` in its root a symlink to `public/`:
+
+<!-- editorconfig-checker-disable -->
+```caddyfile
+php_fastcgi /bookmarks/* unix//run/php/php8.4-fpm.sock {
+	try_files {path} /bookmarks/index.php
+	env DB_USER user_name
+	env DB_PASS user_password
+}
+```
+<!-- editorconfig-checker-enable -->
+
+### Behind a proxy that terminates TLS
+
+Over HTTPS, the session cookie is marked `Secure`. A web server that serves HTTPS itself tells PHP so with no setting;
+behind a proxy that terminates TLS, it has to tell PHP from the proxy's `X-Forwarded-Proto`. Do it only when every
+request comes through the proxy: otherwise a client could send that header itself, though it would only mark its own
+cookie `Secure`.
+
+Apache, in the vhost:
+
+```apache
+SetEnvIf X-Forwarded-Proto "^https$" HTTPS=on
+```
+
+nginx, the `map` in the `http` block and the `fastcgi_param` after `include fastcgi.conf;`:
+
+```nginx
+map $http_x_forwarded_proto $forwarded_https {
+    https on;
+    default "";
+}
+
+fastcgi_param HTTPS $forwarded_https if_not_empty;
+```
+
+Caddy, in the site's block:
+
+<!-- editorconfig-checker-disable -->
+```caddyfile
+map {header.X-Forwarded-Proto} {forwarded_https} {
+	https on
+	default ""
+}
+
+php_fastcgi unix//run/php/php8.4-fpm.sock {
+	env HTTPS {forwarded_https}
+}
+```
+<!-- editorconfig-checker-enable -->
 
 ## Upgrading
 
@@ -258,8 +395,9 @@ sets for the bundled MySQL. Three more shape the stack:
 
 ### Without Docker
 
-The settings go in the web server's environment: `SetEnv` in the Apache vhost, or `env[...]` in the PHP-FPM pool. The
-scripts in [`private/cli/`](private/cli/) read them from their own environment.
+The settings go in the web server's environment: `SetEnv` in Apache's vhost, `fastcgi_param` in nginx's, `env` in
+Caddy's `php_fastcgi`, or `env[...]` in the PHP-FPM pool. The scripts in [`private/cli/`](private/cli/) read them from
+their own environment.
 
 ## Managing users
 
@@ -348,7 +486,8 @@ docker compose logs app | grep 'php:'
 
 ### Without Docker
 
-PHP's log is the file `error_log` names in `php.ini` or, when it names none, the web server's error log.
+PHP's log is the file `error_log` names in `php.ini` or, when it names none, the web server's error log. Caddy 2.6,
+Debian's, keeps no log of what PHP-FPM sends it: with it, name a file in `error_log`.
 
 ## Contributing
 
