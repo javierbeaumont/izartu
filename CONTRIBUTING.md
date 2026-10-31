@@ -11,8 +11,8 @@ Features that assume a central service, or that only make sense for a large mult
 
 ## Reporting bugs
 
-Use the bug report template: it asks for what a report needs. Report a vulnerability privately instead, as
-[SECURITY.md](SECURITY.md) explains.
+Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md): it asks for what a report needs. Report a
+vulnerability privately instead, as [SECURITY.md](SECURITY.md) explains.
 
 ## Pull requests
 
@@ -20,14 +20,14 @@ Use the bug report template: it asks for what a report needs. Report a vulnerabi
   and still not belong here.
 - One concern per commit, with a **single-line** imperative subject.
 - Add or adjust tests for what you change, and keep `make check` green.
-- Update `README.md` in the same commit when behaviour, configuration or requirements change.
+- Update [`README.md`](README.md) in the same commit when behaviour, configuration or requirements change.
 - Sign your commits (`git commit -S`) if you can.
 
 ## Development
 
 You need Docker with the Compose plugin, `make` and, for the hooks, [pre-commit](https://pre-commit.com), plus a `.env`
-with the database credentials (README, "Installation with Docker"). Every task has a `make` target (`make help` lists
-them), and the hooks and CI call the same targets, so each command is defined once:
+with the database credentials ([README, "Installation"](README.md#installation)). Every task has a `make` target
+(`make help` lists them), and the hooks and CI call the same targets, so each command is defined once:
 
 ```sh
 make deps    # install the dev dependencies (PHPUnit, PHPStan, PHP-CS-Fixer) into vendor/, once
@@ -43,17 +43,17 @@ did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
 
 ### Tests
 
-* **Unit** (`tests/Unit/`): the code in isolation, with no database.
-* **Integration** (`tests/Integration/`): the real components wired together (MySQL, the filesystem), against the test
-  databases `izartu_test` and `izartu_migration_test`, never real data. Docker creates both, with
-  `docker/create-test-db.sh`, on the first start of a new database volume; a volume older than one of them needs
-  `docker compose down -v` once, which also deletes the development database. `make test-integration` migrates
-  `izartu_test` first.
-* **E2E** (`tests/E2E/`): `smoke.sh`, a shell script with curl, drives the running app over HTTP, for what only real
-  HTTP shows: the home page up, a login keeping its session across requests, and a tag URL with an encoded slash
-  reaching the app. It runs on a stack of its own (separate Compose project, database and credentials, no published
-  port), removed whatever the outcome; it ignores `.env`, so the app runs on its default settings, and needs no
-  `make deps`.
+* **Unit** ([`tests/Unit/`](tests/Unit/)): the code in isolation, with no database.
+* **Integration** ([`tests/Integration/`](tests/Integration/)): the real components wired together (MySQL, the
+  filesystem), against the test databases `izartu_test` and `izartu_migration_test`, never real data. Docker creates
+  both, with [`docker/create-test-db.sh`](docker/create-test-db.sh), on the first start of a new database volume; a
+  volume older than one of them needs `docker compose down -v` once, which also deletes the development database.
+  `make test-integration` migrates `izartu_test` first.
+* **E2E** ([`tests/E2E/`](tests/E2E/)): [`smoke.sh`](tests/E2E/smoke.sh), a shell script with curl, drives the running
+  app over HTTP, for what only real HTTP shows: the home page up, a login keeping its session across requests, and a tag
+  URL with an encoded slash reaching the app. It runs on a stack of its own (separate Compose project, database and
+  credentials, no published port), removed whatever the outcome; it ignores `.env`, so the app runs on its default
+  settings, and needs no `make deps`.
 
 ```sh
 make test              # all three
@@ -97,17 +97,17 @@ vendor/bin/phpstan analyse --memory-limit=512M
 vendor/bin/php-cs-fixer fix --dry-run                                          # without --dry-run, it applies
 ```
 
-`tests/E2E/smoke.sh` runs against any running instance, given its `BASE_URL` and an existing user's `SMOKE_EMAIL`,
-`SMOKE_USERNAME` and `SMOKE_PASSWORD`.
+[`tests/E2E/smoke.sh`](tests/E2E/smoke.sh) runs against any running instance, given its `BASE_URL` and an existing
+user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 
 ## Continuous integration
 
-Every pull request and every push to `main` runs the workflows in `.github/workflows/`: the unit tests on every
-supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test, style and static
-analysis, the hooks that need no PHP, and an audit of the dev dependencies, which also runs weekly. A local `make check`
-covers one PHP and one MySQL; CI covers the rest.
+Every pull request and every push to `main` runs the workflows in [`.github/workflows/`](.github/workflows/): the unit
+tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test,
+style and static analysis, the hooks that need no PHP, and an audit of the dev dependencies, which also runs weekly. A
+local `make check` covers one PHP and one MySQL; CI covers the rest.
 
 ## License
 
 izartu is licensed under the GNU AGPL, version 3 or any later version, and contributions are accepted under the same
-terms. Every source file carries the licence header; the hooks add it for you.
+terms. Every source file carries the [licence header](scripts/license-header.txt); the hooks add it for you.
