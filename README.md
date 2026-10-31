@@ -122,7 +122,7 @@ Steps:
    (With PHP-FPM, set the same variables in the pool's `env[...]` entries.)
 4. Build the schema: `php private/cli/migrate.php`. Like every CLI script, it reads the `DB_*` variables from its own
    environment (for example `DB_USER=user_name DB_PASS=user_password php private/cli/migrate.php`).
-5. Create the first user: `php private/cli/adduser.php`.
+5. Create the first user, with the role `owner`: `php private/cli/adduser.php`.
 6. Log in at `/login`.
 
 izartu also runs from a sub-directory (e.g. `https://example.org/bookmarks/`);

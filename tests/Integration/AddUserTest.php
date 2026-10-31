@@ -55,13 +55,18 @@ final class AddUserTest extends TestCase
         $this->assertTrue(password_verify('secret123', $row['hash']));
     }
 
-    public function testTheEmailIsLowerCasedAndAnEmptyRoleIsOwner(): void
+    /**
+     * Regression: an empty role gave `owner`, so a user created with the default could edit and delete every public
+     * bookmark.
+     */
+    public function testTheEmailIsLowerCasedAndAnEmptyRoleIsUser(): void
     {
-        $this->addUser(['  CLI@Izartu.Test ', 'cli', 'secret123', 'secret123', '']);
+        [, , $output] = $this->addUser(['  CLI@Izartu.Test ', 'cli', 'secret123', 'secret123', '']);
 
         $row = $this->rows()[0];
 
-        $this->assertSame(['cli@izartu.test', 'owner'], [$row['email'], $row['role']]);
+        $this->assertSame(['cli@izartu.test', 'user'], [$row['email'], $row['role']]);
+        $this->assertStringContainsString('Role (owner/admin/user) [user]: ', $output);
     }
 
     public function testInvalidInputIsRefusedBeforeConnecting(): void
@@ -134,7 +139,7 @@ final class AddUserTest extends TestCase
      *
      * @param list<string> $answers Email, username, password, the password again and role.
      * @param array<string, string> $env Variables to set on top of the current environment.
-     * @return array{int, string} The exit code and what the script wrote to stderr.
+     * @return array{int, string, string} The exit code, and what the script wrote to stderr and to stdout.
      */
     private function addUser(array $answers, array $env = []): array
     {
@@ -147,9 +152,9 @@ final class AddUserTest extends TestCase
         );
         fwrite($pipes[0], implode("\n", $answers) . "\n");
         fclose($pipes[0]);
-        stream_get_contents($pipes[1]);
+        $output = (string) stream_get_contents($pipes[1]);
         $error = (string) stream_get_contents($pipes[2]);
 
-        return [proc_close($process), $error];
+        return [proc_close($process), $error, $output];
     }
 }

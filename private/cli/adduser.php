@@ -22,8 +22,7 @@
 /**
  * CLI: create a user account.
  *
- * Users can be created from the command line. This is how the first user
- * (the owner) is created.
+ * Every user is created here. Type the `owner` role for the first one: an empty answer gives `user`.
  *
  * Run it:
  *   docker compose exec app php /var/www/izartu/private/cli/adduser.php   (Docker)
@@ -44,7 +43,7 @@ $email    = strtolower(Cli::prompt('Email: '));
 $username = Cli::prompt('Username: ');
 $password = Cli::secret('Password: ');
 $again    = Cli::secret('Repeat it: ');
-$role     = Cli::prompt('Role (owner/admin/user) [owner]: ') ?: 'owner';
+$role     = Cli::prompt('Role (owner/admin/user) [user]: ') ?: 'user';
 
 $errors = User::validate($email, $username, $password, $role);
 if ($password !== $again) {
