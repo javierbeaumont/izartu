@@ -19,7 +19,7 @@ Do **not** open a public GitHub issue for security-sensitive reports.
 
 ## Supported versions
 
-Only the latest release receives security fixes; while there is none, that means `main`.
+Only the latest release receives security fixes.
 
 izartu is self-hosted, so keeping your PHP, MySQL and web server patched is part of running it safely. The supported
 versions of each are listed in the [README](README.md#requirements).

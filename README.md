@@ -51,9 +51,9 @@ making one public shares it on your instance's feed.
 
 ## Status
 
-izartu is being rebuilt toward its first release (v0.0) and has no published release yet. The core already works: login,
-bookmark add/edit/delete with tags and visibility, and the public feed with pagination and tag filtering. Expect rough
-edges and breaking changes while the rebuild is under way.
+izartu has published [releases](https://github.com/javierbeaumont/izartu/releases) since v0.0.0, each with notes on what
+changed. Until 1.0, a minor version (`0.1`) may change how izartu is installed or configured, and its notes say how to
+upgrade; a patch (`0.0.1`) only fixes, so the Docker install takes it with `docker compose pull`.
 
 ## Known limitations
 
@@ -77,7 +77,8 @@ The stack runs PHP 8.5 with nginx and MySQL 9.7; [Configuration](#configuration)
 
 ### Without Docker
 
-* PHP, with the `pdo_mysql` and `mbstring` extensions, and `openssl` to encrypt the connection to MySQL over TCP.
+* PHP, with the `mbstring`, `openssl` and `pdo_mysql` extensions; `openssl` even for an unencrypted connection, since
+  MySQL's default login method, `caching_sha2_password`, relies on it.
 * MySQL.
 * A web server that routes every request to [`public/index.php`](public/index.php): Apache with `mod_rewrite`, through
   the shipped [`.htaccess`](public/.htaccess), or nginx or Caddy with PHP-FPM ([Web servers](#web-servers)).

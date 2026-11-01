@@ -62,7 +62,7 @@ jobs:
             exit 1
           fi
           if [ "$(git cat-file -t "refs/tags/$TAG_NAME")" != tag ]; then
-            echo "refusing to publish tag $TAG_NAME: not annotated, and its message is the release's notes" >&2
+            echo "refusing to publish tag $TAG_NAME: not annotated; its message is the release's title and notes" >&2
             exit 1
           fi
           newest=$(git tag --list 'v*' --sort=-version:refname | grep -E -m1 "$release")
@@ -293,7 +293,7 @@ jobs:
       contents: write
       id-token: write
     steps:
-      # The whole history with its tags: `VERSION` names the tag, and the release's notes are its message.
+      # The whole history with its tags: `VERSION` names the tag, and the release's title and notes are its message.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -317,8 +317,12 @@ jobs:
         with:
           subject-checksums: dist/checksums.txt
 
+      # Its title is the tag's subject, and its notes the rest of the tag's message, without the signature.
       - name: Create the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ github.ref_name }}
-        run: gh release create "$TAG_NAME" --notes-from-tag --verify-tag dist/*
+        run: |
+          gh release create "$TAG_NAME" --verify-tag \
+            --title "$(git tag --list --format='%(contents:subject)' "$TAG_NAME")" \
+            --notes "$(git tag --list --format='%(contents:body)' "$TAG_NAME")" dist/*
