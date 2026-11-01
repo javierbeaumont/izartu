@@ -71,7 +71,7 @@ and MySQL 8.4 or later. CI runs the tests on each of those PHP versions against 
 
 ### With Docker
 
-* Docker with the Compose plugin.
+* Docker with the Compose plugin, on amd64 or arm64.
 
 The stack runs PHP 8.5 with nginx and MySQL 9.7; [Configuration](#configuration) says how to choose another MySQL.
 
@@ -86,16 +86,16 @@ The stack runs PHP 8.5 with nginx and MySQL 9.7; [Configuration](#configuration)
 
 ### With Docker
 
-1. Clone the repository:
+1. Download the latest release's [`compose.yaml`](docker/compose.yaml) into a directory of its own:
 
    ```sh
-   git clone https://github.com/javierbeaumont/izartu.git
+   mkdir izartu
    cd izartu
+   curl -fsSLO https://github.com/javierbeaumont/izartu/releases/latest/download/compose.yaml
    ```
 
-2. Choose the database credentials in a `.env` next to [`docker-compose.yml`](docker-compose.yml) (gitignored).
-   `DB_USER` and `DB_PASS` are the app's MySQL account; `DB_ROOT_PASS` is the root password of the bundled MySQL, which
-   izartu never reads:
+2. Choose the database credentials in a `.env` beside it. `DB_USER` and `DB_PASS` are the app's MySQL account;
+   `DB_ROOT_PASS` is the root password of the bundled MySQL, which izartu never reads:
 
    ```sh
    cat > .env <<'EOF'
@@ -109,7 +109,7 @@ The stack runs PHP 8.5 with nginx and MySQL 9.7; [Configuration](#configuration)
    publishes the app on port 8080; `APP_PORT` in `.env` chooses another:
 
    ```sh
-   docker compose up -d --build --wait
+   docker compose up -d --wait
    ```
 
 4. Create your first user, with the role `owner`:
@@ -120,9 +120,17 @@ The stack runs PHP 8.5 with nginx and MySQL 9.7; [Configuration](#configuration)
 
 5. Open <http://localhost:8080>, or the port in `APP_PORT`, and log in at `/login`.
 
+`compose.yaml` names the image `javierbeaumont/izartu`, on Docker Hub, with the tag of its release's minor version,
+`X.Y`, so moving to a newer minor version is a deliberate [upgrade](#upgrading). GHCR has the same image,
+`ghcr.io/javierbeaumont/izartu`, to use instead in `compose.yaml`'s `image:`.
+[SECURITY.md](SECURITY.md#verifying-the-image) says how to check that the image and `compose.yaml` come from this
+repository.
+
 ### Without Docker
 
-1. Copy the repository to the server.
+1. Extract the archive of the [latest release](https://github.com/javierbeaumont/izartu/releases/latest),
+   `izartu-X.Y.Z.tar.gz`, on the server. It holds only what runs, with its version stamped for the footer; a clone of
+   the repository works too.
 
 2. Create an empty MySQL database and an account with every privilege on it: the migrations create and alter its tables.
 
@@ -311,16 +319,21 @@ log says to run `migrate.php`.
 
 ### With Docker
 
+The tag `compose.yaml` names, `X.Y`, moves to each patch release and rebuild of that version:
+
 ```sh
-git pull                             # or check out the new release's tag
-docker compose up -d --build --wait  # the app applies the new migrations on start
+docker compose pull          # the latest image under that tag
+docker compose up -d --wait  # the app applies the new migrations on start
 ```
+
+A newer minor version has its own `compose.yaml`: read its release's notes, download it over the old one as in
+[Installation](#installation), and run the same two commands.
 
 Sessions live in the app container, so recreating it, as a new image does, logs everyone out.
 
 ### Without Docker
 
-1. Replace the files with the new release's.
+1. Replace the files with the new release's, or `git pull` in a clone.
 
 2. Apply the new migrations:
 
@@ -401,8 +414,8 @@ repeated ones. It shows errors to every visitor, so keep it off on a public inst
 ### With Docker
 
 The settings go in `.env`, except `DB_HOST`, `DB_NAME`, `DB_PORT` and `DB_SSL_ENABLED`, which
-[`docker/compose.yaml`](docker/compose.yaml) sets for the bundled MySQL, unencrypted since it runs on the same machine.
-Two more shape the stack:
+[`compose.yaml`](docker/compose.yaml) sets for the bundled MySQL, unencrypted since it runs on the same machine. Two
+more shape the stack:
 
 * `APP_PORT`: the port the app is published on, `8080` by default.
 * `MYSQL_VERSION`: `9.7` by default. Choose it before the first start: a database one MySQL version created may not

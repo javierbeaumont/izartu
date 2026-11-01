@@ -26,8 +26,8 @@ vulnerability privately instead, as [SECURITY.md](SECURITY.md) explains.
 ## Development
 
 You need Docker with the Compose plugin, `make` and, for the hooks, [pre-commit](https://pre-commit.com), plus a `.env`
-with the database credentials ([README, "Installation"](README.md#installation)). Every task has a `make` target
-(`make help` lists them), and the hooks and CI call the same targets, so each command is defined once:
+at the clone's root with the database credentials ([README, "Installation"](README.md#installation)). Every task has a
+`make` target (`make help` lists them), and the hooks and CI call the same targets, so each command is defined once:
 
 ```sh
 make deps    # install the dev dependencies (PHPUnit, PHPStan, PHP-CS-Fixer) into vendor/, once
