@@ -184,10 +184,11 @@ jobs:
           subject-digest: ${{ steps.sbom.outputs.digest }}
           subject-name: docker.io/${{ github.repository }}
 
-      - name: Sign the SBOM on GHCR
+      # Kept in GitHub's attestation store only: GHCR would store it under a tag `sha256-<digest>`, which its package
+      # page then shows as the latest version.
+      - name: Sign the SBOM for GHCR
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          push-to-registry: true
           sbom-path: ${{ runner.temp }}/sbom.spdx.json
           subject-digest: ${{ steps.sbom.outputs.digest }}
           subject-name: ghcr.io/${{ github.repository }}
@@ -272,10 +273,10 @@ jobs:
           subject-digest: ${{ steps.index.outputs.digest }}
           subject-name: docker.io/${{ github.repository }}
 
-      - name: Sign the provenance on GHCR
+      # In GitHub's attestation store only, as the SBOM.
+      - name: Sign the provenance for GHCR
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          push-to-registry: true
           subject-digest: ${{ steps.index.outputs.digest }}
           subject-name: ghcr.io/${{ github.repository }}
 
