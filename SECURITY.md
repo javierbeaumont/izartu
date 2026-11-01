@@ -35,4 +35,9 @@ gh attestation verify oci://docker.io/javierbeaumont/izartu:<tag> --repo javierb
 ```
 
 On GHCR, the image is `ghcr.io/javierbeaumont/izartu`. A platform's SBOM is checked the same way, on its image's digest
-(`docker buildx imagetools inspect` lists them) and with `--predicate-type https://spdx.dev/Document/v2.3`.
+(`docker buildx imagetools inspect` lists them) and with `--predicate-type https://spdx.dev/Document/v2.3`. A release's
+source archive and `compose.yaml` are signed too, and checked on the downloaded file:
+
+```sh
+gh attestation verify izartu-<version>.tar.gz --repo javierbeaumont/izartu
+```

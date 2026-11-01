@@ -8,22 +8,84 @@ on:
       - Dockerfile
       - docker/pin-mtimes.sh
       - docker/rootfs/**
+    tags:
+      - v*
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# One run at a time, so an older run never tags `main` after a newer one.
+# One run per ref at a time, so an older run never moves `main` after a newer one. Per ref, since a newer run cancels
+# the one waiting: a push to `main` never cancels a release.
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
 
-# Built and tested natively on each platform; `main` is tagged only when every platform passed.
+# Shown on GHCR's package page.
+env:
+  DESCRIPTION: 'Self-hosted bookmark manager based on tags: nginx and PHP-FPM on Alpine, with MySQL alongside.'
+  LICENSES: AGPL-3.0-or-later
+
+# Built and tested natively on each platform, and tagged only when every platform passed.
 jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tags: ${{ steps.tags.outputs.tags }}
+      version: ${{ steps.tags.outputs.version }}
+    steps:
+      # Every tag, to find the newest release.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # A tag `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`, and `docker/compose.yaml` has to name `X.Y`; anything else
+      # publishes `main`.
+      - name: Resolve the version and its tags
+        id: tags
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          # Through env: a ${{ }} inside the run block is substituted as text, and git allows shell metacharacters in a
+          # tag name.
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_TYPE" != tag ]; then
+            echo "version=main" >> "$GITHUB_OUTPUT"
+            echo "tags=main" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          release='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          if ! [[ $TAG_NAME =~ $release ]]; then
+            echo "refusing to publish tag '$TAG_NAME': not vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          fi
+          if [ "$(git cat-file -t "refs/tags/$TAG_NAME")" != tag ]; then
+            echo "refusing to publish tag $TAG_NAME: not annotated, and its message is the release's notes" >&2
+            exit 1
+          fi
+          newest=$(git tag --list 'v*' --sort=-version:refname | grep -E -m1 "$release")
+          if [ "$TAG_NAME" != "$newest" ]; then
+            echo "refusing to publish tag $TAG_NAME: only the latest release, $newest, is maintained" >&2
+            exit 1
+          fi
+          version=${TAG_NAME#v}
+          minor=${version%.*}
+          named=$(sed -n 's|^ *image: javierbeaumont/izartu:||p' docker/compose.yaml)
+          if [ "$named" != "$minor" ]; then
+            echo "docker/compose.yaml names the image $named, not $minor" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tags=$version $minor latest" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build / ${{ matrix.arch }}
+    needs: version
     runs-on: ubuntu-${{ matrix.ubuntu }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
     timeout-minutes: 30
-    # Holds DOCKERHUB_PUSH_TOKEN, and only `main` may use it.
+    # Holds DOCKERHUB_PUSH_TOKEN, and only `main` and the tags `v*` may use it.
     environment: container-registries
     permissions:
       attestations: write
@@ -73,7 +135,12 @@ jobs:
         with:
           build-contexts: source=${{ runner.temp }}/source
           context: .
-          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          labels: &labels |
+            org.opencontainers.image.description=${{ env.DESCRIPTION }}
+            org.opencontainers.image.licenses=${{ env.LICENSES }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.version.outputs.version }}
           outputs: type=docker,rewrite-timestamp=true
           tags: izartu-e2e
           target: release
@@ -90,7 +157,7 @@ jobs:
         with:
           build-contexts: source=${{ runner.temp }}/source
           context: .
-          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          labels: *labels
           outputs: type=image,"name=${{ env.NAMES }}",push-by-digest=true,push=true,rewrite-timestamp=true
           provenance: mode=max
           sbom: true
@@ -141,7 +208,9 @@ jobs:
 
   publish:
     name: Publish
-    needs: build
+    needs:
+      - build
+      - version
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: container-registries
@@ -172,19 +241,27 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
 
-      - name: Tag main
+      - name: Tag the image
         id: index
         working-directory: ${{ runner.temp }}/digests
         env:
           REPOSITORY: ${{ github.repository }}
+          TAGS: ${{ needs.version.outputs.tags }}
         run: |
-          sources=()
-          for digest in *; do
-            sources+=("ghcr.io/$REPOSITORY@sha256:$digest")
+          read -ra tags <<< "$TAGS"
+          # GHCR reads a multi-platform image's description from the index, not from its labels.
+          args=(
+            --annotation "index:org.opencontainers.image.description=$DESCRIPTION"
+            --annotation "index:org.opencontainers.image.licenses=$LICENSES"
+          )
+          for tag in "${tags[@]}"; do
+            args+=(--tag "docker.io/$REPOSITORY:$tag" --tag "ghcr.io/$REPOSITORY:$tag")
           done
-          docker buildx imagetools create --tag "docker.io/$REPOSITORY:main" --tag "ghcr.io/$REPOSITORY:main" \
-            "${sources[@]}"
-          docker buildx imagetools inspect "ghcr.io/$REPOSITORY:main" --format '{{json .Manifest}}' \
+          for digest in *; do
+            args+=("ghcr.io/$REPOSITORY@sha256:$digest")
+          done
+          docker buildx imagetools create "${args[@]}"
+          docker buildx imagetools inspect "ghcr.io/$REPOSITORY:${tags[0]}" --format '{{json .Manifest}}' \
             | jq -r '"digest=" + .digest' >> "$GITHUB_OUTPUT"
 
       # The provenance signed with Sigstore, on the index.
@@ -201,3 +278,47 @@ jobs:
           push-to-registry: true
           subject-digest: ${{ steps.index.outputs.digest }}
           subject-name: ghcr.io/${{ github.repository }}
+
+  # Only on a tag's push: a rebuild by hand republishes the image, not the release.
+  release:
+    name: Release
+    needs:
+      - publish
+      - version
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      # The whole history with its tags: `VERSION` names the tag, and the release's notes are its message.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # The deployable tree with `VERSION` stamped, archived here: GitHub's own source archives are not guaranteed to
+      # stay byte-identical. And the Compose file the README installs with.
+      - name: Stage the release's files
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          mkdir dist
+          git archive --format=tar.gz --prefix="izartu-$RELEASE_VERSION/" \
+            --output="dist/izartu-$RELEASE_VERSION.tar.gz" HEAD
+          cp docker/compose.yaml dist/
+          cd dist
+          sha256sum -- * > checksums.txt
+
+      - name: Sign their provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: dist/checksums.txt
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: gh release create "$TAG_NAME" --notes-from-tag --verify-tag dist/*
