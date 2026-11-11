@@ -21,8 +21,10 @@
 # these targets. They all run in the dev-only `test` container.
 
 COMPOSE := docker compose
+# No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect.
+RUN := $(COMPOSE) run --rm -T
 # Only the integration tests need the database, so no tool starts it.
-TOOL := $(COMPOSE) run --rm --no-deps test
+TOOL := $(RUN) --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse validate audit \
 	check user hooks
@@ -50,10 +52,10 @@ test: test-unit test-integration test-e2e ## run the three test tiers
 # DB_HOST points nowhere, so a unit test that reaches for MySQL fails here too, not only in CI, where this tier runs
 # with no database.
 test-unit: ## run the unit tests (no database)
-	$(COMPOSE) run --rm --no-deps -e DB_HOST=no-database.invalid test vendor/bin/phpunit --testsuite unit
+	$(RUN) --no-deps -e DB_HOST=no-database.invalid test vendor/bin/phpunit --testsuite unit
 
 test-integration: ## run the integration tests (MySQL, filesystem)
-	$(COMPOSE) run --rm test sh -c 'php private/cli/migrate.php && vendor/bin/phpunit --testsuite integration'
+	$(RUN) test sh -c 'php private/cli/migrate.php && vendor/bin/phpunit --testsuite integration'
 
 test-e2e: ## run the end-to-end test on a throwaway stack
 	tests/E2E/run.sh
