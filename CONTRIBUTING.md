@@ -104,12 +104,12 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 ## Continuous integration
 
 Every pull request and every push to `main` runs the workflows in [`.github/workflows/`](.github/workflows/): the unit
-tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test,
-style and static analysis, the hooks that need no PHP, and an audit of the dev dependencies, which also runs weekly. A
-push to `main` that changes the image builds it for amd64 and arm64, runs the e2e test on each, and publishes it on
-Docker Hub and GHCR as `main`. An annotated tag `vX.Y.Z` publishes it as `X.Y.Z`, `X.Y` and `latest`, and creates the
-GitHub Release, with the tag's subject as its title, the rest of its message as its notes, and the signed source archive
-and `compose.yaml`. A local `make check` covers one PHP and one MySQL; CI covers the rest.
+tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test, the
+hooks that run before each commit, and an audit of the dev dependencies, which also runs weekly. A push to `main` that
+changes the image builds it for amd64 and arm64, runs the e2e test on each, and publishes it on Docker Hub and GHCR as
+`main`. An annotated tag `vX.Y.Z` publishes it as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release, with the
+tag's subject as its title, the rest of its message as its notes, and the signed source archive and `compose.yaml`. A
+local `make check` covers one PHP and one MySQL; CI covers the rest.
 
 ## License
 

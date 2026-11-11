@@ -21,34 +21,15 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: 3.x
-
-      # The PHP hooks need the Docker toolchain and run in the job below.
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
-        env:
-          SKIP: php-cs-fixer, phpstan, composer-validate
-
-  php:
-    name: Style and static analysis
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
+      # The PHP hooks need the dev image and its dependencies.
       - name: Build the dev image
         run: make build
 
       - name: Install the dev dependencies
         run: make deps
 
-      - name: Check the code style
-        run: make style
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: 3.x
 
-      - name: Run the static analysis
-        run: make analyse
-
-      - name: Check composer.json against the lock file
-        run: make validate
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
