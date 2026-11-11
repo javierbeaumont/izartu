@@ -126,3 +126,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# composer-require-checker needs PHP 8.4: as a dev dependency, `composer install` would fail on 8.2 and 8.3.
+ADD --checksum=sha256:35d1dfdd7aa94a750f4b4c9b0b22dd5e76b5e9e35fb910c8901f3dafd2ad2ab9 --chmod=755 \
+    https://github.com/maglnet/ComposerRequireChecker/releases/download/4.24.0/composer-require-checker.phar \
+    /usr/local/bin/composer-require-checker

@@ -33,13 +33,13 @@ at the clone's root with the database credentials ([README, "Installation"](READ
 make deps    # install the dev dependencies (PHPUnit, PHPStan, PHP-CS-Fixer) into vendor/, once
 make hooks   # install the hooks, once
 make up      # start the app and the database in the background, at http://localhost:8080
-make check   # style, static analysis and the three test tiers
+make check   # style, static analysis, the extensions check and the three test tiers
 ```
 
-The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style and static
-analysis, the licence headers, spelling, the shell scripts, YAML, workflows and Dockerfile, whitespace and line length,
-and leaked secrets. Before a push they run the tests: unit and integration when PHP changed, e2e unless only Markdown
-did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
+The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style, static
+analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, YAML, workflows and
+Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the tests: unit and integration when
+PHP changed, e2e unless only Markdown did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
 
 ### Tests
 
@@ -73,12 +73,15 @@ make test-e2e          # e2e only, on a throwaway stack
 PHPStan runs at level 10, the highest, over `private/` and `public/`, for every supported PHP version
 ([`phpstan.dist.neon`](phpstan.dist.neon)). The code follows
 [PER Coding Style](https://www.php-fig.org/per/coding-style/), with lines of up to 120 characters, enforced by
-PHP-CS-Fixer.
+PHP-CS-Fixer. The published image's PHP has only PHP's core and the extensions `composer.json` requires, so
+[composer-require-checker](https://github.com/maglnet/ComposerRequireChecker) checks that the code calls nothing else
+([`composer-require-checker.json`](composer-require-checker.json)).
 
 ```sh
-make analyse  # static analysis
-make style    # check the code style
-make fmt      # apply it
+make analyse        # static analysis
+make check-require  # the extensions the code calls
+make style          # check the code style
+make fmt            # apply it
 ```
 
 Beyond the fixer: `/** */` docblocks on classes, methods, properties and constants (they are published as API

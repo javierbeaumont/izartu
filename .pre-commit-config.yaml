@@ -94,6 +94,12 @@ repos:
         language: system
         files: \.php$
         pass_filenames: false
+      - id: check-require
+        name: composer-require-checker
+        entry: make check-require
+        language: system
+        files: (\.php|^composer(-require-checker)?\.json)$
+        pass_filenames: false
   # The tests need the database or a whole stack, so they wait until push and commits stay fast.
   - repo: local
     hooks:

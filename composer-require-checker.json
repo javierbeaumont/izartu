@@ -1,0 +1,22 @@
+{
+    "symbol-whitelist": [],
+    "php-core-extensions": [
+        "Core",
+        "date",
+        "hash",
+        "json",
+        "lexbor",
+        "pcre",
+        "random",
+        "Reflection",
+        "SPL",
+        "standard",
+        "uri"
+    ],
+    "scan-files": [
+        "private/*.php",
+        "private/cli/*.php",
+        "private/template/*.php",
+        "public/*.php"
+    ]
+}

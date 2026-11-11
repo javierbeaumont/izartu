@@ -26,8 +26,8 @@ RUN := $(COMPOSE) run --rm -T
 # Only the integration tests need the database, so no tool starts it.
 TOOL := $(RUN) --no-deps test
 
-.PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse validate audit \
-	check user hooks
+.PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
+	validate audit check user hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -71,13 +71,16 @@ fmt: ## apply the code style
 analyse: ## run the static analysis
 	$(TOOL) vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
+check-require: ## check that the code calls only PHP's core and the extensions composer.json requires
+	$(TOOL) composer-require-checker check
+
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
 
 audit: ## report known vulnerabilities in the dependencies
 	$(TOOL) composer audit
 
-check: style analyse test ## everything the CI runs
+check: style analyse check-require test ## everything the CI runs
 
 user: ## create a user (interactive)
 	$(COMPOSE) exec app php /var/www/izartu/private/cli/adduser.php
