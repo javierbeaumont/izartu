@@ -6,7 +6,7 @@
 
 - [ ] Non-trivial changes discussed in an issue first (see CONTRIBUTING.md).
 - [ ] Commits are small and focused, with a single-line imperative subject.
-- [ ] `make check` passes (style, static analysis, the extensions check, tests).
+- [ ] `make check` passes (style, static analysis, the extensions checks, tests).
 - [ ] Tests added or adjusted for the change.
 - [ ] README updated if behaviour, configuration or requirements changed.
 - [ ] No new runtime dependency.

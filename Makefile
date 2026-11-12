@@ -27,7 +27,7 @@ RUN := $(COMPOSE) run --rm -T
 TOOL := $(RUN) --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	validate audit check user hooks
+	check-extensions validate audit check user hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -74,13 +74,19 @@ analyse: ## run the static analysis
 check-require: ## check that the code calls only PHP's core and the extensions composer.json requires
 	$(TOOL) composer-require-checker check
 
+# The image has neither the script nor the files it reads, so they go on stdin and as arguments. Without IMAGE, the dev
+# app, rebuilt: its `base` stage has the image's modules, and the hook runs when the Dockerfile changes.
+check-extensions: ## check the image's PHP modules against composer.json (IMAGE, or else the dev app)
+	$(if $(IMAGE),docker run --rm -i $(IMAGE),$(RUN) --build --no-deps app) \
+		php -- "$$(cat composer.json)" "$$(cat composer-require-checker.json)" < docker/check-extensions.php
+
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
 
 audit: ## report known vulnerabilities in the dependencies
 	$(TOOL) composer audit
 
-check: style analyse check-require test ## everything the CI runs
+check: style analyse check-require check-extensions test ## everything the CI runs
 
 user: ## create a user (interactive)
 	$(COMPOSE) exec app php /var/www/izartu/private/cli/adduser.php

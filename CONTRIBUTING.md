@@ -33,13 +33,14 @@ at the clone's root with the database credentials ([README, "Installation"](READ
 make deps    # install the dev dependencies (PHPUnit, PHPStan, PHP-CS-Fixer) into vendor/, once
 make hooks   # install the hooks, once
 make up      # start the app and the database in the background, at http://localhost:8080
-make check   # style, static analysis, the extensions check and the three test tiers
+make check   # style, static analysis, the extensions checks and the three test tiers
 ```
 
 The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style, static
 analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, YAML, workflows and
-Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the tests: unit and integration when
-PHP changed, e2e unless only Markdown did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
+Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the tests, unit and integration when
+PHP changed and e2e unless only Markdown did, and the image's extensions check when the Dockerfile, `composer.json` or
+`composer-require-checker.json` changed. The PHP hooks use the Docker toolchain, so they need the `.env` too.
 
 ### Tests
 
@@ -75,13 +76,15 @@ PHPStan runs at level 10, the highest, over `private/` and `public/`, for every 
 [PER Coding Style](https://www.php-fig.org/per/coding-style/), with lines of up to 120 characters, enforced by
 PHP-CS-Fixer. The published image's PHP has only PHP's core and the extensions `composer.json` requires, so
 [composer-require-checker](https://github.com/maglnet/ComposerRequireChecker) checks that the code calls nothing else
-([`composer-require-checker.json`](composer-require-checker.json)).
+([`composer-require-checker.json`](composer-require-checker.json)), and
+[`docker/check-extensions.php`](docker/check-extensions.php) that the image has those and nothing else.
 
 ```sh
-make analyse        # static analysis
-make check-require  # the extensions the code calls
-make style          # check the code style
-make fmt            # apply it
+make analyse           # static analysis
+make check-require     # the extensions the code calls
+make check-extensions  # the extensions the image has: IMAGE, or else the dev app, rebuilt
+make style             # check the code style
+make fmt               # apply it
 ```
 
 Beyond the fixer: `/** */` docblocks on classes, methods, properties and constants (they are published as API
@@ -107,12 +110,13 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 ## Continuous integration
 
 Every pull request and every push to `main` runs the workflows in [`.github/workflows/`](.github/workflows/): the unit
-tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test, the
-hooks that run before each commit, and an audit of the dev dependencies, which also runs weekly. A push to `main` that
-changes the image builds it for amd64 and arm64, runs the e2e test on each, and publishes it on Docker Hub and GHCR as
-`main`. An annotated tag `vX.Y.Z` publishes it as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release, with the
-tag's subject as its title, the rest of its message as its notes, and the signed source archive and `compose.yaml`. A
-local `make check` covers one PHP and one MySQL; CI covers the rest.
+tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test and
+the extensions check on one build of the image, the hooks that run before each commit, and an audit of the dev
+dependencies, which also runs weekly. A push to `main` that changes the image builds it for amd64 and arm64, checks its
+extensions and runs the e2e test on each, and publishes it on Docker Hub and GHCR as `main`. An annotated tag `vX.Y.Z`
+publishes it as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release, with the tag's subject as its title, the
+rest of its message as its notes, and the signed source archive and `compose.yaml`. A local `make check` covers one PHP
+and one MySQL; CI covers the rest.
 
 ## License
 
