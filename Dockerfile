@@ -3,8 +3,11 @@ ARG PHP_VERSION=8.5
 
 # ===== The published image =====
 
+# The base of PHP's build and of the image.
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS alpine
+
 # PHP, compiled with only the modules izartu uses.
-FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS php
+FROM alpine AS php
 
 ARG PHP_SOURCE_VERSION=8.5.12
 ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
@@ -69,8 +72,9 @@ RUN apk add --no-cache \
       | sed 's/^/so:/' > /rundeps \
  && find /usr/local -newer main/php_version.h -exec touch -h -r main/php_version.h {} +
 
-# The image: Alpine, with nginx and PHP-FPM under s6 as www-data on port 8080, its layers from the least changing.
-FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS base
+# The image: Alpine, with nginx and PHP-FPM under s6 as www-data on port 8080, its layers from the least changing. First
+# Alpine's packages and PHP, whose layers have to be reproducible.
+FROM alpine AS system
 
 # adduser dates /etc/shadow by the day and keeps backups in /etc/*-, which would change the layer daily.
 RUN --mount=type=bind,from=php,source=/rundeps,target=/rundeps \
@@ -88,10 +92,15 @@ RUN --mount=type=bind,from=php,source=/rundeps,target=/rundeps \
 
 COPY --from=php /usr/local /usr/local
 
-# The fixes Alpine published after the base image.
+# The fixes Alpine published after the base image, dated by its release even if they upgrade it: the later layers carry
+# the dates of the directories above their files.
 RUN --mount=type=bind,source=docker/pin-mtimes.sh,target=/pin-mtimes.sh \
+    --mount=type=bind,from=alpine,source=/etc/alpine-release,target=/base-release \
     apk upgrade --no-cache --no-logfile \
- && /pin-mtimes.sh
+ && /pin-mtimes.sh /base-release
+
+# Then the configuration, without the code.
+FROM system AS base
 
 COPY docker/rootfs/ /
 

@@ -66,8 +66,8 @@ jobs:
       - name: Run the integration tests
         run: make test-integration
 
-  # The published image, built once for the jobs that test it. A required check too: a job skipped because one it needs
-  # failed passes as a check.
+  # The published image, built once for the jobs that test it, its system layers checked. A required check too: a job
+  # skipped because one it needs failed passes as a check.
   image:
     name: Image
     runs-on: ubuntu-latest
@@ -82,6 +82,10 @@ jobs:
           git archive HEAD | tar -x -C "$RUNNER_TEMP/source"
           docker build --target release --build-context source="$RUNNER_TEMP/source" -t izartu:candidate .
           docker save -o "$RUNNER_TEMP/image.tar" izartu:candidate
+
+      # PHP comes from the build's cache, so two builds of the rest take seconds.
+      - name: Check that two builds make the same system layers
+        run: make check-layers
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

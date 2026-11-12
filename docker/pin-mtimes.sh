@@ -18,8 +18,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# Gives what a build step created or changed the date of /etc/alpine-release, so the same packages make the same layer.
-# Docker's mounts stay as they are, and so does /usr/local, which has PHP's own date.
+# Gives what a build step created or changed the date of Alpine's release file, so the same packages make the same
+# layer. Docker's mounts stay as they are, and so does /usr/local, which has PHP's own date.
+release="${1:-/etc/alpine-release}"
 find /bin /etc /home /lib /root /run /sbin /tmp /usr /var -xdev \
     \( -path /etc/hosts -o -path /etc/resolv.conf -o -path /usr/local \) -prune \
-    -o -newer /etc/alpine-release -exec touch -h -r /etc/alpine-release {} +
+    -o -newer "$release" -exec touch -h -r "$release" {} +

@@ -100,7 +100,7 @@ repos:
         language: system
         files: (\.php|^composer(-require-checker)?\.json)$
         pass_filenames: false
-  # The tests need the database or a whole stack, and the extensions check an image that may compile PHP, so they wait
+  # The tests need the database or a whole stack, and the image's checks need builds that may compile PHP, so they wait
   # until push and commits stay fast.
   - repo: local
     hooks:
@@ -109,6 +109,13 @@ repos:
         entry: make check-extensions
         language: system
         files: ^(Dockerfile|Makefile|composer(-require-checker)?\.json|docker/check-extensions\.php)$
+        pass_filenames: false
+        stages: [pre-push]
+      - id: check-layers
+        name: the image's layers
+        entry: make check-layers
+        language: system
+        files: ^(Dockerfile|docker/(pin-mtimes|check-layers)\.sh)$
         pass_filenames: false
         stages: [pre-push]
       - id: phpunit

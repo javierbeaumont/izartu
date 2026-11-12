@@ -27,7 +27,7 @@ RUN := $(COMPOSE) run --rm -T
 TOOL := $(RUN) --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	check-extensions validate audit check user hooks
+	check-extensions check-layers validate audit check user hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -84,13 +84,16 @@ check-extensions: ## check the image's PHP modules against composer.json (IMAGE,
 		php -- "$$composer" "$$(cat composer-require-checker.json)" $(if $(CODE_TAG),--at-least) \
 		< docker/check-extensions.php
 
+check-layers: ## check that two builds of the image's system stage make the same layers
+	docker/check-layers.sh
+
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
 
 audit: ## report known vulnerabilities in the dependencies
 	$(TOOL) composer audit
 
-check: style analyse check-require check-extensions test ## everything the CI runs
+check: style analyse check-require check-extensions check-layers test ## everything the CI runs
 
 user: ## create a user (interactive)
 	$(COMPOSE) exec app php /var/www/izartu/private/cli/adduser.php

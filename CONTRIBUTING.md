@@ -33,14 +33,15 @@ at the clone's root with the database credentials ([README, "Installation"](READ
 make deps    # install the dev dependencies (PHPUnit, PHPStan, PHP-CS-Fixer) into vendor/, once
 make hooks   # install the hooks, once
 make up      # start the app and the database in the background, at http://localhost:8080
-make check   # style, static analysis, the extensions checks and the three test tiers
+make check   # style, static analysis, the extensions and layers checks, and the three test tiers
 ```
 
 The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style, static
 analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, YAML, workflows and
 Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the tests, unit and integration when
-PHP changed and e2e unless only Markdown did, and the image's extensions check when the Dockerfile, `composer.json` or
-`composer-require-checker.json` changed. The PHP hooks use the Docker toolchain, so they need the `.env` too.
+PHP changed and e2e unless only Markdown did, the image's extensions check when the Dockerfile, `composer.json` or
+`composer-require-checker.json` changed, and its layers check when the Dockerfile or `docker/pin-mtimes.sh` did. The PHP
+hooks use the Docker toolchain, so they need the `.env` too.
 
 ### Tests
 
@@ -91,6 +92,17 @@ make fmt               # apply it
 Beyond the fixer: `/** */` docblocks on classes, methods, properties and constants (they are published as API
 documentation), and comments only where the *why* is not obvious.
 
+### The image's layers
+
+The image's first layers, Alpine's packages and PHP (the Dockerfile's `system` stage), have to be reproducible, so that
+an update downloads only the layers that changed. [`docker/check-layers.sh`](docker/check-layers.sh) builds them twice
+and compares; for a layer that differs, it shows the entries that do, often a file a build step left undated
+([`docker/pin-mtimes.sh`](docker/pin-mtimes.sh)).
+
+```sh
+make check-layers  # two builds of the system stage, compared
+```
+
 ### Without Docker
 
 You need PHP and Composer, a reachable MySQL and, for the integration tests, the two test databases, empty and
@@ -111,13 +123,13 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 ## Continuous integration
 
 Every pull request and every push to `main` runs workflows in [`.github/workflows/`](.github/workflows/): the unit tests
-on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test and the
-extensions check on one build of the image, the hooks that run before each commit, and an audit of the dev dependencies,
-which also runs weekly. A release's image is its code, from its tag, with `main`'s packaging (the Dockerfile, `docker/`
-and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last commit builds it for amd64 and arm64, checks its
-extensions and runs the release's own e2e test on each, publishes it on Docker Hub and GHCR as `X.Y.Z`, `X.Y` and
-`latest`, and creates the GitHub Release, with the tag's subject as its title, the rest of its message as its notes, and
-the signed source archive and `compose.yaml`. Run by hand on `main`, the
+on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, one build of the image
+with the e2e test and the extensions and layers checks, the hooks that run before each commit, and an audit of the dev
+dependencies, which also runs weekly. A release's image is its code, from its tag, with `main`'s packaging (the
+Dockerfile, `docker/` and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last commit builds it for amd64 and
+arm64, checks its extensions and layers and runs the release's own e2e test on each, publishes it on Docker Hub and GHCR
+as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release, with the tag's subject as its title, the rest of its
+message as its notes, and the signed source archive and `compose.yaml`. Run by hand on `main`, the
 [Container images](.github/workflows/container-images.yml) workflow publishes the newest release if its tag's run did
 not, and otherwise rebuilds its image in place with the same code: a fix to the packaging reaches the image without a
 release. A local `make check` covers one PHP and one MySQL; CI covers the rest.
