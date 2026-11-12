@@ -20,16 +20,17 @@
 //  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Checks that the PHP running it has the modules izartu expects and no others: PHP's core as
+ * Checks that the PHP running it has the modules izartu expects and, unless `--at-least`, no others: PHP's core as
  * `composer-require-checker.json` lists it, each `ext-*` that `composer.json` requires, mysqlnd and OPcache.
  *
  * The image carries neither file nor this script, so `make check-extensions` passes the files' contents as arguments
  * and the script on stdin:
- *   php -- "$(cat composer.json)" "$(cat composer-require-checker.json)" < docker/check-extensions.php
+ *   php -- "$(cat composer.json)" "$(cat composer-require-checker.json)" [--at-least] < docker/check-extensions.php
  */
 
-if ($argc !== 3) {
-    fwrite(STDERR, "usage: php -- COMPOSER_JSON REQUIRE_CHECKER_JSON < check-extensions.php\n");
+$moreAllowed = $argc === 4 && $argv[3] === '--at-least';
+if ($argc !== 3 && !$moreAllowed) {
+    fwrite(STDERR, "usage: php -- COMPOSER_JSON REQUIRE_CHECKER_JSON [--at-least] < check-extensions.php\n");
     exit(2);
 }
 
@@ -55,7 +56,7 @@ $problems = [];
 if ($missing !== []) {
     $problems[] = 'missing ' . implode(', ', $missing);
 }
-if ($unexpected !== []) {
+if ($unexpected !== [] && !$moreAllowed) {
     $problems[] = 'unexpected ' . implode(', ', $unexpected);
 }
 if ($problems !== []) {

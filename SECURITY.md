@@ -27,8 +27,10 @@ versions of each are listed in the [README](README.md#requirements).
 ## Verifying the image
 
 The container image on Docker Hub and GHCR is built by the [Container images](.github/workflows/container-images.yml)
-workflow, which signs with Sigstore the provenance of each tag and the SBOM of each platform's image. With the
-[GitHub CLI](https://cli.github.com), this checks that an image was built by that workflow from this repository:
+workflow, which signs with Sigstore the provenance of each publication and the SBOM of each platform's image. The
+provenance names the commit of `main` whose packaging built it; the image's label `org.opencontainers.image.revision`,
+the release's. With the [GitHub CLI](https://cli.github.com), this checks that an image was built by that workflow from
+this repository:
 
 ```sh
 gh attestation verify oci://docker.io/javierbeaumont/izartu:<tag> --repo javierbeaumont/izartu

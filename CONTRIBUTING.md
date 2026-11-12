@@ -74,15 +74,16 @@ make test-e2e          # e2e only, on a throwaway stack
 PHPStan runs at level 10, the highest, over `private/` and `public/`, for every supported PHP version
 ([`phpstan.dist.neon`](phpstan.dist.neon)). The code follows
 [PER Coding Style](https://www.php-fig.org/per/coding-style/), with lines of up to 120 characters, enforced by
-PHP-CS-Fixer. The published image's PHP has only PHP's core and the extensions `composer.json` requires, so
+PHP-CS-Fixer. The image's PHP has only PHP's core and the extensions `composer.json` requires, so
 [composer-require-checker](https://github.com/maglnet/ComposerRequireChecker) checks that the code calls nothing else
 ([`composer-require-checker.json`](composer-require-checker.json)), and
-[`docker/check-extensions.php`](docker/check-extensions.php) that the image has those and nothing else.
+[`docker/check-extensions.php`](docker/check-extensions.php) that the image has those and nothing else; a release's
+image, built with `main`'s packaging, has at least those of its own `composer.json`.
 
 ```sh
 make analyse           # static analysis
 make check-require     # the extensions the code calls
-make check-extensions  # the extensions the image has: IMAGE, or else the dev app, rebuilt
+make check-extensions  # the extensions the image has: IMAGE, or else the dev app, rebuilt; at least CODE_TAG's
 make style             # check the code style
 make fmt               # apply it
 ```
@@ -109,14 +110,17 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 
 ## Continuous integration
 
-Every pull request and every push to `main` runs the workflows in [`.github/workflows/`](.github/workflows/): the unit
-tests on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test and
-the extensions check on one build of the image, the hooks that run before each commit, and an audit of the dev
-dependencies, which also runs weekly. A push to `main` that changes the image builds it for amd64 and arm64, checks its
-extensions and runs the e2e test on each, and publishes it on Docker Hub and GHCR as `main`. An annotated tag `vX.Y.Z`
-publishes it as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release, with the tag's subject as its title, the
-rest of its message as its notes, and the signed source archive and `compose.yaml`. A local `make check` covers one PHP
-and one MySQL; CI covers the rest.
+Every pull request and every push to `main` runs workflows in [`.github/workflows/`](.github/workflows/): the unit tests
+on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, the e2e test and the
+extensions check on one build of the image, the hooks that run before each commit, and an audit of the dev dependencies,
+which also runs weekly. A release's image is its code, from its tag, with `main`'s packaging (the Dockerfile, `docker/`
+and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last commit builds it for amd64 and arm64, checks its
+extensions and runs the release's own e2e test on each, publishes it on Docker Hub and GHCR as `X.Y.Z`, `X.Y` and
+`latest`, and creates the GitHub Release, with the tag's subject as its title, the rest of its message as its notes, and
+the signed source archive and `compose.yaml`. Run by hand on `main`, the
+[Container images](.github/workflows/container-images.yml) workflow publishes the newest release if its tag's run did
+not, and otherwise rebuilds its image in place with the same code: a fix to the packaging reaches the image without a
+release. A local `make check` covers one PHP and one MySQL; CI covers the rest.
 
 ## License
 

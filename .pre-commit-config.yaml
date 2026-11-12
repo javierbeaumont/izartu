@@ -108,7 +108,7 @@ repos:
         name: the image's extensions
         entry: make check-extensions
         language: system
-        files: ^(Dockerfile|composer(-require-checker)?\.json|docker/check-extensions\.php)$
+        files: ^(Dockerfile|Makefile|composer(-require-checker)?\.json|docker/check-extensions\.php)$
         pass_filenames: false
         stages: [pre-push]
       - id: phpunit

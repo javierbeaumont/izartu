@@ -74,11 +74,15 @@ analyse: ## run the static analysis
 check-require: ## check that the code calls only PHP's core and the extensions composer.json requires
 	$(TOOL) composer-require-checker check
 
-# The image has neither the script nor the files it reads, so they go on stdin and as arguments. Without IMAGE, the dev
-# app, rebuilt: its `base` stage has the image's modules, and the hook runs when the Dockerfile changes.
-check-extensions: ## check the image's PHP modules against composer.json (IMAGE, or else the dev app)
+# The image has neither the script nor the files it reads. Without IMAGE, the dev app, rebuilt: its `base` stage has the
+# image's modules. With CODE_TAG, that tag's composer.json, and at least its extensions: a release's image is built with
+# `main`'s packaging.
+check-extensions: ## check the image's PHP modules against composer.json (IMAGE, or else the dev app; CODE_TAG)
+	composer="$$($(if $(CODE_TAG),git show 'refs/tags/$(CODE_TAG):composer.json',cat composer.json))" \
+		|| { echo "no composer.json in $(or $(CODE_TAG),the working tree)" >&2; exit 1; }; \
 	$(if $(IMAGE),docker run --rm -i $(IMAGE),$(RUN) --build --no-deps app) \
-		php -- "$$(cat composer.json)" "$$(cat composer-require-checker.json)" < docker/check-extensions.php
+		php -- "$$composer" "$$(cat composer-require-checker.json)" $(if $(CODE_TAG),--at-least) \
+		< docker/check-extensions.php
 
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict

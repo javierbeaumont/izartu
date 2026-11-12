@@ -2,12 +2,6 @@ name: Container images
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - Dockerfile
-      - docker/pin-mtimes.sh
-      - docker/rootfs/**
     tags:
       - v*
   workflow_dispatch:
@@ -15,70 +9,100 @@ on:
 permissions:
   contents: read
 
-# One run per ref at a time, so an older run never moves `main` after a newer one. Per ref, since a newer run cancels
-# the one waiting: a push to `main` never cancels a release.
+# One publication at a time, so a rebuild and a new release never move `X.Y` and `latest` out of order.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
 
 # Shown on GHCR's package page.
 env:
   DESCRIPTION: 'Self-hosted bookmark manager based on tags: nginx and PHP-FPM on Alpine, with MySQL alongside.'
   LICENSES: AGPL-3.0-or-later
 
-# Built and tested natively on each platform, and tagged only when every platform passed.
+# A release's code, from its tag, with `main`'s packaging: the Dockerfile, `docker/` and the Makefile. Built and tested
+# natively on each platform, and tagged only when every platform passed.
 jobs:
   version:
     name: Version
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      tags: ${{ steps.tags.outputs.tags }}
-      version: ${{ steps.tags.outputs.version }}
+      commit: ${{ steps.release.outputs.commit }}
+      packaging: ${{ steps.release.outputs.packaging }}
+      tag: ${{ steps.release.outputs.tag }}
+      tags: ${{ steps.release.outputs.tags }}
+      version: ${{ steps.release.outputs.version }}
     steps:
-      # Every tag, to find the newest release.
+      # Every tag and `main`.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      # A tag `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`, and `docker/compose.yaml` has to name `X.Y`; anything else
-      # publishes `main`.
-      - name: Resolve the version and its tags
-        id: tags
+      # The release: the tag `vX.Y.Z` pushed, or the newest on a run by hand on `main`, which publishes it if its tag's
+      # run did not and otherwise rebuilds it in place. It publishes `X.Y.Z`, `X.Y` and `latest`, and its
+      # `docker/compose.yaml` has to name `X.Y`; any other ref is refused. The packaging is one commit of `main` for the
+      # whole run.
+      - name: Resolve the release
+        id: release
         env:
+          EVENT: ${{ github.event_name }}
           REF_TYPE: ${{ github.ref_type }}
           # Through env: a ${{ }} inside the run block is substituted as text, and git allows shell metacharacters in a
           # tag name.
-          TAG_NAME: ${{ github.ref_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "$REF_TYPE" != tag ]; then
-            echo "version=main" >> "$GITHUB_OUTPUT"
-            echo "tags=main" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           release='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-          if ! [[ $TAG_NAME =~ $release ]]; then
-            echo "refusing to publish tag '$TAG_NAME': not vMAJOR.MINOR.PATCH" >&2
+          newest=$(git tag --list 'v*' --sort=-version:refname | grep -E -m1 "$release") || {
+            echo "refusing to publish: no release tag vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          }
+          if [ "$EVENT" = workflow_dispatch ]; then
+            if [ "$REF_TYPE" != branch ] || [ "$REF_NAME" != main ]; then
+              echo "refusing to run on the $REF_TYPE $REF_NAME: a run by hand is on main, whose packaging it takes" >&2
+              exit 1
+            fi
+            tag=$newest
+            packaging=$GITHUB_SHA
+          else
+            tag=$REF_NAME
+            if ! [[ $tag =~ $release ]]; then
+              echo "refusing to publish tag '$tag': not vMAJOR.MINOR.PATCH" >&2
+              exit 1
+            fi
+            if [ "$tag" != "$newest" ]; then
+              echo "refusing to publish tag $tag: only the latest release, $newest, is maintained" >&2
+              exit 1
+            fi
+            packaging=$(git rev-parse origin/main)
+          fi
+          if ! git merge-base --is-ancestor "refs/tags/$tag" "$packaging"; then
+            echo "refusing to publish tag $tag: main does not have its commit; push main, then run this by hand" >&2
             exit 1
           fi
-          if [ "$(git cat-file -t "refs/tags/$TAG_NAME")" != tag ]; then
-            echo "refusing to publish tag $TAG_NAME: not annotated; its message is the release's title and notes" >&2
+          # The provenance names the run's commit: on a push, the tag's, which has to be the packaging's.
+          if [ "$EVENT" = push ] && [ "$(git rev-parse "refs/tags/$tag^{commit}")" != "$packaging" ]; then
+            echo "refusing to publish tag $tag: main has moved past its commit; run this by hand on main" >&2
             exit 1
           fi
-          newest=$(git tag --list 'v*' --sort=-version:refname | grep -E -m1 "$release")
-          if [ "$TAG_NAME" != "$newest" ]; then
-            echo "refusing to publish tag $TAG_NAME: only the latest release, $newest, is maintained" >&2
+          if [ "$(git cat-file -t "refs/tags/$tag")" != tag ]; then
+            echo "refusing to publish tag $tag: not annotated; its message is the release's title and notes" >&2
             exit 1
           fi
-          version=${TAG_NAME#v}
+          version=${tag#v}
           minor=${version%.*}
-          named=$(sed -n 's|^ *image: javierbeaumont/izartu:||p' docker/compose.yaml)
+          named=$(git show "refs/tags/$tag:docker/compose.yaml" | sed -n 's|^ *image: javierbeaumont/izartu:||p')
           if [ "$named" != "$minor" ]; then
-            echo "docker/compose.yaml names the image $named, not $minor" >&2
+            echo "$tag's docker/compose.yaml names the image $named, not $minor" >&2
             exit 1
           fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tags=$version $minor latest" >> "$GITHUB_OUTPUT"
+          {
+            echo "commit=$(git rev-parse "refs/tags/$tag^{commit}")"
+            echo "packaging=$packaging"
+            echo "tag=$tag"
+            echo "tags=$version $minor latest"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+          echo "$tag's code with the packaging of main at $packaging" >> "$GITHUB_STEP_SUMMARY"
 
   build:
     name: Build / ${{ matrix.arch }}
@@ -103,16 +127,21 @@ jobs:
     env:
       NAMES: docker.io/${{ github.repository }},ghcr.io/${{ github.repository }}
     steps:
+      # The packaging, with the release's tag.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
+          ref: ${{ needs.version.outputs.packaging }}
 
-      # What a release download carries, and the commit's time, which caps the image's file times.
+      # What a release download carries, and its commit's time, which caps the image's file times.
       - name: Extract the release archive
+        env:
+          TAG: ${{ needs.version.outputs.tag }}
         run: |
           mkdir "$RUNNER_TEMP/source"
-          git archive HEAD | tar -x -C "$RUNNER_TEMP/source"
-          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+          git archive "refs/tags/$TAG" | tar -x -C "$RUNNER_TEMP/source"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct "refs/tags/$TAG")" >> "$GITHUB_ENV"
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -138,22 +167,38 @@ jobs:
           labels: &labels |
             org.opencontainers.image.description=${{ env.DESCRIPTION }}
             org.opencontainers.image.licenses=${{ env.LICENSES }}
-            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.revision=${{ needs.version.outputs.commit }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.version=${{ needs.version.outputs.version }}
           outputs: type=docker,rewrite-timestamp=true
           tags: izartu-e2e
           target: release
 
+      # The code's own VERSION: the image has to carry the release's archive.
+      - name: Check the image's release
+        env:
+          COMMIT: ${{ needs.version.outputs.commit }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          printf 'describe: %s\ncommit: %s\n' "$TAG" "$COMMIT" > "$RUNNER_TEMP/expected"
+          docker run --rm --entrypoint cat izartu-e2e /var/www/izartu/VERSION | grep -v '^#' \
+            | diff "$RUNNER_TEMP/expected" -
+
+      # Every extension the release's composer.json requires, and maybe more that `main`'s code requires.
       - name: Check the image's extensions
         env:
+          CODE_TAG: ${{ needs.version.outputs.tag }}
           IMAGE: izartu-e2e
         run: make check-extensions
 
+      # The release's own test and Compose file.
       - name: Run the end-to-end test
         env:
           IMAGE: izartu-e2e
-        run: make test-e2e
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/release" "refs/tags/$TAG"
+          "$RUNNER_TEMP/release/tests/E2E/run.sh"
 
       # The same build, from the cache: the image just tested.
       - name: Push the image by digest
@@ -285,13 +330,12 @@ jobs:
           subject-digest: ${{ steps.index.outputs.digest }}
           subject-name: ghcr.io/${{ github.repository }}
 
-  # Only on a tag's push: a rebuild by hand republishes the image, not the release.
+  # The GitHub Release, unless it exists: a rebuild republishes only the image.
   release:
     name: Release
     needs:
       - publish
       - version
-    if: github.event_name == 'push' && github.ref_type == 'tag'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -299,15 +343,39 @@ jobs:
       contents: write
       id-token: write
     steps:
-      # The whole history with its tags: `VERSION` names the tag, and the release's title and notes are its message.
+      - name: Look for the release
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          if draft=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft \
+            2> "$RUNNER_TEMP/error"); then
+            if [ "$draft" = true ]; then
+              echo "$TAG's release is a draft, left by a run that did not finish: delete it, then run this again" >&2
+              exit 1
+            fi
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          elif grep -q 'release not found' "$RUNNER_TEMP/error"; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          else
+            cat "$RUNNER_TEMP/error" >&2
+            exit 1
+          fi
+
+      # The tag, with the whole history and every tag: `VERSION` names the tag, and the release's title and notes are
+      # its message.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.existing.outputs.exists == 'false'
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: refs/tags/${{ needs.version.outputs.tag }}
 
       # The deployable tree with `VERSION` stamped, archived here: GitHub's own source archives are not guaranteed to
       # stay byte-identical. And the Compose file the README installs with.
       - name: Stage the release's files
+        if: steps.existing.outputs.exists == 'false'
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         run: |
@@ -319,15 +387,17 @@ jobs:
           sha256sum -- * > checksums.txt
 
       - name: Sign their provenance
+        if: steps.existing.outputs.exists == 'false'
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-checksums: dist/checksums.txt
 
       # Its title is the tag's subject, and its notes the rest of the tag's message, without the signature.
       - name: Create the release
+        if: steps.existing.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ needs.version.outputs.tag }}
         run: |
           gh release create "$TAG_NAME" --verify-tag \
             --title "$(git tag --list --format='%(contents:subject)' "$TAG_NAME")" \
