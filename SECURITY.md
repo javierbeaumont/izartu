@@ -29,9 +29,9 @@ versions of each are listed in the [README](README.md#requirements).
 
 The container image on Docker Hub and GHCR is built by the [Container images](.github/workflows/container-images.yml)
 workflow, which signs with Sigstore the provenance of each publication and the SBOM of each platform's image. The
-provenance names the commit of `main` whose packaging built it; the image's label `org.opencontainers.image.revision`,
-the release's. With the [GitHub CLI](https://cli.github.com), this checks that an image was built by that workflow from
-this repository:
+provenance and the image's label `org.izartu.packaging` name the commit of `main` whose packaging built it; its label
+`org.opencontainers.image.revision`, the release's. Its label `org.izartu.php.version` names its PHP. With the
+[GitHub CLI](https://cli.github.com), this checks that an image was built by that workflow from this repository:
 
 ```sh
 gh attestation verify oci://docker.io/javierbeaumont/izartu:<tag> --repo javierbeaumont/izartu

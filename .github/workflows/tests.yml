@@ -83,6 +83,15 @@ jobs:
           docker build --target release --build-context source="$RUNNER_TEMP/source" -t izartu:candidate .
           docker save -o "$RUNNER_TEMP/image.tar" izartu:candidate
 
+      - name: Check the image's PHP label
+        run: |
+          label=$(docker image inspect -f '{{index .Config.Labels "org.izartu.php.version"}}' izartu:candidate)
+          php=$(docker run --rm izartu:candidate php -n -d display_errors=stderr -r 'echo PHP_VERSION;')
+          if [ "$label" != "$php" ]; then
+            echo "the image's PHP label is '$label', not its PHP's $php" >&2
+            exit 1
+          fi
+
       # PHP comes from the build's cache, so two builds of the rest take seconds.
       - name: Check that two builds make the same system layers
         run: make check-layers

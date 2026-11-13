@@ -1,5 +1,8 @@
 # The PHP of the dev and CI toolchain (`test`), which CI builds on every supported version.
 ARG PHP_VERSION=8.5
+# The image's PHP.
+ARG PHP_SOURCE_VERSION=8.5.12
+ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
 
 # ===== The published image =====
 
@@ -9,8 +12,8 @@ FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c03
 # PHP's source, signed by a release manager and checked to be the version named, which the signature does not prove.
 FROM alpine AS php-source
 
-ARG PHP_SOURCE_VERSION=8.5.12
-ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
+ARG PHP_SOURCE_VERSION
+ARG PHP_SHA256
 
 ADD --checksum=sha256:${PHP_SHA256} \
     https://www.php.net/distributions/php-${PHP_SOURCE_VERSION}.tar.xz /php.tar.xz
@@ -132,6 +135,8 @@ CMD ["entrypoint.sh"]
 # The published image, with the code of a release archive (`git archive`) as the build context `source`: what a release
 # download carries, VERSION stamped.
 FROM base AS release
+ARG PHP_SOURCE_VERSION
+LABEL org.izartu.php.version=${PHP_SOURCE_VERSION}
 
 # hadolint ignore=DL3022
 COPY --from=source . /var/www/izartu/
