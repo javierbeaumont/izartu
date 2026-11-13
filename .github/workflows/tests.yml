@@ -92,6 +92,7 @@ jobs:
           if-no-files-found: error
           name: image
           path: ${{ runner.temp }}/image.tar
+          # So a later re-run tests only an image built again, with current packages.
           retention-days: 1
 
   e2e:

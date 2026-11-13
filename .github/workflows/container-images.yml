@@ -281,6 +281,7 @@ jobs:
           if-no-files-found: error
           name: digest-${{ matrix.arch }}
           path: ${{ runner.temp }}/digests/*
+          # So a later re-run publishes only images built again, with current packages.
           retention-days: 1
 
   publish:
@@ -320,6 +321,23 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
           username: ${{ github.actor }}
+
+      # A re-run of one platform's build after the other's digest artifact expired would publish the image without that
+      # platform. The platforms are the build job's matrix.
+      - name: Check that every platform has a digest
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          shopt -s nullglob
+          digests=("$RUNNER_TEMP"/digests/*)
+          for digest in "${digests[@]##*/}"; do
+            docker buildx imagetools inspect "ghcr.io/$REPOSITORY@sha256:$digest" --format '{{json .Manifest}}' \
+              | jq -r '.manifests[] | select(.platform.os != "unknown") | .platform.architecture'
+          done | sort > "$RUNNER_TEMP/platforms"
+          if ! printf '%s\n' amd64 arm64 | cmp -s - "$RUNNER_TEMP/platforms"; then
+            echo "the digests are for '$(paste -sd ' ' "$RUNNER_TEMP/platforms")', not amd64 and arm64 once each" >&2
+            exit 1
+          fi
 
       # Docker Hub gets a copy of GHCR's.
       - name: Tag the image
