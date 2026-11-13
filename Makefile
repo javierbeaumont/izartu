@@ -21,8 +21,9 @@
 # these targets. They all run in the dev-only `test` container.
 
 COMPOSE := docker compose
-# No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect.
-RUN := $(COMPOSE) run --rm -T
+# No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect. --build: Compose
+# otherwise builds an image only when it is missing.
+RUN := $(COMPOSE) run --rm -T --build
 # Only the integration tests need the database, so no tool starts it.
 TOOL := $(RUN) --no-deps test
 
@@ -80,7 +81,7 @@ check-require: ## check that the code calls only PHP's core and the extensions c
 check-extensions: ## check the image's PHP modules against composer.json (IMAGE, or else the dev app; CODE_TAG)
 	composer="$$($(if $(CODE_TAG),git show 'refs/tags/$(CODE_TAG):composer.json',cat composer.json))" \
 		|| { echo "no composer.json in $(or $(CODE_TAG),the working tree)" >&2; exit 1; }; \
-	$(if $(IMAGE),docker run --rm -i $(IMAGE),$(RUN) --build --no-deps app) \
+	$(if $(IMAGE),docker run --rm -i $(IMAGE),$(RUN) --no-deps app) \
 		php -- "$$composer" "$$(cat composer-require-checker.json)" $(if $(CODE_TAG),--at-least) \
 		< docker/check-extensions.php
 
