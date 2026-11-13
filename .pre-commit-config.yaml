@@ -122,7 +122,7 @@ repos:
         name: phpunit
         entry: make test-unit test-integration
         language: system
-        files: \.php$
+        files: (\.php|^docker/.*\.sh|^Dockerfile)$
         pass_filenames: false
         stages: [pre-push]
       # Non-PHP changes can break the app too.

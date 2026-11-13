@@ -237,6 +237,16 @@ jobs:
           sbom: true
           target: release
 
+      - name: Check that the pushed image has the tested one's layers
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if ! make check-pushed IMAGE=izartu-e2e PUSHED="ghcr.io/$REPOSITORY@$DIGEST"; then
+            echo "ghcr.io/$REPOSITORY@$DIGEST stays, untagged, until deleted by hand" >&2
+            exit 1
+          fi
+
       # buildx's attestations are unsigned: each platform's SBOM is signed with Sigstore, on its image as the index
       # lists it.
       - name: Extract the SBOM

@@ -38,10 +38,10 @@ make check   # style, static analysis, the extensions and layers checks, and the
 
 The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style, static
 analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, YAML, workflows and
-Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the tests, unit and integration when
-PHP changed and e2e unless only Markdown did, the image's extensions check when the Dockerfile, `composer.json` or
-`composer-require-checker.json` changed, and its layers check when the Dockerfile or `docker/pin-mtimes.sh` did. The PHP
-hooks use the Docker toolchain, so they need the `.env` too.
+Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the unit and integration tests when
+PHP, the Dockerfile or a script in `docker/` changed, the e2e test unless only Markdown did, the image's extensions
+check when the Dockerfile, `composer.json` or `composer-require-checker.json` changed, and its layers check when the
+Dockerfile or `docker/pin-mtimes.sh` did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
 
 ### Tests
 
@@ -50,7 +50,8 @@ hooks use the Docker toolchain, so they need the `.env` too.
   filesystem), against the test databases `izartu_test` and `izartu_migration_test`, never real data. Docker creates
   both, with [`docker/create-test-db.sh`](docker/create-test-db.sh), on the first start of a new database volume; a
   volume older than one of them needs `docker compose down -v` once, which also deletes the development database.
-  `make test-integration` migrates `izartu_test` first.
+  `make test-integration` migrates `izartu_test` first. This tier also runs `docker/check-pushed.sh`, against a fake of
+  docker.
 * **E2E** ([`tests/E2E/`](tests/E2E/)): [`smoke.sh`](tests/E2E/smoke.sh), a shell script with curl, drives the running
   app over HTTP, for what only real HTTP shows: the home page up, a login keeping its session across requests, and a tag
   URL with an encoded slash reaching the app. It runs the published image, built from the tracked files as they are (or
@@ -105,7 +106,7 @@ make check-layers  # two builds of the system stage, compared
 
 ### Without Docker
 
-You need PHP and Composer, a reachable MySQL and, for the integration tests, the two test databases, empty and
+You need PHP and Composer, a reachable MySQL and, for the integration tests, jq and the two test databases, empty and
 accessible to your MySQL user. Migrate `izartu_test` first; the suite runs with `DEBUG=1` because part of it exercises
 the debug instrumentation:
 

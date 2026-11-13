@@ -17,8 +17,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with izartu. If not, see <https://www.gnu.org/licenses/>.
 
-# Every development task, defined once: the hooks, the CI and the README call
-# these targets. They all run in the dev-only `test` container.
+# Every development task, defined once.
 
 COMPOSE := docker compose
 # No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect. --build: Compose
@@ -28,7 +27,7 @@ RUN := $(COMPOSE) run --rm -T --build
 TOOL := $(RUN) --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	check-extensions check-layers check-rebuild upgradable validate audit check user hooks
+	check-extensions check-layers check-rebuild upgradable check-pushed validate audit check user hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -96,6 +95,10 @@ check-rebuild: ## check that a rebuild of a release (IMAGE) has the code of its 
 upgradable: ## list the packages Alpine has fixed since the image (IMAGE) was built
 	@docker run --rm --user root $(or $(IMAGE),$(error IMAGE is required)) \
 		sh -c 'apk update --quiet && apk list --upgradable'
+
+# Not in `check`: it reads a registry.
+check-pushed: ## check that a pushed platform image (PUSHED) has the layers of a local one (IMAGE)
+	docker/check-pushed.sh "$(IMAGE)" "$(PUSHED)"
 
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
