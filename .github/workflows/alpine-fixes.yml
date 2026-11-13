@@ -1,0 +1,121 @@
+name: Alpine's fixes
+
+on:
+  schedule:
+    - cron: 41 3 * * * # Daily at 03:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+
+# The newest release's image, rebuilt in place by the container images workflow when Alpine has fixed one of its
+# packages on either platform.
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      # Every tag, to find the newest release.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Find the newest release
+        id: release
+        run: |
+          release='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          tag=$(git tag --list 'v*' --sort=-version:refname | grep -E -m1 "$release") || {
+            echo "no release tag" >&2
+            exit 1
+          }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: Check / ${{ matrix.arch }}
+    needs: release
+    runs-on: ubuntu-${{ matrix.ubuntu }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
+    timeout-minutes: 10
+    # One output per platform: a matrix's legs share the job's outputs.
+    outputs:
+      amd64: ${{ steps.upgradable.outputs.amd64 }}
+      arm64: ${{ steps.upgradable.outputs.arm64 }}
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+        # One Ubuntu for both platforms: arm64 has no `-latest` label to follow.
+        ubuntu:
+          - '26.04'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: List the packages Alpine has fixed
+        id: upgradable
+        env:
+          ARCH: ${{ matrix.arch }}
+          IMAGE: ghcr.io/${{ github.repository }}:${{ needs.release.outputs.version }}
+        run: |
+          if ! docker buildx imagetools inspect "$IMAGE" > /dev/null; then
+            echo "$IMAGE cannot be read: not published (a run by hand on main publishes it), or no answer" >&2
+            exit 1
+          fi
+          make upgradable > "$RUNNER_TEMP/upgradable"
+          {
+            echo "### $ARCH"
+            echo '```'
+            cat "$RUNNER_TEMP/upgradable"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$ARCH=$(wc -l < "$RUNNER_TEMP/upgradable")" >> "$GITHUB_OUTPUT"
+
+  # Waits for the rebuild, so its failure is this run's: a scheduled run notifies whoever last edited its cron, a run
+  # dispatched with GITHUB_TOKEN maybe no one.
+  rebuild:
+    name: Rebuild
+    needs:
+      - check
+      - release
+    if: needs.check.outputs.amd64 != '0' || needs.check.outputs.arm64 != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      actions: write
+    steps:
+      # On `main`, with its packaging: the container images workflow rebuilds the newest release.
+      - name: Rebuild the release's image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          # API version 2026-03-10 answers with the run it starts.
+          run=$(gh api --method POST -H 'X-GitHub-Api-Version: 2026-03-10' \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/container-images.yml/dispatches" \
+            -f ref=main --jq .workflow_run_id)
+          if [ -z "$run" ]; then
+            echo "the dispatch returned no run" >&2
+            exit 1
+          fi
+          echo "[Container images for $TAG]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$run)" \
+            >> "$GITHUB_STEP_SUMMARY"
+          state=
+          until [ "${state%% *}" = completed ]; do
+            sleep 60
+            state=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq '.status + " " + (.conclusion // "")') \
+              || continue
+          done
+          if [ "$state" != "completed success" ]; then
+            echo "the rebuild ended: ${state#completed }" >&2
+            exit 1
+          fi

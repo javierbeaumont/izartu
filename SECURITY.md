@@ -19,7 +19,8 @@ Do **not** open a public GitHub issue for security-sensitive reports.
 
 ## Supported versions
 
-Only the latest release receives security fixes.
+Only the latest release receives security fixes; its image is rebuilt in place, with the same code, when Alpine fixes
+one of the image's packages or the image itself is fixed.
 
 izartu is self-hosted, so keeping your PHP, MySQL and web server patched is part of running it safely. The supported
 versions of each are listed in the [README](README.md#requirements).

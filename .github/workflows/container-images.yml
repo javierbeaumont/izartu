@@ -28,6 +28,7 @@ jobs:
     outputs:
       commit: ${{ steps.release.outputs.commit }}
       packaging: ${{ steps.release.outputs.packaging }}
+      published: ${{ steps.release.outputs.published }}
       tag: ${{ steps.release.outputs.tag }}
       tags: ${{ steps.release.outputs.tags }}
       version: ${{ steps.release.outputs.version }}
@@ -50,6 +51,7 @@ jobs:
           # Through env: a ${{ }} inside the run block is substituted as text, and git allows shell metacharacters in a
           # tag name.
           REF_NAME: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           release='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
           newest=$(git tag --list 'v*' --sort=-version:refname | grep -E -m1 "$release") || {
@@ -95,9 +97,18 @@ jobs:
             echo "$tag's docker/compose.yaml names the image $named, not $minor" >&2
             exit 1
           fi
+          if docker buildx imagetools inspect "ghcr.io/$REPOSITORY:$version" > /dev/null 2> "$RUNNER_TEMP/error"; then
+            published=true
+          elif grep -qF "ghcr.io/$REPOSITORY:$version: not found" "$RUNNER_TEMP/error"; then
+            published=false
+          else
+            cat "$RUNNER_TEMP/error" >&2
+            exit 1
+          fi
           {
             echo "commit=$(git rev-parse "refs/tags/$tag^{commit}")"
             echo "packaging=$packaging"
+            echo "published=$published"
             echo "tag=$tag"
             echo "tags=$version $minor latest"
             echo "version=$version"
@@ -175,6 +186,26 @@ jobs:
 
       - name: Check that two builds make the same system layers
         run: make check-layers
+
+      # So a rebuild for Alpine's fixes that does not get them fails.
+      - name: Check that the image has every fix Alpine published
+        env:
+          IMAGE: izartu-e2e
+        run: |
+          make upgradable > "$RUNNER_TEMP/upgradable"
+          if [ -s "$RUNNER_TEMP/upgradable" ]; then
+            echo "Alpine has newer versions of these packages:" >&2
+            cat "$RUNNER_TEMP/upgradable" >&2
+            exit 1
+          fi
+
+      # A rebuild in place, by hand or for Alpine's fixes.
+      - name: Check the rebuild against the published image
+        if: needs.version.outputs.published == 'true'
+        env:
+          IMAGE: izartu-e2e
+          PUBLISHED: ghcr.io/${{ github.repository }}:${{ needs.version.outputs.version }}
+        run: make check-rebuild
 
       # The release's own test and Compose file.
       - name: Run the end-to-end test

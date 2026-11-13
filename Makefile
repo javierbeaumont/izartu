@@ -27,7 +27,7 @@ RUN := $(COMPOSE) run --rm -T
 TOOL := $(RUN) --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	check-extensions check-layers validate audit check user hooks
+	check-extensions check-layers check-rebuild upgradable validate audit check user hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -86,6 +86,15 @@ check-extensions: ## check the image's PHP modules against composer.json (IMAGE,
 
 check-layers: ## check that two builds of the image's system stage make the same layers
 	docker/check-layers.sh
+
+# Not in `check`: it needs the image published under the rebuilt release's version.
+check-rebuild: ## check that a rebuild of a release (IMAGE) has the code of its published image (PUBLISHED)
+	docker/check-rebuild.sh "$(IMAGE)" "$(PUBLISHED)"
+
+# As root, since the image's user cannot update apk's index; silent, so its output is the list alone.
+upgradable: ## list the packages Alpine has fixed since the image (IMAGE) was built
+	@docker run --rm --user root $(or $(IMAGE),$(error IMAGE is required)) \
+		sh -c 'apk update --quiet && apk list --upgradable'
 
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
