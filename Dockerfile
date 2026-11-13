@@ -6,14 +6,28 @@ ARG PHP_VERSION=8.5
 # The base of PHP's build and of the image.
 FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS alpine
 
-# PHP, compiled with only the modules izartu uses.
-FROM alpine AS php
+# PHP's source, signed by a release manager and checked to be the version named, which the signature does not prove.
+FROM alpine AS php-source
 
 ARG PHP_SOURCE_VERSION=8.5.12
 ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
 
 ADD --checksum=sha256:${PHP_SHA256} \
-    https://www.php.net/distributions/php-${PHP_SOURCE_VERSION}.tar.xz /usr/src/php.tar.xz
+    https://www.php.net/distributions/php-${PHP_SOURCE_VERSION}.tar.xz /php.tar.xz
+
+# The signature by wget: an ADD without a checksum would fetch it on every build, cached or not.
+RUN --mount=type=bind,source=docker/php-keys.asc,target=/php-keys.asc \
+    apk add --no-cache gpg gpgv \
+ && wget -q -O /php.tar.xz.asc "https://www.php.net/distributions/php-${PHP_SOURCE_VERSION}.tar.xz.asc" \
+ && gpg --dearmor < /php-keys.asc > /php-keys.gpg \
+ && gpgv --keyring /php-keys.gpg /php.tar.xz.asc /php.tar.xz \
+ && tar -xf /php.tar.xz -C /tmp "php-${PHP_SOURCE_VERSION}/main/php_version.h" \
+ && grep -qF "#define PHP_VERSION \"${PHP_SOURCE_VERSION}\"" "/tmp/php-${PHP_SOURCE_VERSION}/main/php_version.h"
+
+# PHP, compiled with only the modules izartu uses.
+FROM alpine AS php
+
+COPY --from=php-source /php.tar.xz /usr/src/php.tar.xz
 
 # The official image's hardening flags; PHP_UNAME stands for the build machine, which `php -i` would otherwise name.
 ENV CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64" \
