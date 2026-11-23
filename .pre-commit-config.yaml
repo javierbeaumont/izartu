@@ -95,12 +95,12 @@ repos:
           - --detect-license-in-X-top-lines=25
           - --no-extra-eol
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.14.0
+    rev: v10.15.0
     hooks:
       - id: eslint
         files: \.js$
         additional_dependencies:
-          - eslint@10.14.0
+          - eslint@10.15.0
           - '@eslint/js@10.0.1'
           - globals@17.14.0
   # Enforces .editorconfig, including the line length php-cs-fixer cannot check.
