@@ -3,7 +3,7 @@ name: Supply-chain analysis
 on:
   branch_protection_rule:
   schedule:
-    - cron: 24 5 * * 1 # Weekly: Mondays at 05:24 UTC
+    - cron: 24 5 * * 1
   push:
     branches:
       - main
@@ -21,13 +21,11 @@ jobs:
     permissions:
       id-token: write # publish results to the OpenSSF API
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
       - name: Run analysis
         uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
         with:
+          # `archive`, the default, reads a tarball without the export-ignored files, the workflows among them.
+          file_mode: git
           results_file: results.sarif
           results_format: sarif
           publish_results: true
