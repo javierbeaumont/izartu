@@ -7,7 +7,7 @@ ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
 # ===== The published image =====
 
 # The base of PHP's build and of the image.
-FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS alpine
+FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS alpine
 
 # PHP's source, signed by a release manager and checked to be the version named, which the signature does not prove.
 FROM alpine AS php-source
