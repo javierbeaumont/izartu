@@ -52,3 +52,18 @@ updates:
           - "*"
     schedule:
       interval: monthly
+
+  - package-ecosystem: uv
+    allow:
+      - dependency-type: all
+    commit-message:
+      prefix: ci
+    cooldown:
+      default-days: 7
+    directory: /.github/pre-commit
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
+    schedule:
+      interval: monthly

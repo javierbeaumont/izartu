@@ -25,9 +25,11 @@ COMPOSE := docker compose
 RUN := $(COMPOSE) run --rm -T --build
 # Only the integration tests need the database, so no tool starts it.
 TOOL := $(RUN) --no-deps test
+PRE_COMMIT := uv run --locked --project .github/pre-commit pre-commit
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	check-extensions check-layers check-rebuild upgradable check-pushed validate audit audit-fix check user hooks
+	check-extensions check-layers check-rebuild upgradable check-pushed validate audit audit-fix check user hooks \
+	lint check-secrets pre-commit-sync pre-commit-lock
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -110,10 +112,22 @@ audit-fix: ## update the lock file's packages with known vulnerabilities, within
 	$(TOOL) composer update --minimal-changes --no-install
 	$(MAKE) audit
 
-check: style analyse check-require check-extensions check-layers test ## everything the CI runs
+check: style analyse check-require check-extensions check-layers test ## check the code and image, run the test tiers
 
 user: ## create a user (interactive)
 	$(COMPOSE) exec app php /var/www/izartu/private/cli/adduser.php
 
 hooks: ## install the pre-commit hooks
-	pre-commit install --hook-type pre-commit --hook-type pre-push
+	$(PRE_COMMIT) install --hook-type pre-commit --hook-type pre-push
+
+lint: ## run the commit hooks on every file
+	$(PRE_COMMIT) run --all-files --show-diff-on-failure
+
+check-secrets: ## check HEAD's history for secrets
+	$(PRE_COMMIT) run --hook-stage manual gitleaks-history --all-files
+
+pre-commit-sync: ## install the locked pre-commit, in .github/pre-commit/.venv
+	uv sync --locked --project .github/pre-commit
+
+pre-commit-lock: ## lock pre-commit, in .github/pre-commit/uv.lock
+	uv lock --project .github/pre-commit

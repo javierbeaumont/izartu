@@ -1,6 +1,9 @@
 extends: default
 
 rules:
+  # Pinned actions carry their version as `@<sha> # vX.Y.Z`.
+  comments:
+    min-spaces-from-content: 1
   document-start: disable
   line-length:
     max: 120

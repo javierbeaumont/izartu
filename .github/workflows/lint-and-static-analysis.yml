@@ -16,10 +16,41 @@ jobs:
   pre-commit:
     name: pre-commit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRE_COMMIT_COLOR: always
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # For the scan of the history.
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version-file: .github/pre-commit/uv.lock
+
+      - name: Install pre-commit
+        id: pre-commit
+        run: make pre-commit-sync
+
+      - name: Cache the hooks' environments
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml', '.github/pre-commit/uv.lock') }}
+
+      # A pull request from a fork gets no secrets.
+      - name: Log in to Docker Hub
+        env:
+          DOCKERHUB_PULL_TOKEN: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ github.repository_owner }}
+        run: |
+          if [ -n "$DOCKERHUB_PULL_TOKEN" ]; then
+            echo "$DOCKERHUB_PULL_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+          fi
 
       # The PHP hooks need the dev image and its dependencies.
       - name: Build the dev image
@@ -28,8 +59,10 @@ jobs:
       - name: Install the dev dependencies
         run: make deps
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: 3.x
+      - name: Run the hooks
+        run: make lint
 
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+      # A leak is reported even after a failed step.
+      - name: Scan the history for secrets
+        if: ${{ !cancelled() && steps.pre-commit.outcome == 'success' }}
+        run: make check-secrets

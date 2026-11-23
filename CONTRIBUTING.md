@@ -19,30 +19,34 @@ vulnerability privately instead, as [SECURITY.md](SECURITY.md) explains.
 - Open an issue before a non-trivial change: the direction is decided outside the tracker, so a change can be well built
   and still not belong here.
 - One concern per commit, with a **single-line** imperative subject.
-- Add or adjust tests for what you change, and keep `make check` green.
+- Add or adjust tests for what you change, and keep `make check` and `make lint` green.
 - Update [`README.md`](README.md) in the same commit when behaviour, configuration or requirements change.
 - Sign your commits (`git commit -S`) if you can.
 
 ## Development
 
-You need Docker with the Compose plugin, `make` and, for the hooks, [pre-commit](https://pre-commit.com), plus a `.env`
-at the clone's root with the database credentials ([README, "Installation"](README.md#installation)). Every task has a
-`make` target (`make help` lists them), and the hooks and CI call the same targets, so each command is defined once:
+You need Docker with the Compose plugin, `make`, a `.env` at the clone's root with the database credentials
+([README, "Installation"](README.md#installation)) and, for the hooks, [uv](https://docs.astral.sh/uv/), which runs the
+[pre-commit](https://pre-commit.com) locked in [`.github/pre-commit/`](.github/pre-commit/) (`make pre-commit-sync`
+after the lock changes). Every task has a `make` target (`make help` lists them), and the hooks and CI call the same
+targets, so each command is defined once:
 
 ```sh
 make deps    # install the dev dependencies (PHPUnit, PHPStan, PHP-CS-Fixer) into vendor/, once
 make hooks   # install the hooks, once
 make up      # start the app and the database in the background, at http://localhost:8080
-make check   # style, static analysis, the extensions and layers checks, and the three test tiers
+make check   # check the code and image, run the test tiers
+make lint    # run the commit hooks on every file
 ```
 
-The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style, static
-analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, JavaScript, YAML,
-workflows and Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the unit and
-integration tests when PHP, the Dockerfile or a script in `docker/` changed, the e2e test unless only Markdown did, the
-image's extensions check when the Dockerfile, `composer.json` or `composer-require-checker.json` changed, and its layers
-check when the Dockerfile or `docker/pin-mtimes.sh` did. The PHP hooks use the Docker toolchain, so they need the `.env`
-too.
+### Hooks
+
+The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check:
+
+- **before each commit**: the code style, static analysis and the extensions the code calls; the licence headers;
+  spelling; the shell scripts, JavaScript, YAML, workflows and Dockerfile; whitespace and line length; and leaked
+  secrets, which `make check-secrets` also looks for in HEAD's history;
+- **before a push**, each when a file it reads changed: the three test tiers and the image's extensions and layers.
 
 ### Tests
 
@@ -124,19 +128,28 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 
 ## Continuous integration
 
-Every pull request and every push to `main` runs workflows in [`.github/workflows/`](.github/workflows/): the unit tests
-on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, one build of the image
-with the e2e test and the extensions and layers checks, the hooks that run before each commit, and CodeQL, which also
-runs weekly, on the workflows and the JavaScript. A weekly audit of the dev dependencies opens a pull request when an
-update within `composer.json`'s constraints fixes the vulnerabilities it finds. A release's image is its code, from its
-tag, with `main`'s packaging (the Dockerfile, `docker/` and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last
-commit builds it for amd64 and arm64, checks its extensions and layers and that it has every fix Alpine published, runs
-the release's own e2e test on each, publishes it on Docker Hub and GHCR as `X.Y.Z`, `X.Y` and `latest`, and creates the
-GitHub Release, with the tag's subject as its title, the rest of its message as its notes, and the signed source archive
-and `compose.yaml`. Run by hand on `main`, the [Container images](.github/workflows/container-images.yml) workflow
-publishes the newest release if its tag's run did not, and otherwise rebuilds its image in place with the same code: a
-fix to the packaging reaches the image without a release. A daily workflow runs it when Alpine has fixed one of the
-image's packages. A local `make check` covers one PHP and one MySQL; CI covers the rest.
+Every pull request and every push to `main` runs workflows in [`.github/workflows/`](.github/workflows/):
+
+- the unit tests on every supported PHP version, and the integration tests on each of them against MySQL 8.4 and 9.7;
+- one build of the image, with the e2e test and the extensions and layers checks;
+- the commit hooks and a scan of the history for secrets;
+- CodeQL, which also runs weekly, on the workflows and the JavaScript.
+
+A local `make check` covers one PHP and one MySQL; CI covers the rest. A weekly audit of the dev dependencies opens a
+pull request when an update within `composer.json`'s constraints fixes the vulnerabilities it finds.
+
+### Releases
+
+A release's image is its code, from its tag, with `main`'s packaging (the Dockerfile, `docker/` and the Makefile).
+
+- **An annotated tag `vX.Y.Z`** on `main`'s last commit builds it for amd64 and arm64, checks its extensions and layers
+  and that it has every fix Alpine published, runs the release's own e2e test on each, publishes it on Docker Hub and
+  GHCR as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release: the tag's subject as its title, the rest of its
+  message as its notes, and the signed source archive and `compose.yaml`.
+- **Run by hand on `main`**, the [Container images](.github/workflows/container-images.yml) workflow publishes the
+  newest release if its tag's run did not, and otherwise rebuilds its image in place with the same code: a fix to the
+  packaging reaches the image without a release.
+- **Daily**, a workflow starts that rebuild when Alpine has fixed one of the image's packages.
 
 ## License
 
