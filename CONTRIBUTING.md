@@ -37,11 +37,12 @@ make check   # style, static analysis, the extensions and layers checks, and the
 ```
 
 The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check before each commit the code style, static
-analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, YAML, workflows and
-Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the unit and integration tests when
-PHP, the Dockerfile or a script in `docker/` changed, the e2e test unless only Markdown did, the image's extensions
-check when the Dockerfile, `composer.json` or `composer-require-checker.json` changed, and its layers check when the
-Dockerfile or `docker/pin-mtimes.sh` did. The PHP hooks use the Docker toolchain, so they need the `.env` too.
+analysis and the extensions the code calls, the licence headers, spelling, the shell scripts, JavaScript, YAML,
+workflows and Dockerfile, whitespace and line length, and leaked secrets. Before a push they run the unit and
+integration tests when PHP, the Dockerfile or a script in `docker/` changed, the e2e test unless only Markdown did, the
+image's extensions check when the Dockerfile, `composer.json` or `composer-require-checker.json` changed, and its layers
+check when the Dockerfile or `docker/pin-mtimes.sh` did. The PHP hooks use the Docker toolchain, so they need the `.env`
+too.
 
 ### Tests
 
@@ -125,8 +126,9 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 
 Every pull request and every push to `main` runs workflows in [`.github/workflows/`](.github/workflows/): the unit tests
 on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, one build of the image
-with the e2e test and the extensions and layers checks, the hooks that run before each commit, and CodeQL on the
-workflows, which also runs weekly. An audit of the dev dependencies runs weekly. A release's image is its code, from its
+with the e2e test and the extensions and layers checks, the hooks that run before each commit, and CodeQL, which also
+runs weekly, on the workflows and the JavaScript. A weekly audit of the dev dependencies opens a pull request when an
+update within `composer.json`'s constraints fixes the vulnerabilities it finds. A release's image is its code, from its
 tag, with `main`'s packaging (the Dockerfile, `docker/` and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last
 commit builds it for amd64 and arm64, checks its extensions and layers and that it has every fix Alpine published, runs
 the release's own e2e test on each, publishes it on Docker Hub and GHCR as `X.Y.Z`, `X.Y` and `latest`, and creates the

@@ -12,6 +12,10 @@ jobs:
   audit:
     name: composer audit
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -21,5 +25,17 @@ jobs:
       - name: Build the dev image
         run: make build
 
-      - name: Report known vulnerabilities and abandoned packages
+      - name: Report known vulnerabilities
+        id: audit
+        continue-on-error: ${{ github.ref == 'refs/heads/main' }}
         run: make audit
+
+      - name: Update the packages with known vulnerabilities
+        if: steps.audit.outcome == 'failure'
+        run: make audit-fix
+
+      - name: Propose the update in a pull request
+        if: steps.audit.outcome == 'failure'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: await require('./.github/scripts/propose-audit-fix.js')({ github, context })

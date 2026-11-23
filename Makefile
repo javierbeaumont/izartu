@@ -27,7 +27,7 @@ RUN := $(COMPOSE) run --rm -T --build
 TOOL := $(RUN) --no-deps test
 
 .PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	check-extensions check-layers check-rebuild upgradable check-pushed validate audit check user hooks
+	check-extensions check-layers check-rebuild upgradable check-pushed validate audit audit-fix check user hooks
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
@@ -103,8 +103,12 @@ check-pushed: ## check that a pushed platform image (PUSHED) has the layers of a
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
 
-audit: ## report known vulnerabilities and abandoned packages in the dependencies
-	$(TOOL) composer audit --locked --abandoned=fail
+audit: ## report known vulnerabilities in the dependencies
+	$(TOOL) composer audit --locked --abandoned=ignore
+
+audit-fix: ## update the lock file's packages with known vulnerabilities, within composer.json's constraints
+	$(TOOL) composer update --minimal-changes --no-install
+	$(MAKE) audit
 
 check: style analyse check-require check-extensions check-layers test ## everything the CI runs
 

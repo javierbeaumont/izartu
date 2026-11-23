@@ -55,8 +55,7 @@ repos:
     rev: v8.30.1
     hooks:
       - id: gitleaks
-  # Single source for the AGPL header. It goes after `<?php`: anything before
-  # the opening tag is output.
+  # Single source for the AGPL header. In PHP it goes after `<?php`: anything before the opening tag is output.
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.6
     hooks:
@@ -68,6 +67,23 @@ repos:
           - --insert-license-after-regex=^<\?php$
           - --detect-license-in-X-top-lines=25
           - --no-extra-eol
+      - id: insert-license
+        name: Insert license in JavaScript
+        files: \.js$
+        args:
+          - --license-filepath=scripts/license-header.txt
+          - --comment-style=//
+          - --detect-license-in-X-top-lines=25
+          - --no-extra-eol
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v10.14.0
+    hooks:
+      - id: eslint
+        files: \.js$
+        additional_dependencies:
+          - eslint@10.14.0
+          - '@eslint/js@10.0.1'
+          - globals@17.14.0
   # Enforces .editorconfig, including the line length php-cs-fixer cannot check.
   - repo: https://github.com/editorconfig-checker/editorconfig-checker
     rev: v4.0.2
