@@ -42,15 +42,10 @@ jobs:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml', '.github/pre-commit/uv.lock') }}
 
-      # A pull request from a fork gets no secrets.
       - name: Log in to Docker Hub
-        env:
-          DOCKERHUB_PULL_TOKEN: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ github.repository_owner }}
-        run: |
-          if [ -n "$DOCKERHUB_PULL_TOKEN" ]; then
-            echo "$DOCKERHUB_PULL_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
-          fi
+        uses: ./.github/actions/docker-hub-login
+        with:
+          token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
       # The PHP hooks need the dev image and its dependencies.
       - name: Build the dev image

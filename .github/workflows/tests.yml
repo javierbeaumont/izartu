@@ -18,6 +18,7 @@ jobs:
   unit:
     name: Unit / PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -25,9 +26,15 @@ jobs:
     env:
       PHP_VERSION: ${{ matrix.php }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Log in to Docker Hub
+        uses: ./.github/actions/docker-hub-login
+        with:
+          token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
       - name: Build the dev image
         run: make build
@@ -41,6 +48,7 @@ jobs:
   integration:
     name: Integration / PHP ${{ matrix.php }} / MySQL ${{ matrix.mysql }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -53,9 +61,15 @@ jobs:
       MYSQL_VERSION: ${{ matrix.mysql }}
       PHP_VERSION: ${{ matrix.php }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Log in to Docker Hub
+        uses: ./.github/actions/docker-hub-login
+        with:
+          token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
       - name: Build the dev image
         run: make build
@@ -71,10 +85,17 @@ jobs:
   image:
     name: Image
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Log in to Docker Hub
+        uses: ./.github/actions/docker-hub-login
+        with:
+          token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
       - name: Build the image from the release archive
         run: |
@@ -96,7 +117,8 @@ jobs:
       - name: Check that two builds make the same system layers
         run: make check-layers
 
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Upload the image
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           if-no-files-found: error
           name: image
@@ -108,12 +130,20 @@ jobs:
     name: E2E
     needs: image
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Log in to Docker Hub
+        uses: ./.github/actions/docker-hub-login
+        with:
+          token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
+
+      - name: Download the image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: image
           path: ${{ runner.temp }}
@@ -130,12 +160,15 @@ jobs:
     name: Extensions
     needs: image
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Download the image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: image
           path: ${{ runner.temp }}
