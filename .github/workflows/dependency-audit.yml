@@ -22,6 +22,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Log in to Docker Hub
+        uses: ./.github/actions/docker-hub-login
+        with:
+          token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
+
       - name: Build the dev image
         run: make build
 
