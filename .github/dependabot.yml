@@ -2,6 +2,8 @@ version: 2
 
 updates:
   - package-ecosystem: composer
+    commit-message:
+      prefix: build
     cooldown:
       default-days: 7
     directory: /
@@ -13,6 +15,8 @@ updates:
       interval: monthly
 
   - package-ecosystem: docker
+    commit-message:
+      prefix: image
     cooldown:
       default-days: 7
     directory: /
@@ -24,6 +28,8 @@ updates:
       interval: monthly
 
   - package-ecosystem: github-actions
+    commit-message:
+      prefix: ci
     cooldown:
       default-days: 7
     directory: /
@@ -35,6 +41,8 @@ updates:
       interval: monthly
 
   - package-ecosystem: pre-commit
+    commit-message:
+      prefix: ci
     cooldown:
       default-days: 7
     directory: /
