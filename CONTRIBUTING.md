@@ -125,16 +125,16 @@ user's `SMOKE_EMAIL`, `SMOKE_USERNAME` and `SMOKE_PASSWORD`.
 
 Every pull request and every push to `main` runs workflows in [`.github/workflows/`](.github/workflows/): the unit tests
 on every supported PHP version, the integration tests on each of them against MySQL 8.4 and 9.7, one build of the image
-with the e2e test and the extensions and layers checks, the hooks that run before each commit, and an audit of the dev
-dependencies, which also runs weekly. A release's image is its code, from its tag, with `main`'s packaging (the
-Dockerfile, `docker/` and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last commit builds it for amd64 and
-arm64, checks its extensions and layers and that it has every fix Alpine published, runs the release's own e2e test on
-each, publishes it on Docker Hub and GHCR as `X.Y.Z`, `X.Y` and `latest`, and creates the GitHub Release, with the tag's
-subject as its title, the rest of its message as its notes, and the signed source archive and `compose.yaml`. Run by
-hand on `main`, the [Container images](.github/workflows/container-images.yml) workflow publishes the newest release if
-its tag's run did not, and otherwise rebuilds its image in place with the same code: a fix to the packaging reaches the
-image without a release. A daily workflow runs it when Alpine has fixed one of the image's packages. A local
-`make check` covers one PHP and one MySQL; CI covers the rest.
+with the e2e test and the extensions and layers checks, the hooks that run before each commit, an audit of the dev
+dependencies and CodeQL on the workflows, both of which also run weekly. A release's image is its code, from its tag,
+with `main`'s packaging (the Dockerfile, `docker/` and the Makefile). An annotated tag `vX.Y.Z` on `main`'s last commit
+builds it for amd64 and arm64, checks its extensions and layers and that it has every fix Alpine published, runs the
+release's own e2e test on each, publishes it on Docker Hub and GHCR as `X.Y.Z`, `X.Y` and `latest`, and creates the
+GitHub Release, with the tag's subject as its title, the rest of its message as its notes, and the signed source archive
+and `compose.yaml`. Run by hand on `main`, the [Container images](.github/workflows/container-images.yml) workflow
+publishes the newest release if its tag's run did not, and otherwise rebuilds its image in place with the same code: a
+fix to the packaging reaches the image without a release. A daily workflow runs it when Alpine has fixed one of the
+image's packages. A local `make check` covers one PHP and one MySQL; CI covers the rest.
 
 ## License
 

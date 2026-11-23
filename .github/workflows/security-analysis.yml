@@ -8,7 +8,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: 17 4 * * 1 # Weekly: Mondays at 04:17 UTC
+    - cron: 17 4 * * 1
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,8 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -31,3 +32,26 @@ jobs:
 
       - name: Report known vulnerabilities
         run: make audit
+
+  analyze:
+    name: CodeQL on the workflows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: actions
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: /language:actions
