@@ -1,0 +1,25 @@
+name: Dependency audit
+
+on:
+  schedule:
+    - cron: 38 6 * * 4
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: composer audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the dev image
+        run: make build
+
+      - name: Report known vulnerabilities and abandoned packages
+        run: make audit

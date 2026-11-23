@@ -103,8 +103,8 @@ check-pushed: ## check that a pushed platform image (PUSHED) has the layers of a
 validate: ## check composer.json against the lock file
 	$(TOOL) composer validate --strict
 
-audit: ## report known vulnerabilities in the dependencies
-	$(TOOL) composer audit
+audit: ## report known vulnerabilities and abandoned packages in the dependencies
+	$(TOOL) composer audit --locked --abandoned=fail
 
 check: style analyse check-require check-extensions check-layers test ## everything the CI runs
 

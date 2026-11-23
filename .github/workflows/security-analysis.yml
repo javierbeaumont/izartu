@@ -15,24 +15,6 @@ permissions:
   contents: read
 
 jobs:
-  audit:
-    name: Dependency audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Build the dev image
-        run: make build
-
-      - name: Install the dev dependencies
-        run: make deps
-
-      - name: Report known vulnerabilities
-        run: make audit
-
   analyze:
     name: CodeQL on the workflows
     runs-on: ubuntu-latest
