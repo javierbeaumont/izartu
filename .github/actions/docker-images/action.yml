@@ -1,0 +1,58 @@
+name: Docker images
+description: Logs in to Docker Hub and loads the dev and MySQL images from GitHub's cache.
+
+inputs:
+  token:
+    description: A read-only Docker Hub token.
+    default: ''
+  php-version:
+    description: The PHP version of the dev image to load; none if empty.
+    default: ''
+  mysql-version:
+    description: The MySQL version to load; none if empty.
+    default: ''
+
+outputs:
+  dev-image-hit:
+    description: Whether the dev image came from the cache.
+    value: ${{ steps.dev-image.outputs.cache-hit }}
+  mysql-hit:
+    description: Whether the MySQL image came from the cache.
+    value: ${{ steps.mysql.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Log in to Docker Hub
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        DOCKERHUB_TOKEN: ${{ inputs.token }}
+        DOCKERHUB_USERNAME: ${{ github.repository_owner }}
+      with:
+        script: await require('./.github/scripts/docker-hub-login.js')({ core, exec })
+
+    - name: Restore the dev image
+      id: dev-image
+      if: inputs.php-version != ''
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/dev-image.tar
+        key: dev-image-${{ inputs.php-version }}-${{ hashFiles('Dockerfile', 'docker/dev-image.sh') }}
+
+    - name: Load the dev image
+      if: steps.dev-image.outputs.cache-hit == 'true'
+      shell: bash
+      run: docker load -i "$RUNNER_TEMP/dev-image.tar"
+
+    - name: Restore the MySQL image
+      id: mysql
+      if: inputs.mysql-version != ''
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/mysql.tar
+        key: mysql-${{ inputs.mysql-version }}-${{ hashFiles('Dockerfile') }}
+
+    - name: Load the MySQL image
+      if: steps.mysql.outputs.cache-hit == 'true'
+      shell: bash
+      run: docker load -i "$RUNNER_TEMP/mysql.tar"

@@ -20,9 +20,9 @@
 # Every development task, defined once.
 
 COMPOSE := docker compose
-# No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect. --build: Compose
-# otherwise builds an image only when it is missing.
-RUN := $(COMPOSE) run --rm -T --build
+export PHP_VERSION := $(or $(PHP_VERSION),8.5)
+# No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect.
+RUN := docker/dev-image.sh && $(COMPOSE) run --rm -T
 # Only the integration tests need the database, so no tool starts it.
 TOOL := $(RUN) --no-deps test
 PRE_COMMIT := uv run --locked --project .github/pre-commit pre-commit
@@ -41,7 +41,7 @@ down: ## stop the stack (the database volume survives)
 	$(COMPOSE) down
 
 build: ## build the dev image for PHP_VERSION (default 8.5)
-	$(COMPOSE) build test
+	docker/dev-image.sh
 
 deps: ## install the dev dependencies from the lock file
 	$(TOOL) composer install
@@ -82,7 +82,7 @@ check-require: ## check that the code calls only PHP's core and the extensions c
 check-extensions: ## check the image's PHP modules against composer.json (IMAGE, or else the dev app; CODE_TAG)
 	composer="$$($(if $(CODE_TAG),git show 'refs/tags/$(CODE_TAG):composer.json',cat composer.json))" \
 		|| { echo "no composer.json in $(or $(CODE_TAG),the working tree)" >&2; exit 1; }; \
-	$(if $(IMAGE),docker run --rm -i $(IMAGE),$(RUN) --no-deps app) \
+	$(if $(IMAGE),docker run --rm -i $(IMAGE),$(COMPOSE) run --rm -T --build --no-deps app) \
 		php -- "$$composer" "$$(cat composer-require-checker.json)" $(if $(CODE_TAG),--at-least) \
 		< docker/check-extensions.php
 

@@ -32,7 +32,9 @@ updates:
       prefix: ci
     cooldown:
       default-days: 7
-    directory: /
+    directories:
+      - /
+      - /.github/actions/*
     groups:
       actions:
         patterns:

@@ -20,13 +20,13 @@ services:
       - ./docker/create-test-db.sh:/docker-entrypoint-initdb.d/create-test-db.sh
 
   test:
-    # Dev-only tooling; the profile keeps `docker compose up` from booting it
-    # (it is still reachable with `docker compose run --rm test`).
+    # Dev-only tooling: the profile keeps `docker compose up` from booting it; `docker compose run test` still does.
     build:
       context: .
       target: test
       args:
         PHP_VERSION: ${PHP_VERSION:-8.5}
+    image: izartu-dev:${PHP_VERSION:-8.5}
     command: [vendor/bin/phpunit]
     depends_on:
       db:

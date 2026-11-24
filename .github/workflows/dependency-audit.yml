@@ -16,15 +16,19 @@ jobs:
       actions: write
       contents: write
       pull-requests: write
+    env:
+      PHP_VERSION: '8.5'
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Log in to Docker Hub
-        uses: ./.github/actions/docker-hub-login
+      - name: Log in to Docker Hub and load the cached images
+        id: docker
+        uses: ./.github/actions/docker-images
         with:
+          php-version: ${{ env.PHP_VERSION }}
           token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
       - name: Build the dev image
@@ -44,3 +48,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: await require('./.github/scripts/propose-audit-fix.js')({ github, context })
+
+      - name: Save the dev image
+        if: steps.docker.outputs.dev-image-hit != 'true'
+        run: docker save -o "$RUNNER_TEMP/dev-image.tar" "izartu-dev:$PHP_VERSION"
