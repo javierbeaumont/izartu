@@ -133,7 +133,7 @@ repos:
         name: composer-require-checker
         entry: make check-require
         language: system
-        files: (\.php|^composer(-require-checker)?\.json)$
+        files: (\.php|^composer(-require-checker)?\.json|^docker/dev/[^/]+/(Dockerfile|composer\.(json|lock)))$
         pass_filenames: false
   # The tests need the database or a whole stack, and the image's checks need builds that may compile PHP, so they wait
   # until push and commits stay fast.
@@ -172,6 +172,7 @@ repos:
             ^docker-compose\.yml|
             ^docker/.*\.sh|
             ^docker/compose\.yaml|
+            ^docker/dev/.*|
             ^Dockerfile|
             ^Makefile|
             ^phpunit\.xml|

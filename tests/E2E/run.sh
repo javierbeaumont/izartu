@@ -60,11 +60,13 @@ else
 fi
 export IMAGE
 
+docker/dev-image.sh mysql
+docker/dev-image.sh php
 compose up -d "$BUILD" --wait app
 
 printf '%s\n' "$E2E_EMAIL" "$E2E_USERNAME" "$E2E_PASSWORD" "$E2E_PASSWORD" owner |
     compose exec -T app php /var/www/izartu/private/cli/adduser.php
 
 # No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect.
-compose run --rm --build -T -e BASE_URL=http://app:8080 -e SMOKE_EMAIL="$E2E_EMAIL" \
+compose run --rm -T -e BASE_URL=http://app:8080 -e SMOKE_EMAIL="$E2E_EMAIL" \
     -e SMOKE_USERNAME="$E2E_USERNAME" -e SMOKE_PASSWORD="$E2E_PASSWORD" smoke

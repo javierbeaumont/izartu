@@ -1,5 +1,3 @@
-# The published image, IMAGE, as given or built from this tree's release archive (SOURCE), with no published port, so
-# the throwaway e2e stack never clashes with a running dev stack; and the smoke test, on the dev image, which has curl.
 services:
   app:
     build:
@@ -8,12 +6,15 @@ services:
       additional_contexts:
         source: ${SOURCE:?the extracted release archive}
     image: ${IMAGE:?the image under test}
+    # So the throwaway stack never clashes with a running dev stack.
     ports: !reset []
 
+  db:
+    image: izartu-dev-mysql:${MYSQL_VERSION:-latest}
+
   smoke:
-    build:
-      context: .
-      target: test
+    # For its curl.
+    image: izartu-dev-php:${PHP_VERSION:-latest}
     command: [/smoke.sh]
     volumes:
       - ./tests/E2E/smoke.sh:/smoke.sh:ro

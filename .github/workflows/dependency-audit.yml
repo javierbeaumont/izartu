@@ -16,8 +16,6 @@ jobs:
       actions: write
       contents: write
       pull-requests: write
-    env:
-      PHP_VERSION: '8.5'
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -28,10 +26,10 @@ jobs:
         id: docker
         uses: ./.github/actions/docker-images
         with:
-          php-version: ${{ env.PHP_VERSION }}
+          php-version: latest
           token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
-      - name: Build the dev image
+      - name: Build the dev PHP image
         run: make build
 
       - name: Report known vulnerabilities
@@ -49,6 +47,6 @@ jobs:
         with:
           script: await require('./.github/scripts/propose-audit-fix.js')({ github, context })
 
-      - name: Save the dev image
-        if: steps.docker.outputs.dev-image-hit != 'true'
-        run: docker save -o "$RUNNER_TEMP/dev-image.tar" "izartu-dev:$PHP_VERSION"
+      - name: Save the dev PHP image
+        if: steps.docker.outputs.php-hit != 'true'
+        run: docker save -o "$RUNNER_TEMP/dev-php.tar" "izartu-dev-php:$PHP_VERSION"

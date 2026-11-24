@@ -39,6 +39,10 @@ make check   # check the code and image, run the test tiers
 make lint    # run the commit hooks on every file
 ```
 
+The dev images come from [`docker/dev/`](docker/dev/), a directory per PHP and MySQL version that `PHP_VERSION` and
+`MYSQL_VERSION` choose, from the environment or `.env`, the newest by default. A dev database stays on its MySQL only
+with `MYSQL_VERSION` in `.env`: once a newer MySQL upgrades it, it may not start on the older one again.
+
 ### Hooks
 
 The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check:
@@ -61,8 +65,8 @@ The hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) check:
   app over HTTP, for what only real HTTP shows: the home page up, a login keeping its session across requests, and a tag
   URL with an encoded slash reaching the app. It runs the published image, built from the tracked files as they are (or
   the one `IMAGE` names, local or in a registry), on a stack of its own (separate Compose project, database and
-  credentials, no published port), removed whatever the outcome; it ignores `.env`, so the app runs on its default
-  settings, and needs no `make deps`.
+  credentials, no published port), removed whatever the outcome; it takes only the PHP and MySQL versions from `.env`,
+  through `make`, so the app runs on its default settings, and needs no `make deps`.
 
 ```sh
 make test              # all three

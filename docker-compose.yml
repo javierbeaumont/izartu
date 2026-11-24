@@ -15,18 +15,14 @@ services:
     extends:
       file: docker/compose.yaml
       service: db
+    image: izartu-dev-mysql:${MYSQL_VERSION:-latest}
     restart: !reset null
     volumes:
       - ./docker/create-test-db.sh:/docker-entrypoint-initdb.d/create-test-db.sh
 
   test:
-    # Dev-only tooling: the profile keeps `docker compose up` from booting it; `docker compose run test` still does.
-    build:
-      context: .
-      target: test
-      args:
-        PHP_VERSION: ${PHP_VERSION:-8.5}
-    image: izartu-dev:${PHP_VERSION:-8.5}
+    # Tooling, kept out of `docker compose up` by its profile.
+    image: izartu-dev-php:${PHP_VERSION:-latest}
     command: [vendor/bin/phpunit]
     depends_on:
       db:

@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PHP_VERSION: '8.5'
       PRE_COMMIT_COLOR: always
     steps:
       - name: Check out the repository
@@ -47,11 +46,11 @@ jobs:
         id: docker
         uses: ./.github/actions/docker-images
         with:
-          php-version: ${{ env.PHP_VERSION }}
+          php-version: latest
           token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
-      # The PHP hooks need the dev image and its dependencies.
-      - name: Build the dev image
+      # The PHP hooks need the dev PHP image and the dev dependencies.
+      - name: Build the dev PHP image
         run: make build
 
       - name: Install the dev dependencies
@@ -60,9 +59,9 @@ jobs:
       - name: Run the hooks
         run: make lint
 
-      - name: Save the dev image
-        if: steps.docker.outputs.dev-image-hit != 'true'
-        run: docker save -o "$RUNNER_TEMP/dev-image.tar" "izartu-dev:$PHP_VERSION"
+      - name: Save the dev PHP image
+        if: steps.docker.outputs.php-hit != 'true'
+        run: docker save -o "$RUNNER_TEMP/dev-php.tar" "izartu-dev-php:$PHP_VERSION"
 
       # A leak is reported even after a failed step.
       - name: Scan the history for secrets

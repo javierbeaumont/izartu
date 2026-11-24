@@ -38,7 +38,7 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
-      - name: Build the dev image
+      - name: Build the dev PHP image
         run: make build
 
       - name: Resolve the dev dependencies
@@ -47,9 +47,9 @@ jobs:
       - name: Run the unit tests
         run: make test-unit
 
-      - name: Save the dev image
-        if: steps.docker.outputs.dev-image-hit != 'true'
-        run: docker save -o "$RUNNER_TEMP/dev-image.tar" "izartu-dev:$PHP_VERSION"
+      - name: Save the dev PHP image
+        if: steps.docker.outputs.php-hit != 'true'
+        run: docker save -o "$RUNNER_TEMP/dev-php.tar" "izartu-dev-php:$PHP_VERSION"
 
   integration:
     name: Integration / PHP ${{ matrix.php }} / MySQL ${{ matrix.mysql }}
@@ -80,7 +80,7 @@ jobs:
           php-version: ${{ env.PHP_VERSION }}
           token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
-      - name: Build the dev image
+      - name: Build the dev PHP image
         run: make build
 
       - name: Resolve the dev dependencies
@@ -89,13 +89,13 @@ jobs:
       - name: Run the integration tests
         run: make test-integration
 
-      - name: Save the dev image
-        if: steps.docker.outputs.dev-image-hit != 'true'
-        run: docker save -o "$RUNNER_TEMP/dev-image.tar" "izartu-dev:$PHP_VERSION"
+      - name: Save the dev PHP image
+        if: steps.docker.outputs.php-hit != 'true'
+        run: docker save -o "$RUNNER_TEMP/dev-php.tar" "izartu-dev-php:$PHP_VERSION"
 
-      - name: Save the MySQL image
+      - name: Save the dev MySQL image
         if: steps.docker.outputs.mysql-hit != 'true'
-        run: docker save -o "$RUNNER_TEMP/mysql.tar" "mysql:$MYSQL_VERSION"
+        run: docker save -o "$RUNNER_TEMP/dev-mysql.tar" "izartu-dev-mysql:$MYSQL_VERSION"
 
   # The published image, built once for the jobs that test it, its system layers checked. A required check too: a job
   # skipped because one it needs failed passes as a check.
@@ -148,8 +148,6 @@ jobs:
     needs: image
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      MYSQL_VERSION: '9.7'
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -160,7 +158,8 @@ jobs:
         id: docker
         uses: ./.github/actions/docker-images
         with:
-          mysql-version: ${{ env.MYSQL_VERSION }}
+          mysql-version: latest
+          php-version: latest
           token: ${{ secrets.DOCKERHUB_PULL_TOKEN }}
 
       - name: Download the image
@@ -177,9 +176,13 @@ jobs:
           IMAGE: izartu:candidate
         run: make test-e2e
 
-      - name: Save the MySQL image
+      - name: Save the dev PHP image
+        if: steps.docker.outputs.php-hit != 'true'
+        run: docker save -o "$RUNNER_TEMP/dev-php.tar" "izartu-dev-php:$PHP_VERSION"
+
+      - name: Save the dev MySQL image
         if: steps.docker.outputs.mysql-hit != 'true'
-        run: docker save -o "$RUNNER_TEMP/mysql.tar" "mysql:$MYSQL_VERSION"
+        run: docker save -o "$RUNNER_TEMP/dev-mysql.tar" "izartu-dev-mysql:$MYSQL_VERSION"
 
   extensions:
     name: Extensions

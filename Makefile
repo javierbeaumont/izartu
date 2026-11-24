@@ -20,28 +20,45 @@
 # Every development task, defined once.
 
 COMPOSE := docker compose
-export PHP_VERSION := $(or $(PHP_VERSION),8.5)
+# The versions in .env, which Compose reads, unless given.
+env = $(if $(wildcard .env),$(shell sed -nE \
+	's/^[[:space:]]*(export[[:space:]]+)?$(1)[[:space:]]*=[^0-9]*([0-9.]*).*/\2/p' .env | tail -n 1))
+PHP_VERSION ?= $(call env,PHP_VERSION)
+MYSQL_VERSION ?= $(call env,MYSQL_VERSION)
+# A test platform's version: the one given, or else latest, the newest under docker/dev.
+newest = $(shell printf '%s\n' $(patsubst docker/dev/$(1)-%,%,$(wildcard docker/dev/$(1)-*)) | sort -V | tail -n 1)
+platform = $(if $(filter-out latest,$(2)),$(2),$(call newest,$(1)))
+export PHP_VERSION MYSQL_VERSION
+override PHP_VERSION := $(call platform,php,$(PHP_VERSION))
+override MYSQL_VERSION := $(call platform,mysql,$(MYSQL_VERSION))
 # No TTY: pre-commit gives hooks no terminal on stdin, which older Compose versions do not detect.
-RUN := docker/dev-image.sh && $(COMPOSE) run --rm -T
+RUN := docker/dev-image.sh php && $(COMPOSE) run --rm -T
 # Only the integration tests need the database, so no tool starts it.
 TOOL := $(RUN) --no-deps test
 PRE_COMMIT := uv run --locked --project .github/pre-commit pre-commit
 
-.PHONY: help up down build deps deps-update test test-unit test-integration test-e2e style fmt analyse check-require \
-	check-extensions check-layers check-rebuild upgradable check-pushed validate audit audit-fix check user hooks \
-	lint check-secrets pre-commit-sync pre-commit-lock
+.PHONY: help up down build versions deps deps-update test test-unit test-integration test-e2e style fmt analyse \
+	check-require check-extensions check-layers check-rebuild upgradable check-pushed validate audit audit-fix check user \
+	hooks lint check-secrets pre-commit-sync pre-commit-lock
 
 help: ## list the targets
 	@grep -hE '^[a-z][a-z0-9-]*:.*##' $(MAKEFILE_LIST) | sed 's/:[^#]*## /\t/' | expand -t 18
 
 up: ## start the stack in the background
+	docker/dev-image.sh mysql
 	$(COMPOSE) up -d app db
 
 down: ## stop the stack (the database volume survives)
 	$(COMPOSE) down
 
-build: ## build the dev image for PHP_VERSION (default 8.5)
-	docker/dev-image.sh
+build: ## build the dev PHP image for PHP_VERSION (unset: the newest PHP)
+	docker/dev-image.sh php
+
+versions: ## print the resolved PHP_VERSION, MYSQL_VERSION and their dev images' hashes as an env file
+	@echo "PHP_VERSION=$(PHP_VERSION)"
+	@hash=$$(docker/dev-image.sh php --hash) && echo "PHP_HASH=$$hash"
+	@echo "MYSQL_VERSION=$(MYSQL_VERSION)"
+	@hash=$$(docker/dev-image.sh mysql --hash) && echo "MYSQL_HASH=$$hash"
 
 deps: ## install the dev dependencies from the lock file
 	$(TOOL) composer install
@@ -57,6 +74,7 @@ test-unit: ## run the unit tests (no database)
 	$(RUN) --no-deps -e DB_HOST=no-database.invalid test vendor/bin/phpunit --testsuite unit
 
 test-integration: ## run the integration tests (MySQL, filesystem)
+	docker/dev-image.sh mysql
 	$(RUN) test sh -c 'php private/cli/migrate.php && vendor/bin/phpunit --testsuite integration'
 
 test-e2e: ## run the end-to-end test on a throwaway stack
@@ -73,6 +91,8 @@ fmt: ## apply the code style
 analyse: ## run the static analysis
 	$(TOOL) vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
+# composer-require-checker is in the newest PHP's dev image alone.
+check-require: export PHP_VERSION := $(call platform,php,latest)
 check-require: ## check that the code calls only PHP's core and the extensions composer.json requires
 	$(TOOL) composer-require-checker check
 

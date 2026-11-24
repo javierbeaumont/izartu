@@ -1,10 +1,5 @@
-# The PHP of the dev and CI toolchain (`test`), which CI builds on every supported version.
-ARG PHP_VERSION=8.5
-# The image's PHP.
 ARG PHP_SOURCE_VERSION=8.5.12
 ARG PHP_SHA256=08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209
-
-# ===== The published image =====
 
 # The base of PHP's build and of the image.
 FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS alpine
@@ -140,23 +135,3 @@ LABEL org.izartu.php.version=${PHP_SOURCE_VERSION}
 
 # hadolint ignore=DL3022
 COPY --from=source . /var/www/izartu/
-
-# ===== The dev and CI toolchain, never shipped =====
-
-FROM php:${PHP_VERSION}-cli AS test
-
-RUN docker-php-ext-install pdo_mysql
-
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      git \
-      jq \
-      unzip \
- && rm -rf /var/lib/apt/lists/*
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# composer-require-checker needs PHP 8.4: as a dev dependency, `composer install` would fail on 8.2 and 8.3.
-ADD --checksum=sha256:35d1dfdd7aa94a750f4b4c9b0b22dd5e76b5e9e35fb910c8901f3dafd2ad2ab9 --chmod=755 \
-    https://github.com/maglnet/ComposerRequireChecker/releases/download/4.24.0/composer-require-checker.phar \
-    /usr/local/bin/composer-require-checker

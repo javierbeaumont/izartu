@@ -14,6 +14,19 @@ updates:
     schedule:
       interval: monthly
 
+  - package-ecosystem: composer
+    commit-message:
+      prefix: tests
+    cooldown:
+      default-days: 7
+    directory: /docker/dev/php-8.5
+    groups:
+      dev-tools:
+        patterns:
+          - "*"
+    schedule:
+      interval: monthly
+
   - package-ecosystem: docker
     commit-message:
       prefix: image
@@ -24,6 +37,30 @@ updates:
       docker:
         patterns:
           - "*"
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: docker
+    commit-message:
+      prefix: tests
+    cooldown:
+      default-days: 7
+    directories:
+      - /docker/dev/*
+    groups:
+      dev-images:
+        patterns:
+          - "*"
+    # Each directory is one PHP or MySQL version: only its digest moves.
+    ignore:
+      - dependency-name: mysql
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: php
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
     schedule:
       interval: monthly
 
